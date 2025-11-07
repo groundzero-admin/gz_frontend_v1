@@ -1,0 +1,39 @@
+:root {
+  /* 🌞 Light Mode */
+  --bg-light: #F8F9FA;
+  --text-light-primary: #2B2A4C;
+  --text-light-secondary: #555;
+  --border-light: rgba(0, 0, 0, 0.1);
+  --card-light: rgba(255, 255, 255, 0.3);
+  --accent-purple: #8A2BE2;
+  --accent-teal: #00C4CC;
+  --button-bg-light: #ffffff;
+  --button-text-light: #2B2A4C;
+
+  /* 🌙 Dark Mode */
+  --bg-dark: #0B0C1B;
+  --text-dark-primary: #ffffff;
+  --text-dark-secondary: #B0B0B0;
+  --border-dark: rgba(255, 255, 255, 0.1);
+  --card-dark: rgba(255, 255, 255, 0.05);
+  --button-bg-dark: rgba(0, 0, 0, 0.6);
+  --button-text-dark: #ffffff;
+}
+
+/* ✨ Animated Gradient Border */
+.border-gradient {
+  position: relative;
+  border: 2px solid transparent;
+  background-image: 
+    linear-gradient(var(--button-bg-dark), var(--button-bg-dark)),
+    linear-gradient(90deg, var(--accent-teal), var(--accent-purple), var(--accent-teal));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  animation: borderFlow 4s linear infinite;
+}
+
+@keyframes borderFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}

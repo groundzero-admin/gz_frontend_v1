@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+
+/* Add this to your main CSS file (e.g., index.css)
+  It fixes the browser's autofill style
+*/
+
+/* --- FIX FOR DARK MODE --- */
+:root.dark input:-webkit-autofill,
+:root.dark input:-webkit-autofill:hover,
+:root.dark input:-webkit-autofill:focus,
+:root.dark input:-webkit-autofill:active {
+    /* This is the magic trick. It paints a giant shadow 
+      over the browser's white background, using YOUR theme's color.
+    */
+    box-shadow: 0 0 0 1000px var(--bg-dark) inset !important;
+    
+    /* This forces the text color to be your theme's color */
+    -webkit-text-fill-color: var(--text-dark-primary) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+/* --- FIX FOR LIGHT MODE --- */
+:root:not(.dark) input:-webkit-autofill,
+:root:not(.dark) input:-webkit-autofill:hover,
+:root:not(.dark) input:-webkit-autofill:focus,
+:root:not(.dark) input:-webkit-autofill:active {
+    
+    box-shadow: 0 0 0 1000px var(--bg-light) inset !important;
+    
+    -webkit-text-fill-color: var(--text-light-primary) !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
+
+:root{
+  overflow-x: hidden;
+}
