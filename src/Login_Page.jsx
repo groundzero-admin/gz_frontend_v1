@@ -140,7 +140,7 @@ const AuthPage = () => {
         aria-label="Toggle Theme"
       >
         {isDark ? (
-          <FaSun className="text-xl" style={{ color: "#FFA500" }} />
+          <FaSun className="text-xl" style={{ color: "white" }} />
         ) : (
           <FaMoon
             className="text-xl"

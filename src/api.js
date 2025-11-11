@@ -5,12 +5,27 @@ const BASE_URL = "http://localhost:4011/api";
 export const whoamipath = `${BASE_URL}/whoami`;
 export const loginPath = `${BASE_URL}/login`;
 export const requestAccessPath = `${BASE_URL}/requestaccess`;
-export const validateInvitePath = `${BASE_URL}/validateinvite`;
+export const validateInvitePath = `${BASE_URL}/invite-validate`;
 export const onboardUserPath = `${BASE_URL}/onboard`;
 export const checkRolePath = `${BASE_URL}/checkrole`;
 export const logoutPath = `${BASE_URL}/logout`;
 export const getAllRequestsPath = `${BASE_URL}/admin/getallrequest`;
 export const actionRequestPath = `${BASE_URL}/admin/actionrequest`;
+export const sendInvitePath = `${BASE_URL}/admin/invite`;
+export const listAllTeachersPath = `${BASE_URL}/admin/listallteachers`; // <-- NEW PATH
+export const listAllCoursesPath = `${BASE_URL}/admin/listallcourse`; // <-- NEW
+export const getWorksheetsForCoursePath = `${BASE_URL}/admin/worksheetfromcouse`; // <-- NEW
+
+export const createCoursePath = `${BASE_URL}/admin/createcourse` ;
+export const uploadWorksheetPath = `${BASE_URL}/admin/uploadworksheet`;
+
+export const getMyChildrenDetailsPath = `${BASE_URL}/parent/mychildrendetails`;
+
+
+export const listStudentsCoursesPath = `${BASE_URL}/student/listmycourses`;
+// --- 1. CORRECTED PATH ---
+export const enrollInCoursePath = `${BASE_URL}/student/enrollment`;
+export const listStudentWorksheetsPath = `${BASE_URL}/student/worksheetsfromcourse`;
 
 
 // --- whoami ---
@@ -177,5 +192,340 @@ export const approveAccessRequest = async (requestId) => {
   } catch (error) {
     console.error("Action Request error:", error);
     return { success: false, message: "Network error processing action." };
+  }
+};
+
+
+
+
+
+
+
+
+export const sendInvite = async (email, role, parentEmails = [], childEmails = []) => {
+  try {
+    const response = await fetch(sendInvitePath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // Sends admin cookie
+      body: JSON.stringify({ 
+        email, 
+        role, 
+        parentEmails, 
+        childEmails 
+      }),
+    });
+    return await response.json(); // Returns { success, message }
+  } catch (error) {
+    console.error("Send Invite error:", error);
+    return { success: false, message: "Network error sending invite." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * (PARENT) Fetches details for the logged-in parent's children.
+ */
+export const getMyChildrenDetails = async () => {
+  try {
+    const response = await fetch(getMyChildrenDetailsPath, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      // This is CRITICAL. It sends your 'auth_token' cookie
+      // to the backend so you can pass 'requireAuthCookie'.
+      credentials: 'include', 
+    });
+
+    // Get the JSON response from the server
+    const data = await response.json();
+
+    if (!response.ok) {
+      // This will catch 401, 403, and 500 errors.
+      // The 'data' object will contain { success: false, message: "..." }
+      // from your backend's sendResponse function.
+      return data;
+    }
+
+    // If successful (status 200), the 'data' object is
+    // { success: true, message: "...", data: [...] }
+    return data;
+    
+  } catch (error) {
+    // This catches network errors (e.g., server is down)
+    console.error("Get My Children Details error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not fetch children's details." 
+    };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+export const listAllTeachers = async () => {
+  try {
+    const response = await fetch(listAllTeachersPath, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      // This sends the admin's auth_token cookie
+      credentials: 'include', 
+    });
+
+    const data = await response.json();
+    
+    // The AdminLayout already handles 401/403 auth errors,
+    // but we still pass the full response for data handling.
+    return data; 
+    
+  } catch (error) {
+    // This catches network errors (e.g., server is down)
+    console.error("List All Teachers error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not fetch teachers." 
+    };
+  }
+};
+
+
+
+
+
+
+export const listAllCourses = async () => {
+  try {
+    const response = await fetch(listAllCoursesPath, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // Sends admin auth cookie
+    });
+    const data = await response.json();
+    return data; // Returns { success: true, message: "...", data: [...] }
+  } catch (error) {
+    console.error("List All Courses error:", error);
+    return { success: false, message: "Network error: Could not fetch courses." };
+  }
+};
+
+
+
+
+
+
+
+export const getWorksheetsForCourse = async (courseId) => {
+  try {
+    // We send the courseId as a query parameter, just like your backend API is setup
+    const response = await fetch(`${getWorksheetsForCoursePath}?courseId=${courseId}`, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Sends admin auth cookie
+    });
+
+    const data = await response.json();
+    // data is { success, message, data: [...] }
+    return data;
+    
+  } catch (error) {
+    console.error("Get Worksheets For Course error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not fetch worksheets." 
+    };
+  }
+};
+
+
+
+
+
+
+
+export const createCourse = async (formData) => {
+  try {
+    const response = await fetch(createCoursePath, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Sends admin auth cookie
+      body: JSON.stringify(formData),
+    });
+
+    const data = await response.json();
+    // data is { success, message, data: { courseId, ... } }
+    return data;
+    
+  } catch (error) {
+    console.error("Create Course error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not create course." 
+    };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+export const uploadWorksheet = async (courseId, title, description, worksheetNumber, file) => {
+  // 1. Create a FormData object to send file + text
+  const formData = new FormData();
+  
+  // 2. Append all the fields
+  formData.append("courseId", courseId);
+  formData.append("title", title);
+  formData.append("description", description);
+  formData.append("worksheetNumber", worksheetNumber);
+  // This field name "worksheetFile" MUST match your backend
+  formData.append("worksheetFile", file); 
+
+
+ 
+
+
+
+
+  try {
+    const response = await fetch(uploadWorksheetPath, {
+      method: 'POST',
+      credentials: 'include', // Sends admin auth cookie
+      // 3. DO NOT set Content-Type. The browser sets it
+      // automatically for FormData, including the boundary.
+      body: formData, 
+    });
+
+    const data = await response.json();
+    // data is { success, message, data: { worksheetId, ... } }
+    return data;
+    
+  } catch (error) {
+    console.error("Upload Worksheet error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not upload worksheet." 
+    };
+  }
+};
+
+
+
+
+
+
+
+
+export const listStudentsCourses = async () => {
+  try {
+    const response = await fetch(listStudentsCoursesPath, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Sends student auth cookie
+    });
+    return await response.json(); // Returns { success: true, data: [...] }
+  } catch (error) {
+    console.error("List Student Courses error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not fetch courses." 
+    };
+  }
+};
+
+
+
+
+
+
+
+
+export const enrollInCourse = async (courseId) => {
+  try {
+    // --- 2. THIS IS NOW A REAL API CALL ---
+    const response = await fetch(enrollInCoursePath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // Sends the auth cookie
+      body: JSON.stringify({ courseId }) // Sends the courseId in the body
+    });
+    
+    const data = await response.json();
+    // The backend sends { success, message, data: { created, skipped } }
+    // The frontend logic in StudentCoursesPage only needs 'success' and 'message'
+    return data;
+    // --- END REAL API CALL ---
+
+  } catch (error) {
+    console.error("Enroll in Course error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not enroll." 
+    };
+  }
+};
+
+
+
+
+
+
+
+export const listStudentWorksheets = async (courseId) => {
+  try {
+    // --- THIS IS THE FIX ---
+    // Use a GET request and send courseId as a query parameter
+    const response = await fetch(`${listStudentWorksheetsPath}?courseId=${courseId}`, {
+      method: 'GET', // <-- CORRECT
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Sends student auth cookie
+      // No body for a GET request
+    });
+    // --- END FIX ---
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { success: false, message: data.message || "Failed to fetch worksheets." };
+    }
+    return data; // Returns { success: true, data: [...] }
+    
+  } catch (error) {
+    console.error("List Student Worksheets error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not fetch worksheets." 
+    };
   }
 };

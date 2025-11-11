@@ -16,8 +16,8 @@ import {
   FaMoon,
 } from "react-icons/fa"
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom"
-import "./color.css" // Your color.css file
-import { checkRole, logout } from "./api.js"
+import "../color.css" // Your color.css file
+import { checkRole, logout } from "../api.js"
 
 // --- Sidebar Component (Re-styled) ---
 const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, setIsSidebarOpen }) => {
@@ -226,7 +226,7 @@ const AdminLayout = () => {
           </button>
         ) : (
           <button
-            onClick={() => navigate("/auth")}
+            onClick={() => navigate("/login")}
             className="px-6 py-3 rounded-lg font-bold text-lg text-white"
             style={{ backgroundColor: "var(--accent-teal)"}}
           >

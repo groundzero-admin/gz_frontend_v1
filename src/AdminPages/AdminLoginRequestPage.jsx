@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaSearch } from "react-icons/fa";
 import { useOutletContext } from 'react-router-dom';
-import { getAllAccessRequests, approveAccessRequest } from "./api.js";
+import { getAllAccessRequests, approveAccessRequest } from "../api.js";
 
 // --- Helper component for the colored role badge ---
 const RoleBadge = ({ role }) => {
