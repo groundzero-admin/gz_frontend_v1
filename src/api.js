@@ -26,6 +26,21 @@ export const listStudentsCoursesPath = `${BASE_URL}/student/listmycourses`;
 // --- 1. CORRECTED PATH ---
 export const enrollInCoursePath = `${BASE_URL}/student/enrollment`;
 export const listStudentWorksheetsPath = `${BASE_URL}/student/worksheetsfromcourse`;
+export const getAllStudentDetailsPath = `${BASE_URL}/admin/getallstudentdetails`;
+
+
+
+
+export const listTeachersCoursesPath = `${BASE_URL}/teacher/listmycourses`;
+
+export const listTeacherWorksheetsPath = `${BASE_URL}/teacher/worksheetfromcouse`;
+
+
+
+
+//// for teacher to getch his studnts
+export const listMyStudentsPath = `${BASE_URL}/teacher/listmystudent`;
+
 
 
 // --- whoami ---
@@ -526,6 +541,126 @@ export const listStudentWorksheets = async (courseId) => {
     return { 
       success: false, 
       message: "Network error: Could not fetch worksheets." 
+    };
+  }
+};
+
+
+
+/**
+ * ADMIN: Lists all students.
+ */
+export const getAllStudentDetails = async () => {
+  try {
+    const response = await fetch(getAllStudentDetailsPath, { method: 'GET', credentials: 'include' });
+    return await response.json();
+  } catch (error) {
+    console.error("getAllStudentDetails error:", error);
+    return { success: false, message: "Network error fetching students." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+export const listTeachersCourses = async () => {
+  try {
+    const response = await fetch(listTeachersCoursesPath, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Sends teacher's auth cookie
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      // Handles 401, 403, 500 errors
+      return data; 
+    }
+    
+    // Returns { success: true, message: "...", data: [...] }
+    return data;
+    
+  } catch (error) {
+    console.error("List Teacher Courses error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not fetch courses." 
+    };
+  }
+};
+
+
+
+
+export const listTeacherWorksheets = async (courseId) => {
+  try {
+    // We send the courseId as a query parameter, as your backend requires
+    const response = await fetch(`${listTeacherWorksheetsPath}?courseId=${courseId}`, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Sends teacher's auth cookie
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      // Handles 401, 403, 500 errors
+      return { success: false, message: data.message || "Failed to fetch worksheets." };
+    }
+    
+    // Returns { success: true, message: "...", data: [...] }
+    return data;
+    
+  } catch (error) {
+    console.error("List Teacher Worksheets error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not fetch worksheets." 
+    };
+  }
+};
+
+
+
+
+
+
+
+
+
+export const listMyStudents = async () => {
+  try {
+    const response = await fetch(listMyStudentsPath, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Sends teacher's auth cookie
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      // Handles 401, 403, 500 errors
+      return data; 
+    }
+    
+    // Returns { success: true, message: "...", data: [...] }
+    return data;
+    
+  } catch (error) {
+    console.error("List My Students error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not fetch students." 
     };
   }
 };

@@ -17,6 +17,13 @@ import StudentWelcomePage from './StudentPages/StudentWelcomePage.jsx'
 import StudentCoursesPage from './StudentPages/StudentAllCoursePage.jsx'
 import StudentWorksheetPage from './StudentPages/StudentSpecificCourse.jsx'
 import StudentDocViewerPage from './StudentPages/StudentSpecificWorkSheet.jsx'
+import AdminStudentPage from './AdminPages/Admin_List_All_Students.jsx'
+import TeacherLayout from './TeacherPages/TeacherDashboardPage.jsx'
+import TeacherWelcome from './TeacherPages/TeacherWelcome.jsx'
+import TeacherCoursesPage from './TeacherPages/TeacherAllCoursePage.jsx'
+import TeacherWorksheetListPage from './TeacherPages/TeacherSpecificCourse.jsx'
+import TeacherDocViewerPage from './TeacherPages/TeacherViewedWroksheet.jsx'
+import TeacherStudentsPage from './TeacherPages/TeachersStudentListPage.jsx'
 
 
 
@@ -50,7 +57,7 @@ function App() {
               <Route path="course/:courseId" element={<AdminWorksheetListPage />} />
               <Route path="course/:courseId/:worksheetId" element={< AdminViewedWorksheet  />} />
               <Route path="teacher" element={<AdminListAllTeacherPage />} />
-              {/* <Route path="student" element={<AdminStudentsPage />} /> */}
+              <Route path="student" element={<AdminStudentPage />} />
     </Route>
 
 
@@ -72,6 +79,25 @@ function App() {
               <Route path="course/:courseId/:worksheetId" element={< StudentDocViewerPage />} />
 
               {/* <Route path="student" element={<AdminStudentsPage />} /> */}
+    </Route>
+
+
+
+
+         <Route path="/teacher/dashboard" element={< TeacherLayout />}>
+              {/* Default page at /admin/dashboard */}
+              <Route index element={< TeacherWelcome />} /> 
+              
+              {/* Page at /admin/dashboard/request */}
+              {/* {/* <Route path="request" element={<AdminRequestPage />} /> */}
+            
+              <Route path="course" element={< TeacherCoursesPage />} />
+
+           
+              <Route path="course/:courseId" element={< TeacherWorksheetListPage />} />
+              <Route path="course/:courseId/:worksheetId" element={<  TeacherDocViewerPage />} /> 
+
+              <Route path="students" element={< TeacherStudentsPage />} />
     </Route>
 
 
