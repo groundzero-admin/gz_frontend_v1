@@ -43,6 +43,16 @@ export const listMyStudentsPath = `${BASE_URL}/teacher/listmystudent`;
 
 
 
+
+export const setupChatThreadPath = `${BASE_URL}/student/setupchatthread`;
+export const loadChatHistoryPath = `${BASE_URL}/student/loadchatofspecificworksheet`;
+export const askQuestionPath = `${BASE_URL}/student/askq`;
+
+export const getStudentHistoryPath = `${BASE_URL}/studenthistory`;
+
+
+
+
 // --- whoami ---
 export const whoami = async () => {
   try {
@@ -661,6 +671,102 @@ export const listMyStudents = async () => {
     return { 
       success: false, 
       message: "Network error: Could not fetch students." 
+    };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+export const setupChatThread = async (worksheetId) => {
+  try {
+    const response = await fetch(setupChatThreadPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ worksheetId }),
+    });
+    return await response.json(); // Returns { success: true, data: { thread_id: "..." } }
+  } catch (error) {
+    console.error("Setup Chat Thread error:", error);
+    return { success: false, message: "Network error setting up chat." };
+  }
+};
+
+/**
+ * (STUDENT) Loads the chat history for a specific worksheet.
+ */
+export const loadChatOfSpecificWorksheet = async (worksheetId) => {
+  try {
+    const response = await fetch(loadChatHistoryPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ worksheetId }),
+    });
+    return await response.json(); // Returns { success: true, data: [...] }
+  } catch (error) {
+    console.error("Load Chat History error:", error);
+    return { success: false, message: "Network error loading chat." };
+  }
+};
+
+/**
+ * (STUDENT) Asks a question to the AI assistant.
+ */
+export const askQ = async (threadId, worksheetId, promptText) => {
+  try {
+    const response = await fetch(askQuestionPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ threadId, worksheetId, promptText }),
+    });
+    return await response.json(); // Returns { success: true, data: { answer: "..." } }
+  } catch (error) {
+    console.error("Ask Question error:", error);
+    return { success: false, message: "Network error asking question." };
+  }
+};
+
+
+
+
+
+
+export const getStudentFullHistory = async (studentId) => {
+  try {
+    // We send the studentId as a query parameter, as your backend requires
+    const response = await fetch(`${getStudentHistoryPath}?studentId=${studentId}`, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Sends admin/teacher auth cookie
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      // Handles 401, 403, 500 errors
+      return { success: false, message: data.message || "Failed to fetch history." };
+    }
+    
+    // Returns { success: true, message: "...", data: [...] }
+    return data;
+    
+  } catch (error) {
+    console.error("Get Student Full History error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not fetch history." 
     };
   }
 };

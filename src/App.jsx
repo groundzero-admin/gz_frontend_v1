@@ -24,6 +24,8 @@ import TeacherCoursesPage from './TeacherPages/TeacherAllCoursePage.jsx'
 import TeacherWorksheetListPage from './TeacherPages/TeacherSpecificCourse.jsx'
 import TeacherDocViewerPage from './TeacherPages/TeacherViewedWroksheet.jsx'
 import TeacherStudentsPage from './TeacherPages/TeachersStudentListPage.jsx'
+import AdminStudentPromptHistory from './AdminPages/AdminSpecificStudentHistory.jsx'
+import TeacherStudentPromptHistory from './TeacherPages/TeacherSpecificStudentHistory.jsx'
 
 
 
@@ -58,6 +60,7 @@ function App() {
               <Route path="course/:courseId/:worksheetId" element={< AdminViewedWorksheet  />} />
               <Route path="teacher" element={<AdminListAllTeacherPage />} />
               <Route path="student" element={<AdminStudentPage />} />
+              <Route path="student/:studentId" element={< AdminStudentPromptHistory />    } />
     </Route>
 
 
@@ -98,6 +101,7 @@ function App() {
               <Route path="course/:courseId/:worksheetId" element={<  TeacherDocViewerPage />} /> 
 
               <Route path="students" element={< TeacherStudentsPage />} />
+                  <Route path="students/:studentId" element={< TeacherStudentPromptHistory />    } />
     </Route>
 
 
