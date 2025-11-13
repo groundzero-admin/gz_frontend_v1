@@ -50,7 +50,7 @@ export const askQuestionPath = `${BASE_URL}/student/askq`;
 
 export const getStudentHistoryPath = `${BASE_URL}/studenthistory`;
 
-
+export const getMyChildHistoryPath = `${BASE_URL}/parent/mychildhistory`;
 
 
 // --- whoami ---
@@ -764,6 +764,38 @@ export const getStudentFullHistory = async (studentId) => {
     
   } catch (error) {
     console.error("Get Student Full History error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not fetch history." 
+    };
+  }
+};
+
+
+
+
+export const getMyChildHistory = async (childEmail) => {
+  try {
+    // We send the childEmail as a query parameter, as your backend requires
+    const response = await fetch(`${getMyChildHistoryPath}?childEmail=${childEmail}`, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Sends parent's auth cookie
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      // Handles 401, 403, 500 errors
+      return { success: false, message: data.message || "Failed to fetch history." };
+    }
+    
+    // Returns { success: true, message: "...", data: [...] }
+    return data;
+    
+  } catch (error) {
+    console.error("Get My Child History error:", error);
     return { 
       success: false, 
       message: "Network error: Could not fetch history." 
