@@ -15,6 +15,10 @@ import {
   FaSun,
   FaMoon,
 } from "react-icons/fa"
+
+import { GiArtificialHive } from "react-icons/gi";
+
+
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom"
 // Assuming api.js and color.css are in the parent directory
 import "../color.css" 
@@ -116,6 +120,15 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen }) => {
           isActive={isActive("/student/dashboard/course")}
           isDark={isDark}
         />
+
+         <SidebarLink 
+          to="/student/dashboard/asktoai" 
+          icon={<GiArtificialHive />} 
+          label="Ask to AI" 
+          isActive={isActive("/student/dashboard/asktoai")}
+          isDark={isDark}
+        />
+
         <SidebarLink 
           to="/student/dashboard/practice" 
           icon={<FaPencilAlt />} 

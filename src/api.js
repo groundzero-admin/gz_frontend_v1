@@ -13,27 +13,23 @@ export const getAllRequestsPath = `${BASE_URL}/admin/getallrequest`;
 export const actionRequestPath = `${BASE_URL}/admin/actionrequest`;
 export const sendInvitePath = `${BASE_URL}/admin/invite`;
 export const listAllTeachersPath = `${BASE_URL}/admin/listallteachers`; // <-- NEW PATH
-export const listAllCoursesPath = `${BASE_URL}/admin/listallcourse`; // <-- NEW
-export const getWorksheetsForCoursePath = `${BASE_URL}/admin/worksheetfromcouse`; // <-- NEW
 
-export const createCoursePath = `${BASE_URL}/admin/createcourse` ;
-export const uploadWorksheetPath = `${BASE_URL}/admin/uploadworksheet`;
 
 export const getMyChildrenDetailsPath = `${BASE_URL}/parent/mychildrendetails`;
 
 
-export const listStudentsCoursesPath = `${BASE_URL}/student/listmycourses`;
-// --- 1. CORRECTED PATH ---
-export const enrollInCoursePath = `${BASE_URL}/student/enrollment`;
-export const listStudentWorksheetsPath = `${BASE_URL}/student/worksheetsfromcourse`;
+
+
 export const getAllStudentDetailsPath = `${BASE_URL}/admin/getallstudentdetails`;
 
 
 
+export const setupGeneralChatThreadPath = `${BASE_URL}/student/setupchatthread`;
+export const loadGeneralChatHistoryPath = `${BASE_URL}/student/chathistory`;
+export const askGeneralQuestionPath = `${BASE_URL}/student/askq`;
 
-export const listTeachersCoursesPath = `${BASE_URL}/teacher/listmycourses`;
 
-export const listTeacherWorksheetsPath = `${BASE_URL}/teacher/worksheetfromcouse`;
+
 
 
 
@@ -44,9 +40,7 @@ export const listMyStudentsPath = `${BASE_URL}/teacher/listmystudent`;
 
 
 
-export const setupChatThreadPath = `${BASE_URL}/student/setupchatthread`;
-export const loadChatHistoryPath = `${BASE_URL}/student/loadchatofspecificworksheet`;
-export const askQuestionPath = `${BASE_URL}/student/askq`;
+
 
 export const getStudentHistoryPath = `${BASE_URL}/studenthistory`;
 
@@ -338,80 +332,6 @@ export const listAllTeachers = async () => {
 
 
 
-export const listAllCourses = async () => {
-  try {
-    const response = await fetch(listAllCoursesPath, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // Sends admin auth cookie
-    });
-    const data = await response.json();
-    return data; // Returns { success: true, message: "...", data: [...] }
-  } catch (error) {
-    console.error("List All Courses error:", error);
-    return { success: false, message: "Network error: Could not fetch courses." };
-  }
-};
-
-
-
-
-
-
-
-export const getWorksheetsForCourse = async (courseId) => {
-  try {
-    // We send the courseId as a query parameter, just like your backend API is setup
-    const response = await fetch(`${getWorksheetsForCoursePath}?courseId=${courseId}`, {
-      method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json' 
-      },
-      credentials: 'include', // Sends admin auth cookie
-    });
-
-    const data = await response.json();
-    // data is { success, message, data: [...] }
-    return data;
-    
-  } catch (error) {
-    console.error("Get Worksheets For Course error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not fetch worksheets." 
-    };
-  }
-};
-
-
-
-
-
-
-
-export const createCourse = async (formData) => {
-  try {
-    const response = await fetch(createCoursePath, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json' 
-      },
-      credentials: 'include', // Sends admin auth cookie
-      body: JSON.stringify(formData),
-    });
-
-    const data = await response.json();
-    // data is { success, message, data: { courseId, ... } }
-    return data;
-    
-  } catch (error) {
-    console.error("Create Course error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not create course." 
-    };
-  }
-};
 
 
 
@@ -422,45 +342,6 @@ export const createCourse = async (formData) => {
 
 
 
-export const uploadWorksheet = async (courseId, title, description, worksheetNumber, file) => {
-  // 1. Create a FormData object to send file + text
-  const formData = new FormData();
-  
-  // 2. Append all the fields
-  formData.append("courseId", courseId);
-  formData.append("title", title);
-  formData.append("description", description);
-  formData.append("worksheetNumber", worksheetNumber);
-  // This field name "worksheetFile" MUST match your backend
-  formData.append("worksheetFile", file); 
-
-
- 
-
-
-
-
-  try {
-    const response = await fetch(uploadWorksheetPath, {
-      method: 'POST',
-      credentials: 'include', // Sends admin auth cookie
-      // 3. DO NOT set Content-Type. The browser sets it
-      // automatically for FormData, including the boundary.
-      body: formData, 
-    });
-
-    const data = await response.json();
-    // data is { success, message, data: { worksheetId, ... } }
-    return data;
-    
-  } catch (error) {
-    console.error("Upload Worksheet error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not upload worksheet." 
-    };
-  }
-};
 
 
 
@@ -469,91 +350,12 @@ export const uploadWorksheet = async (courseId, title, description, worksheetNum
 
 
 
-export const listStudentsCourses = async () => {
-  try {
-    const response = await fetch(listStudentsCoursesPath, {
-      method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json' 
-      },
-      credentials: 'include', // Sends student auth cookie
-    });
-    return await response.json(); // Returns { success: true, data: [...] }
-  } catch (error) {
-    console.error("List Student Courses error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not fetch courses." 
-    };
-  }
-};
 
 
 
 
 
 
-
-
-export const enrollInCourse = async (courseId) => {
-  try {
-    // --- 2. THIS IS NOW A REAL API CALL ---
-    const response = await fetch(enrollInCoursePath, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // Sends the auth cookie
-      body: JSON.stringify({ courseId }) // Sends the courseId in the body
-    });
-    
-    const data = await response.json();
-    // The backend sends { success, message, data: { created, skipped } }
-    // The frontend logic in StudentCoursesPage only needs 'success' and 'message'
-    return data;
-    // --- END REAL API CALL ---
-
-  } catch (error) {
-    console.error("Enroll in Course error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not enroll." 
-    };
-  }
-};
-
-
-
-
-
-
-
-export const listStudentWorksheets = async (courseId) => {
-  try {
-    // --- THIS IS THE FIX ---
-    // Use a GET request and send courseId as a query parameter
-    const response = await fetch(`${listStudentWorksheetsPath}?courseId=${courseId}`, {
-      method: 'GET', // <-- CORRECT
-      headers: { 
-        'Content-Type': 'application/json' 
-      },
-      credentials: 'include', // Sends student auth cookie
-      // No body for a GET request
-    });
-    // --- END FIX ---
-
-    const data = await response.json();
-    if (!response.ok) {
-      return { success: false, message: data.message || "Failed to fetch worksheets." };
-    }
-    return data; // Returns { success: true, data: [...] }
-    
-  } catch (error) {
-    console.error("List Student Worksheets error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not fetch worksheets." 
-    };
-  }
-};
 
 
 
@@ -576,68 +378,6 @@ export const getAllStudentDetails = async () => {
 
 
 
-
-
-
-export const listTeachersCourses = async () => {
-  try {
-    const response = await fetch(listTeachersCoursesPath, {
-      method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json' 
-      },
-      credentials: 'include', // Sends teacher's auth cookie
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      // Handles 401, 403, 500 errors
-      return data; 
-    }
-    
-    // Returns { success: true, message: "...", data: [...] }
-    return data;
-    
-  } catch (error) {
-    console.error("List Teacher Courses error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not fetch courses." 
-    };
-  }
-};
-
-
-
-
-export const listTeacherWorksheets = async (courseId) => {
-  try {
-    // We send the courseId as a query parameter, as your backend requires
-    const response = await fetch(`${listTeacherWorksheetsPath}?courseId=${courseId}`, {
-      method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json' 
-      },
-      credentials: 'include', // Sends teacher's auth cookie
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      // Handles 401, 403, 500 errors
-      return { success: false, message: data.message || "Failed to fetch worksheets." };
-    }
-    
-    // Returns { success: true, message: "...", data: [...] }
-    return data;
-    
-  } catch (error) {
-    console.error("List Teacher Worksheets error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not fetch worksheets." 
-    };
-  }
-};
 
 
 
@@ -684,58 +424,6 @@ export const listMyStudents = async () => {
 
 
 
-
-
-export const setupChatThread = async (worksheetId) => {
-  try {
-    const response = await fetch(setupChatThreadPath, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ worksheetId }),
-    });
-    return await response.json(); // Returns { success: true, data: { thread_id: "..." } }
-  } catch (error) {
-    console.error("Setup Chat Thread error:", error);
-    return { success: false, message: "Network error setting up chat." };
-  }
-};
-
-/**
- * (STUDENT) Loads the chat history for a specific worksheet.
- */
-export const loadChatOfSpecificWorksheet = async (worksheetId) => {
-  try {
-    const response = await fetch(loadChatHistoryPath, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ worksheetId }),
-    });
-    return await response.json(); // Returns { success: true, data: [...] }
-  } catch (error) {
-    console.error("Load Chat History error:", error);
-    return { success: false, message: "Network error loading chat." };
-  }
-};
-
-/**
- * (STUDENT) Asks a question to the AI assistant.
- */
-export const askQ = async (threadId, worksheetId, promptText) => {
-  try {
-    const response = await fetch(askQuestionPath, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ threadId, worksheetId, promptText }),
-    });
-    return await response.json(); // Returns { success: true, data: { answer: "..." } }
-  } catch (error) {
-    console.error("Ask Question error:", error);
-    return { success: false, message: "Network error asking question." };
-  }
-};
 
 
 
@@ -800,5 +488,68 @@ export const getMyChildHistory = async (childEmail) => {
       success: false, 
       message: "Network error: Could not fetch history." 
     };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+export const setupGeneralChatThread = async () => {
+  try {
+    const response = await fetch(setupGeneralChatThreadPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({}) // Send empty body
+    });
+    return await response.json(); // Returns { success: true, data: { thread_id: "..." } }
+  } catch (error) {
+    console.error("Setup General Chat Thread error:", error);
+    return { success: false, message: "Network error setting up chat." };
+  }
+};
+
+/**
+ * (STUDENT) Loads the student's entire chat history.
+ */
+export const loadGeneralChatHistory = async () => {
+  try {
+    const response = await fetch(loadGeneralChatHistoryPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({}) // Send empty body
+    });
+    return await response.json(); // Returns { success: true, data: [...] }
+  } catch (error) {
+    console.error("Load General Chat History error:", error);
+    return { success: false, message: "Network error loading chat." };
+  }
+};
+
+/**
+ * (STUDENT) Asks a GENERAL question to the AI assistant.
+ */
+export const askGeneralQuestion = async (threadId, promptText) => {
+  try {
+    const response = await fetch(askGeneralQuestionPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      // This 'askQ' controller does not need worksheetId
+      body: JSON.stringify({ threadId, promptText }),
+    });
+    return await response.json(); // Returns { success: true, data: { answer: "..." } }
+  } catch (error) {
+    console.error("Ask General Question error:", error);
+    return { success: false, message: "Network error asking question." };
   }
 };
