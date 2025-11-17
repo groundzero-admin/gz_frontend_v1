@@ -1,5 +1,7 @@
 // (Or update this to your backend URL)
-const BASE_URL = "http://localhost:4011/api"; 
+const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL  ; 
+
+// console.log("API BASE_URL is:", BASE_URL);
 
 // --- Paths (add these) ---
 export const whoamipath = `${BASE_URL}/whoami`;
