@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import { FaPlus, FaLayerGroup, FaMapMarkerAlt, FaCalendarAlt, FaTimes } from "react-icons/fa";
+import { FaPlus, FaLayerGroup, FaMapMarkerAlt, FaCalendarAlt, FaTimes, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { listAllActiveBatches, updateBatchStatus, createBatch } from "../api.js";
 
 // --- Helper: Modal Input ---
@@ -43,7 +43,7 @@ const ModalSelect = ({ label, value, onChange, options, isDark }) => (
   </div>
 );
 
-// --- Smart Calendar Component ---
+// --- Smart Calendar Component (UPDATED: Any Day Allowed) ---
 const SmartCalendar = ({ label, value, onChange, isDark }) => {
   const today = new Date();
   const initialDate = value ? new Date(value) : today;
@@ -68,12 +68,15 @@ const SmartCalendar = ({ label, value, onChange, isDark }) => {
     onChange(adjustedDate.toISOString().split('T')[0]);
   };
 
+  // --- UPDATED: Removed 'isMonday' check ---
   const isSelectable = (day) => {
     const checkDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-    const isMonday = checkDate.getDay() === 1; 
+    
     const todayMidnight = new Date();
     todayMidnight.setHours(0,0,0,0);
-    return isMonday && checkDate >= todayMidnight;
+    
+    // Allow any date that is today or in the future
+    return checkDate >= todayMidnight;
   };
 
   const isSelected = (day) => {
@@ -163,7 +166,7 @@ const SmartCalendar = ({ label, value, onChange, isDark }) => {
   );
 };
 
-// --- Create Batch Modal ---
+// --- Create Batch Modal (UPDATED: Removed Monday Check) ---
 const CreateBatchModal = ({ isOpen, onClose, onSubmit, isDark }) => {
   const [formData, setFormData] = useState({
     cohort: 'spark',
@@ -185,10 +188,12 @@ const CreateBatchModal = ({ isOpen, onClose, onSubmit, isDark }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!formData.startDate) {
       alert("Please select a Start Date.");
       return;
     }
+
     setIsSubmitting(true);
     const success = await onSubmit(formData);
     if (success) {
@@ -287,20 +292,19 @@ const CreateBatchModal = ({ isOpen, onClose, onSubmit, isDark }) => {
   );
 };
 
-// --- Batch Card ---
+// --- Batch Card (Unchanged) ---
 const BatchCard = ({ batch, isDark, onStatusUpdate }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const navigate = useNavigate();
 
   const handleCardClick = () => {
-    // Corrected navigation logic
     navigate(`/admin/dashboard/batches/${batch._id}`, { 
       state: { batchStringId: batch.batchId } 
     });
   };
 
   const handleAction = async (e) => {
-    e.stopPropagation(); // Stop click from triggering card navigation
+    e.stopPropagation(); 
     if (!window.confirm(`Are you sure you want to change status to ${batch.isUpcoming ? 'LIVE' : 'ENDED'}?`)) return;
     
     setIsUpdating(true);
@@ -311,25 +315,16 @@ const BatchCard = ({ batch, isDark, onStatusUpdate }) => {
 
   const statusColor = batch.isLive ? "text-green-400" : "text-yellow-400";
 
-  // --- DATE VALIDATION LOGIC ---
+  // Date Validation Logic (Unchanged)
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Normalize today to midnight
-
+  today.setHours(0, 0, 0, 0); 
   const startDate = new Date(batch.startDate);
-  startDate.setHours(0, 0, 0, 0); // Normalize start date to midnight
-
-  // Check if today is on or after the start date
+  startDate.setHours(0, 0, 0, 0); 
   const isDateReady = today.getTime() >= startDate.getTime();
-  
-  // Disable if: 
-  // 1. Currently updating 
-  // 2. It is an UPCOMING batch AND the date is not ready yet
   const isActionDisabled = isUpdating || (batch.isUpcoming && !isDateReady);
 
-  // Dynamic Label
   let buttonLabel = batch.isLive ? "End Batch" : "Make Live";
   if (isUpdating) buttonLabel = "Updating...";
-  // Optional: Show when it starts if disabled
   else if (batch.isUpcoming && !isDateReady) buttonLabel = `Live on ${startDate.toLocaleDateString()}`;
 
   return (
@@ -356,21 +351,14 @@ const BatchCard = ({ batch, isDark, onStatusUpdate }) => {
         </div>
       </div>
 
-      <div className="space-y-2 flex-grow mb-6" >
+      <div className="space-y-2 flex-grow mb-6">
         <p className="text-sm flex items-center gap-2 opacity-80">
-            <span className="capitalize font-semibold">{batch.cohort}</span> •
-            <span className="capitalize font-semibold">{batch.level}</span> •
-            <span className="capitalize">
-                {batch.type === "C"
-                ? "Society"
-                : batch.type === "I"
-                ? "Individual"
-                : batch.type === "S"
-                ? "School"
-                : batch.type}
-            </span>
+          <span className="capitalize font-semibold">{batch.cohort}</span> • 
+          <span className="capitalize font-semibold">{batch.level}</span> • 
+          <span className="capitalize">
+            {batch.type === "C" ? "Society" : batch.type === "I" ? "Individual" : batch.type === "S" ? "School" : batch.type}
+          </span>
         </p>
-
         <p className="text-sm flex items-center gap-2 opacity-70">
           <FaMapMarkerAlt /> {batch.classLocation} ({batch.cityCode})
         </p>
@@ -399,7 +387,7 @@ const BatchCard = ({ batch, isDark, onStatusUpdate }) => {
   );
 };
 
-// --- Main Page Component ---
+// --- Main Page Component (Unchanged) ---
 const AdminBatchesPage = () => {
   const { isDark } = useOutletContext();
   const [batches, setBatches] = useState([]);
