@@ -20,6 +20,8 @@ import TeacherStudentsPage from './TeacherPages/TeachersStudentListPage.jsx'
 import AdminStudentPromptHistory from './AdminPages/AdminSpecificStudentHistory.jsx'
 import TeacherStudentPromptHistory from './TeacherPages/TeacherSpecificStudentHistory.jsx'
 import StudentAskToAIPage from './StudentPages/StudentAskToAIPage.jsx'
+import AdminBatchesPage from './AdminPages/AdminBatchesPage.jsx'
+import AdminBatchWeekPage from './AdminPages/AdminBatchWeekPage.jsx'
 
 
 
@@ -49,13 +51,16 @@ function App() {
               <Route path="invitation" element={<AdminNewInvitationsPage />} />
 
 
+              <Route path="batches" element={<  AdminBatchesPage  />} />
+
+              <Route path="batches/:batchId" element={<  AdminBatchWeekPage  />} />
 
 
 
               <Route path="teacher" element={<AdminListAllTeacherPage />} />
               <Route path="student" element={<AdminStudentPage />} />
               <Route path="student/:studentId" element={< AdminStudentPromptHistory />    } />
-    </Route>
+      </Route>
 
 
 

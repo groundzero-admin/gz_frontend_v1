@@ -26,7 +26,7 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
 
   const sidebarLinks = [
     { to: "/admin/dashboard/request", icon: <FaRegLightbulb />, label: "Requests" },
-    { to: "/admin/dashboard/course", icon: <FaBook />, label: "Courses" },
+    { to: "/admin/dashboard/batches", icon: <FaBook />, label: "Batches" },
     { to: "/admin/dashboard/teacher", icon: <FaChalkboardTeacher />, label: "Teachers" },
     { to: "/admin/dashboard/student", icon: <FaUserGraduate />, label: "Students" },
     { to: "/admin/dashboard/invitation", icon: <FaEnvelopeOpenText />, label: "Invitations" },

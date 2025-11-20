@@ -49,6 +49,25 @@ export const getStudentHistoryPath = `${BASE_URL}/studenthistory`;
 export const getMyChildHistoryPath = `${BASE_URL}/parent/mychildhistory`;
 
 
+export const listAllBatchesPath = `${BASE_URL}/admin/listallbatches`;
+export const updateBatchStatusPath = `${BASE_URL}/admin/updatebatchstatus`;
+export const createBatchPath = `${BASE_URL}/admin/createCourse`; // Note: Backend uses 'createCourse' route for batches
+
+
+
+export const getWeeksForBatchPath = `${BASE_URL}/admin/weekinforabatch`;
+export const createBatchWeekPath = `${BASE_URL}/admin/createbatchweek`;
+
+export const linkStudentToBatchPath = `${BASE_URL}/admin/linkstudentinabatch`;
+
+
+export const getStudentsInBatchPath = `${BASE_URL}/admin/getstudentsinbatch`;
+
+
+
+
+
+
 // --- whoami ---
 export const whoami = async () => {
   try {
@@ -553,5 +572,175 @@ export const askGeneralQuestion = async (threadId, promptText) => {
   } catch (error) {
     console.error("Ask General Question error:", error);
     return { success: false, message: "Network error asking question." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * ADMIN: Fetches all active (Live/Upcoming) batches.
+ */
+export const listAllActiveBatches = async () => {
+  try {
+    const response = await fetch(listAllBatchesPath, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("List Batches error:", error);
+    return { success: false, message: "Network error fetching batches." };
+  }
+};
+
+/**
+ * ADMIN: Updates the status of a batch (UPCOMING -> LIVE -> ENDED).
+ * @param {string} batchId - The human-readable ID (e.g. "SP-A-C-01")
+ * @param {string} status - "LIVE" or "ENDED"
+ */
+export const updateBatchStatus = async (batchId, status) => {
+  try {
+    const response = await fetch(updateBatchStatusPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ batchId, status }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Update Batch Status error:", error);
+    return { success: false, message: "Network error updating status." };
+  }
+};
+
+/**
+ * ADMIN: Creates a new batch.
+ * @param {object} batchData - Form data
+ */
+export const createBatch = async (batchData) => {
+  try {
+    const response = await fetch(createBatchPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(batchData),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Create Batch error:", error);
+    return { success: false, message: "Network error creating batch." };
+  }
+};
+
+
+
+
+
+/**
+ * ADMIN: Fetches all weeks for a specific batch.
+ * @param {string} batch_obj_id - The MongoDB _id of the batch
+ */
+export const getWeeksForBatch = async (batch_obj_id) => {
+  try {
+    // Using query param as per your backend controller
+    const response = await fetch(`${getWeeksForBatchPath}?batch_obj_id=${batch_obj_id}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Get Weeks error:", error);
+    return { success: false, message: "Network error fetching weeks." };
+  }
+};
+
+/**
+ * ADMIN: Creates a new week for a batch.
+ */
+export const createBatchWeek = async (formData) => {
+  try {
+    const response = await fetch(createBatchWeekPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(formData),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Create Week error:", error);
+    return { success: false, message: "Network error creating week." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * ADMIN: Links a student (by GZST number) to a batch (by Batch ID).
+ */
+export const linkStudentToBatch = async (batchId, student_number) => {
+  try {
+    const response = await fetch(linkStudentToBatchPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ batchId, student_number }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Link Student error:", error);
+    return { success: false, message: "Network error linking student." };
+  }
+};
+
+
+
+
+
+/**
+ * ADMIN: Fetches all students linked to a specific batch.
+ * @param {string} batch_obj_id - The MongoDB _id of the batch
+ */
+export const getStudentsInBatch = async (batch_obj_id) => {
+  try {
+    const response = await fetch(`${getStudentsInBatchPath}?batch_obj_id=${batch_obj_id}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Get Students in Batch error:", error);
+    return { success: false, message: "Network error fetching students." };
   }
 };
