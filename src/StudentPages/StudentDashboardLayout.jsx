@@ -210,7 +210,7 @@ const Navbar = ({ userData, onToggleSidebar, isDark }) => (
         <h3 className="font-bold text-lg">
           Welcome, {userData.username}!
           <span className="text-sm font-medium ml-2" style={{ color: 'var(--accent-teal)'}}>
-            ({userData.role})
+            ({userData.student_number})
           </span>
         </h3>
       </div>
@@ -254,6 +254,10 @@ const StudentLayout = () => {
           correctRole: response.data.role,
           message: response.message,
         })
+
+ 
+
+
       } else {
         setAuthStatus({
           isLoading: false,
@@ -308,6 +312,7 @@ const StudentLayout = () => {
       </FullPageMessage>
     )
   }
+
 
   // --- RENDER 3: Authorized State ---
   return (

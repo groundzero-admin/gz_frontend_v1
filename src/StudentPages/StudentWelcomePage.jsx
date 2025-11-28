@@ -219,6 +219,17 @@ const StudentDashboardPage = () => {
                     value={todayStr}
                   />
 
+                   <InfoPill 
+                  isDark={isDark}
+                  icon={<FaClock />}
+                  label="Timings"
+                  value={
+                    batchInfo.startTime 
+                      ? `${batchInfo.startTime} - ${batchInfo.endTime}` 
+                      : "N/A"
+                  }
+                />
+
                   {/* 3. TIMINGS */}
                   <InfoPill 
                     isDark={isDark}
