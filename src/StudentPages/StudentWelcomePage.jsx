@@ -85,6 +85,7 @@ const StudentDashboardPage = () => {
       const response = await getTodaysLiveBatchInfo(selectedBatchId);
       if (response.success) {
         setBatchInfo(response.data);
+
       }
       setIsLoadingInfo(false);
     };
@@ -234,11 +235,11 @@ const StudentDashboardPage = () => {
                   <InfoPill 
                     isDark={isDark}
                     icon={<FaClock />}
-                    label="Timings"
+                    label="Location"
                     value={
-                      batchInfo.startTime 
-                        ? `${batchInfo.startTime} - ${batchInfo.endTime}` 
-                        : "N/A"
+                      batchInfo.classLocation 
+                        ?   batchInfo.classLocation 
+                        : "--"
                     }
                   />
 
