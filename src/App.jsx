@@ -22,6 +22,8 @@ import TeacherStudentPromptHistory from './TeacherPages/TeacherSpecificStudentHi
 import StudentAskToAIPage from './StudentPages/StudentAskToAIPage.jsx'
 import AdminBatchesPage from './AdminPages/AdminBatchesPage.jsx'
 import AdminBatchWeekPage from './AdminPages/AdminBatchWeekPage.jsx'
+import StudentMyBatches from './StudentPages/StudentMyBatches.jsx'
+import StudentAllBatchesPage from './StudentPages/StudentAllBatches.jsx'
 
 
 
@@ -70,6 +72,8 @@ function App() {
               {/* Default page at /admin/dashboard */}
               <Route index element={< StudentWelcomePage />} /> 
               <Route path="asktoai" element={< StudentAskToAIPage />} />
+              <Route path = "mybatches" element={ <StudentMyBatches/>     } />
+              <Route path = "allbatches" element={ <StudentAllBatchesPage/>     } />
     </Route>
 
 

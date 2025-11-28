@@ -114,12 +114,20 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen }) => {
         />
         {/* --- 2. CORRECTED "MY COURSES" LINK --- */}
         <SidebarLink 
-          to="/student/dashboard/course" 
+          to="/student/dashboard/mybatches" 
           icon={<FaBook />} 
-          label="My Courses" 
-          isActive={isActive("/student/dashboard/course")}
+          label="My Batches" 
+          isActive={isActive("/student/dashboard/mybatches")}
           isDark={isDark}
         />
+
+          <SidebarLink 
+            to="/student/dashboard/allbatches" 
+            icon={<FaBook />} 
+            label="All Batches" 
+            isActive={isActive("/student/dashboard/allbatches")}
+            isDark={isDark}
+          />
 
          <SidebarLink 
           to="/student/dashboard/asktoai" 
@@ -130,10 +138,10 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen }) => {
         />
 
         <SidebarLink 
-          to="/student/dashboard/practice" 
+          to="/student/dashboard/replit" 
           icon={<FaPencilAlt />} 
-          label="Practice" 
-          isActive={isActive("/student/dashboard/practice")}
+          label="Replit" 
+          isActive={isActive("/student/dashboard/replit")}
           isDark={isDark}
         />
         <SidebarLink 
@@ -290,7 +298,7 @@ const StudentLayout = () => {
           </button>
         ) : (
           <button
-            onClick={() => navigate("/auth")}
+            onClick={() => navigate("/login")}
             className="px-6 py-3 rounded-xl font-bold text-lg text-white"
             style={{ background: "linear-gradient(90deg, var(--accent-teal), var(--accent-purple))" }}
           >

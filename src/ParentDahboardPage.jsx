@@ -297,7 +297,7 @@ const ParentDashboardPage = () => {
           </button>
         ) : (
           <button
-            onClick={() => navigate("/auth")}
+            onClick={() => navigate("/login")}
             className="px-6 py-3 rounded-xl font-bold text-lg text-white"
             style={{ background: "linear-gradient(90deg, var(--accent-teal), var(--accent-purple))" }}
           >

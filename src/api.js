@@ -65,8 +65,14 @@ export const getStudentsInBatchPath = `${BASE_URL}/admin/getstudentsinbatch`;
 
 
 
+export const getMyLiveBatchesPath = `${BASE_URL}/student/mylivebatchlist`;
+export const getTodaysLiveBatchInfoPath = `${BASE_URL}/student/todayslivebatchinfo`;
 
 
+export const getMyEnrolledBatchesPath = `${BASE_URL}/student/myenrolledbatches`;
+export const getWeeksForBatchStudentPath = `${BASE_URL}/student/weeksinfoofbatch`;
+
+export const getAllBatchesForStudentPath = `${BASE_URL}/student/getallbatches`;
 
 // --- whoami ---
 export const whoami = async () => {
@@ -742,5 +748,113 @@ export const getStudentsInBatch = async (batch_obj_id) => {
   } catch (error) {
     console.error("Get Students in Batch error:", error);
     return { success: false, message: "Network error fetching students." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+export const getMyLiveBatches = async () => {
+  try {
+    const response = await fetch(getMyLiveBatchesPath, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // Sends student auth cookie
+    });
+    return await response.json(); // Returns { success, data: [{ batchId, batch_obj_id }, ...] }
+  } catch (error) {
+    console.error("Get My Live Batches error:", error);
+    return { success: false, message: "Network error fetching batches." };
+  }
+};
+
+/**
+ * (STUDENT) Fetches today's class info for a specific batch.
+ */
+export const getTodaysLiveBatchInfo = async (batch_obj_id) => {
+  try {
+    const response = await fetch(getTodaysLiveBatchInfoPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ batch_obj_id }),
+    });
+    return await response.json(); // Returns { success, data: { hasClassToday, calculatedWeek, ... } }
+  } catch (error) {
+    console.error("Get Today's Batch Info error:", error);
+    return { success: false, message: "Network error fetching batch info." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export const getMyEnrolledBatches = async () => {
+  try {
+    const response = await fetch(getMyEnrolledBatchesPath, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Get My Enrolled Batches error:", error);
+    return { success: false, message: "Network error fetching batches." };
+  }
+};
+
+/**
+ * (STUDENT) Fetches the weeks/schedule for a specific batch.
+ * @param {string} batch_obj_id - The MongoDB _id of the batch
+ */
+export const getWeeksForBatchStudent = async (batch_obj_id) => {
+  try {
+    const response = await fetch(`${getWeeksForBatchStudentPath}?batch_obj_id=${batch_obj_id}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Get Weeks for Batch Student error:", error);
+    return { success: false, message: "Network error fetching batch weeks." };
+  }
+};
+
+
+
+export const getAllBatchesForStudent = async () => {
+  try {
+    const response = await fetch(getAllBatchesForStudentPath, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json(); // Returns { success, data: [{ ..., amIEnrolled: true/false }] }
+  } catch (error) {
+    console.error("Get All Batches for Student error:", error);
+    return { success: false, message: "Network error fetching batches." };
   }
 };

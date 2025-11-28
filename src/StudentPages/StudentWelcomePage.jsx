@@ -1,154 +1,292 @@
-import React from 'react';
-import { useOutletContext, Link } from 'react-router-dom';
-import { FaBook, FaPencilAlt, FaCalendarAlt, FaQuestionCircle } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { useOutletContext, useNavigate } from 'react-router-dom'; 
+import { 
+  FaCalendarAlt, 
+  FaClock, 
+  FaMapMarkerAlt, 
+  FaChalkboardTeacher, 
+  FaRocket, 
+  FaLightbulb, 
+  FaBolt 
+} from 'react-icons/fa';
 
-// --- Reusable Quick Action Card ---
-const QuickActionCard = ({ to, icon, title, description, isDark }) => (
-  <Link
-    to={to}
-    className="p-6 rounded-2xl border flex items-center gap-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+import { getMyLiveBatches, getTodaysLiveBatchInfo } from '../api.js';
+
+// --- Helper: Batch Selection Chip ---
+const BatchChip = ({ label, isSelected, onClick, isDark }) => (
+  <button
+    onClick={onClick}
+    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300 border
+      ${isSelected 
+        ? 'bg-[var(--accent-purple)] text-white border-[var(--accent-purple)] shadow-md scale-105' 
+        : 'bg-transparent hover:bg-opacity-10 hover:bg-gray-500'
+      }
+    `}
     style={{
-      backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
-      borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
-      backdropFilter: "blur(10px)"
+      borderColor: isSelected ? 'var(--accent-purple)' : `var(${isDark ? "--border-dark" : "--border-light"})`,
+      color: isSelected ? 'white' : `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`,
     }}
   >
-    <span 
-      className="flex-shrink-0 flex items-center justify-center w-16 h-16 rounded-full"
-      style={{ 
-        backgroundColor: `var(${isDark ? "--bg-dark" : "rgba(0,0,0,0.03)"})`,
-      }}
+    {label}
+  </button>
+);
+
+// --- Helper: Info Pill ---
+const InfoPill = ({ icon, label, value, isDark }) => (
+  <div 
+    className="flex flex-col p-3 rounded-xl border"
+    style={{
+      backgroundColor: `var(${isDark ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.5)"})`,
+      borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
+    }}
+  >
+    <div className="flex items-center gap-2 mb-1 text-[10px] font-bold uppercase tracking-wider opacity-70" 
+      style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}
     >
-      {icon}
-    </span>
-    <div>
-      <h3 className="text-xl font-bold mb-1">{title}</h3>
-      <p style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}>
-        {description}
-      </p>
+      {icon} {label}
     </div>
-  </Link>
+    <div className="text-base font-bold">{value}</div>
+  </div>
 );
-
-// --- Welcome SVG Illustration ---
-const WelcomeSVG = ({ isDark }) => (
-  <svg viewBox="0 0 200 180" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="student-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="var(--accent-teal)" />
-        <stop offset="100%" stopColor="var(--accent-purple)" />
-      </linearGradient>
-    </defs>
-    
-    {/* Book */}
-    <path 
-      d="M160,150 L160,30 C160,20 150,10 140,10 L70,10 C50,10 40,20 40,40 L40,160 C40,170 50,180 60,180 L140,180 C150,180 160,170 160,160" 
-      fill={`var(${isDark ? "--card-dark" : "--bg-light"})`} 
-      stroke="url(#student-grad)" 
-      strokeWidth="6"
-    />
-    {/* Page line */}
-    <line 
-      x1="45" y1="35" x2="155" y2="35" 
-      stroke={`var(${isDark ? "--border-dark" : "--border-light"})`} 
-      strokeWidth="3"
-    />
-    <line 
-      x1="45" y1="165" x2="155" y2="165" 
-      stroke={`var(${isDark ? "--border-dark" : "--border-light"})`} 
-      strokeWidth="3"
-    />
-    {/* Bookmark */}
-    <path 
-      d="M70,10 L70,50 L85,35 L100,50 L100,10" 
-      fill="url(#student-grad)"
-      stroke="url(#student-grad)"
-      strokeWidth="2"
-    />
-  </svg>
-);
-
 
 const StudentDashboardPage = () => {
-  // Get userData and isDark from the parent layout
-  const { isDark, userData } = useOutletContext();
+  const { isDark } = useOutletContext();
+  const navigate = useNavigate();
+
+  // State
+  const [liveBatches, setLiveBatches] = useState([]);
+  const [selectedBatchId, setSelectedBatchId] = useState(null);
+  const [batchInfo, setBatchInfo] = useState(null);
+  const [isLoadingBatches, setIsLoadingBatches] = useState(true);
+  const [isLoadingInfo, setIsLoadingInfo] = useState(false);
+
+  // Fetch Live Batches
+  useEffect(() => {
+    const fetchBatches = async () => {
+      setIsLoadingBatches(true);
+      const response = await getMyLiveBatches();
+      if (response.success) {
+        setLiveBatches(response.data);
+        if (response.data.length > 0) {
+          setSelectedBatchId(response.data[0].batch_obj_id);
+        }
+      }
+      setIsLoadingBatches(false);
+    };
+    fetchBatches();
+  }, []);
+
+  // Fetch Batch Info
+  useEffect(() => {
+    if (!selectedBatchId) return;
+
+    const fetchInfo = async () => {
+      setIsLoadingInfo(true);
+      const response = await getTodaysLiveBatchInfo(selectedBatchId);
+      if (response.success) {
+        setBatchInfo(response.data);
+      }
+      setIsLoadingInfo(false);
+    };
+    fetchInfo();
+  }, [selectedBatchId]);
+
+  // Helper: Current batch name
+  const getSelectedBatchName = () => {
+    const batch = liveBatches.find(b => b.batch_obj_id === selectedBatchId);
+    return batch ? batch.batchId : "Unknown Batch";
+  };
+
+  // --- Format Today's Date ---
+  const todayStr = new Date().toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    weekday: 'short'
+  });
+
+  // --- Format Next Class Date ---
+  const nextClassValue = batchInfo?.nextClassDate
+    ? (isNaN(new Date(batchInfo.nextClassDate).getTime())
+        ? "Update Soon"
+        : new Date(batchInfo.nextClassDate).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            weekday: 'short'
+          })
+      )
+    : "Update Soon";
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* --- Main Welcome Card --- */}
+    <div className="flex flex-col gap-5 pb-10">
+      
+      {/* --- Welcome Banner --- */}
       <div 
-        className="p-8 rounded-2xl border flex flex-col md:flex-row items-center justify-between overflow-hidden"
+        className="relative rounded-3xl overflow-hidden p-6 md:p-8 text-white shadow-xl"
         style={{
-          backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
-          borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          minHeight: '180px'
         }}
       >
-        <div className="z-10">
-          <h1 className="text-4xl font-bold mb-3">
-            Hello, {userData.username}!
-          </h1>
-          <p className="text-lg mb-8" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}>
-            Welcome back. Let's get started on your next lesson.
-          </p>
-          <div className="flex items-center gap-4">
-            <Link 
-              to="/student/dashboard/practice"
-              className="px-6 py-3 rounded-xl font-bold text-lg text-white"
-              style={{
-                background: "linear-gradient(90deg, var(--accent-teal), var(--accent-purple))"
-              }}
-            >
-              Start Practice
-            </Link>
-            <Link 
-              to="/student/dashboard/doubts"
-              className="px-6 py-3 rounded-xl font-bold text-lg"
-              style={{
-                backgroundColor: `var(${isDark ? "--border-dark" : "rgba(0,0,0,0.05)"})`,
-              }}
-            >
-              Ask a Doubt
-            </Link>
-          </div>
-        </div>
-        <div className="w-48 h-48 mt-8 md:mt-0 z-10">
-          <WelcomeSVG isDark={isDark} />
+        <h1 className="text-3xl font-extrabold mb-1">Welcome to Ground Zero</h1>
+        <p className="text-sm opacity-90 italic mb-4">
+          "The future belongs to those who believe in the beauty of their dreams."
+        </p>
+
+        <div className="flex flex-wrap gap-2">
+          <span className="px-3 py-1 rounded-full bg-white/20 text-[10px] font-bold flex items-center gap-2">
+            <FaRocket /> Building Future Leaders
+          </span>
+          <span className="px-3 py-1 rounded-full bg-white/20 text-[10px] font-bold flex items-center gap-2">
+            <FaLightbulb /> Innovation First
+          </span>
+          <span className="px-3 py-1 rounded-full bg-white/20 text-[10px] font-bold flex items-center gap-2">
+            <FaBolt /> Your Journey Starts Here
+          </span>
         </div>
       </div>
 
-      {/* --- Quick Action Cards --- */}
-      <h2 className="text-2xl font-bold">Your Quick Links</h2>
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* --- 3. UPDATED THIS CARD'S LINK --- */}
-        <QuickActionCard 
-          to="/student/dashboard/course" 
-          icon={<FaBook className="text-3xl text-[var(--accent-purple)]" />} 
-          title="My Courses"
-          description="View all your enrolled courses and progress."
-          isDark={isDark}
-        />
-        <QuickActionCard 
-          to="/student/dashboard/practice" 
-          icon={<FaPencilAlt className="text-3xl text-[var(--accent-teal)]" />} 
-          title="Practice Zone"
-          description="Hone your skills with interactive exercises."
-          isDark={isDark}
-        />
-        <QuickActionCard 
-          to="/student/dashboard/schedules" 
-          icon={<FaCalendarAlt className="text-3xl text-orange-400" />} 
-          title="Class Schedules"
-          description="See your upcoming classes and events."
-          isDark={isDark}
-        />
-        <QuickActionCard 
-          to="/student/dashboard/doubts" 
-          icon={<FaQuestionCircle className="text-3xl text-blue-400" />} 
-          title="Doubt Solver"
-          description="Get help from teachers and our AI assistant."
-          isDark={isDark}
-        />
+      {/* --- Batch Selection --- */}
+      <div>
+        <h2 className="text-sm font-bold uppercase tracking-wide opacity-70 mb-2">My Live Batches</h2>
+
+        {isLoadingBatches ? (
+          <p className="opacity-50 text-sm">Loading batches...</p>
+        ) : liveBatches.length === 0 ? (
+          <p className="opacity-50 italic text-sm">You are not enrolled in any batches.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {liveBatches.map(batch => (
+              <BatchChip
+                key={batch.batch_obj_id}
+                label={batch.batchId}
+                isDark={isDark}
+                isSelected={selectedBatchId === batch.batch_obj_id}
+                onClick={() => setSelectedBatchId(batch.batch_obj_id)}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* --- Active Batch Card --- */}
+      {selectedBatchId && (
+        <div 
+          className="rounded-3xl border p-1 overflow-hidden transition-all flex-grow"
+          style={{
+            backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
+            borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
+          }}
+        >
+          <div className="p-6 relative h-full flex flex-col">
+
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <FaBolt className="text-[var(--accent-teal)] text-lg" />
+                  <h2 className="text-2xl font-extrabold">{getSelectedBatchName()}</h2>
+                </div>
+              </div>
+
+              <div className="px-3 py-1 rounded-lg border text-[10px] font-bold uppercase"
+                style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`}}
+              >
+                {batchInfo?.hasClassToday ? "Class Today" : "No Class Today"}
+              </div>
+            </div>
+
+            {isLoadingInfo ? (
+              <div className="py-10 text-center opacity-50 text-sm">
+                Loading schedule details...
+              </div>
+            ) : batchInfo ? (
+              <>
+                {/* --- Updated Order --- */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+
+                  {/* 1. CURRENT WEEK */}
+                  <InfoPill 
+                    isDark={isDark}
+                    icon={<FaCalendarAlt />}
+                    label="Current Week"
+                    value={`Week ${batchInfo.calculatedWeek || "N/A"}`}
+                  />
+
+                  {/* 2. TODAY (DATE + DAY) */}
+                  <InfoPill 
+                    isDark={isDark}
+                    icon={<FaChalkboardTeacher />}
+                    label="Today"
+                    value={todayStr}
+                  />
+
+                  {/* 3. TIMINGS */}
+                  <InfoPill 
+                    isDark={isDark}
+                    icon={<FaClock />}
+                    label="Timings"
+                    value={
+                      batchInfo.startTime 
+                        ? `${batchInfo.startTime} - ${batchInfo.endTime}` 
+                        : "N/A"
+                    }
+                  />
+
+                  {/* 4. NEXT CLASS DATE (ALWAYS) */}
+                  <InfoPill 
+                    isDark={isDark}
+                    icon={<FaMapMarkerAlt />}
+                    label="Next Class"
+                    value={nextClassValue}
+                  />
+
+                </div>
+
+                {/* --- Topic Section --- */}
+                <div 
+                  className="p-4 rounded-2xl border mb-6 flex-grow"
+                  style={{
+                    backgroundColor: `var(${isDark ? "--bg-dark" : "rgba(0,0,0,0.02)"})`,
+                    borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
+                  }}
+                >
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest mb-1 text-[var(--accent-purple)]">
+                    Learning Focus
+                  </h4>
+                  <h3 className="text-xl font-bold mb-1">
+                    {batchInfo.weekTitle || "No topic scheduled"}
+                  </h3>
+                  <p className="opacity-70 text-sm max-w-3xl line-clamp-2">
+                    {batchInfo.weekDescription || "Check back later for details."}
+                  </p>
+                </div>
+
+                {/* --- Action Buttons --- */}
+                <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+                  <button 
+                    className="flex-1 py-3 rounded-xl font-bold text-sm text-white shadow-lg transition"
+                    style={{ background: "linear-gradient(90deg,#8B5CF6,#6D28D9)" }}
+                    onClick={() => navigate("asktoai")}
+                  >
+                    ✨ Open AI Chat
+                  </button>
+                  <button 
+                    className="flex-1 py-3 rounded-xl font-bold text-sm border"
+                    style={{ 
+                      borderColor: 'var(--accent-teal)', 
+                      color: 'var(--accent-teal)',
+                    }}
+                    onClick={() => alert("Opening Replit...")}
+                  >
+                    Build with Replit →
+                  </button>
+                </div>
+              </>
+            ) : (
+              <p className="text-center opacity-50 text-sm">Select a batch to view details.</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
