@@ -25,6 +25,8 @@ import StudentMyBatches from './StudentPages/StudentMyBatches.jsx'
 import StudentAllBatchesPage from './StudentPages/StudentAllBatches.jsx'
 import TeacherAllLiveBatchesPage from './TeacherPages/TeacherAllBatchesPage.jsx'
 import TeacherSpecificBatchDetailPage from './TeacherPages/TeacherSpecificBatchDetails.jsx'
+import StudentDoubtsPage from './StudentPages/StudentDoubtPage.jsx'
+import TeacherDoubtsPage from './TeacherPages/TeacherDoubts.jsx'
 
 
 
@@ -75,6 +77,7 @@ function App() {
               <Route path="asktoai" element={< StudentAskToAIPage />} />
               <Route path = "mybatches" element={ <StudentMyBatches/>     } />
               <Route path = "allbatches" element={ <StudentAllBatchesPage/>     } />
+              <Route path = "doubts" element={ <StudentDoubtsPage/>     } />
     </Route>
 
 
@@ -86,6 +89,7 @@ function App() {
               
               <Route path="batches" element={<  TeacherAllLiveBatchesPage />} />
               <Route path="batches/:batchId" element={<  TeacherSpecificBatchDetailPage  />} />
+              <Route path="doubts" element={<  TeacherDoubtsPage  />} />
 
            
 

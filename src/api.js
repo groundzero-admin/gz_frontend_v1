@@ -78,6 +78,13 @@ export const getTodaysLiveBatchesForTeacherPath = `${BASE_URL}/teacher/todaysliv
 export const getBatchDetailsForTeacherPath = `${BASE_URL}/teacher/batchdetails`;
 
 
+export const raiseDoubtPath = `${BASE_URL}/student/raisedoubt`;
+export const getMyDoubtsPath = `${BASE_URL}/student/mydoubts`  ;
+
+
+
+export const getUnresolvedDoubtsPath = `${BASE_URL}/teacher/unresolveddoubts`; // Assuming this route name based on your controller
+export const resolveDoubtPath = `${BASE_URL}/teacher/resolvedoubt`;
 
 
 // --- whoami ---
@@ -913,5 +920,98 @@ export const getBatchDetailsForTeacher = async (batch_obj_id) => {
   } catch (error) {
     console.error("Get Batch Details (Teacher) error:", error);
     return { success: false, message: "Network error fetching batch details." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * (STUDENT) Raises a new doubt for a specific batch.
+ */
+export const raiseDoubt = async (batchId, doubt_content) => {
+  try {
+    const response = await fetch(raiseDoubtPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ batchId, doubt_content }),
+    });
+    return await response.json(); 
+  } catch (error) {
+    console.error("Raise Doubt error:", error);
+    return { success: false, message: "Network error raising doubt." };
+  }
+};
+
+/**
+ * (STUDENT) Fetches all doubts raised by the student.
+ */
+export const getMyDoubts = async () => {
+  try {
+    const response = await fetch(getMyDoubtsPath, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return await response.json(); 
+  } catch (error) {
+    console.error("Get My Doubts error:", error);
+    return { success: false, message: "Network error fetching doubts." };
+  }
+};
+
+
+
+
+
+
+export const getUnresolvedDoubts = async (batchId = "") => {
+  try {
+    const url = batchId 
+      ? `${getUnresolvedDoubtsPath}?batchId=${batchId}` 
+      : getUnresolvedDoubtsPath;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // Sends teacher auth cookie
+    });
+    return await response.json(); // Returns { success, data: [...] }
+  } catch (error) {
+    console.error("Get Unresolved Doubts error:", error);
+    return { success: false, message: "Network error fetching doubts." };
+  }
+};
+
+/**
+ * (TEACHER) Marks a doubt as resolved.
+ * @param {string} doubtId - The ID of the doubt to resolve.
+ */
+export const resolveDoubt = async (doubtId) => {
+  try {
+    const response = await fetch(resolveDoubtPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ doubtId }),
+    });
+    return await response.json(); // Returns { success, message, data: ... }
+  } catch (error) {
+    console.error("Resolve Doubt error:", error);
+    return { success: false, message: "Network error resolving doubt." };
   }
 };
