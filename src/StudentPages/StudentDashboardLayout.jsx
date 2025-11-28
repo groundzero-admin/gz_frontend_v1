@@ -210,7 +210,7 @@ const Navbar = ({ userData, onToggleSidebar, isDark }) => (
         <h3 className="font-bold text-lg">
           Welcome, {userData.username}!
           <span className="text-sm font-medium ml-2" style={{ color: 'var(--accent-teal)'}}>
-            ({userData.student_number})
+            ({userData.user_number})
           </span>
         </h3>
       </div>

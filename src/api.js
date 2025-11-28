@@ -37,9 +37,6 @@ export const askGeneralQuestionPath = `${BASE_URL}/student/askq`;
 
 
 //// for teacher to getch his studnts
-export const listMyStudentsPath = `${BASE_URL}/teacher/listmystudent`;
-
-
 
 
 
@@ -73,6 +70,15 @@ export const getMyEnrolledBatchesPath = `${BASE_URL}/student/myenrolledbatches`;
 export const getWeeksForBatchStudentPath = `${BASE_URL}/student/weeksinfoofbatch`;
 
 export const getAllBatchesForStudentPath = `${BASE_URL}/student/getallbatches`;
+
+export const getLiveBatchInfoTeacherPath = `${BASE_URL}/teacher/getlivebatchinfo`;
+export const getTodaysLiveBatchesForTeacherPath = `${BASE_URL}/teacher/todayslivebatchinfo`  ;
+
+
+export const getBatchDetailsForTeacherPath = `${BASE_URL}/teacher/batchdetails`;
+
+
+
 
 // --- whoami ---
 export const whoami = async () => {
@@ -412,35 +418,6 @@ export const getAllStudentDetails = async () => {
 
 
 
-
-
-export const listMyStudents = async () => {
-  try {
-    const response = await fetch(listMyStudentsPath, {
-      method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json' 
-      },
-      credentials: 'include', // Sends teacher's auth cookie
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      // Handles 401, 403, 500 errors
-      return data; 
-    }
-    
-    // Returns { success: true, message: "...", data: [...] }
-    return data;
-    
-  } catch (error) {
-    console.error("List My Students error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not fetch students." 
-    };
-  }
-};
 
 
 
@@ -856,5 +833,85 @@ export const getAllBatchesForStudent = async () => {
   } catch (error) {
     console.error("Get All Batches for Student error:", error);
     return { success: false, message: "Network error fetching batches." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * (TEACHER) Fetches a list of live batches (minor details for buttons).
+ */
+export const getLiveBatchInfoTeacherMinor = async () => {
+  try {
+    // Fetch 'minor' details as requested
+    const response = await fetch(`${getLiveBatchInfoTeacherPath}?details=minor`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json(); // Returns { success, data: [{ _id, batchId }, ...] }
+  } catch (error) {
+    console.error("Get Live Batch Info (Teacher) error:", error);
+    return { success: false, message: "Network error fetching live batches." };
+  }
+};
+
+/**
+ * (TEACHER) Fetches today's schedule for ALL live batches.
+ */
+export const getTodaysLiveBatchesForTeacher = async () => {
+  try {
+    const response = await fetch(getTodaysLiveBatchesForTeacherPath, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json(); // Returns { success, data: [{ batchId, classLocation, ... }, ...] }
+  } catch (error) {
+    console.error("Get Today's Live Batches (Teacher) error:", error);
+    return { success: false, message: "Network error fetching schedule." };
+  }
+};
+
+
+
+
+export const getLiveBatchInfoTeacherMajor = async () => {
+  try {
+    const response = await fetch(`${getLiveBatchInfoTeacherPath}?details=major`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json(); // Returns { success, data: [ ...fullBatchInfo ] }
+  } catch (error) {
+    console.error("Get Live Batch Major Info error:", error);
+    return { success: false, message: "Network error fetching live batches." };
+  }
+};
+
+
+
+
+export const getBatchDetailsForTeacher = async (batch_obj_id) => {
+  try {
+    const response = await fetch(`${getBatchDetailsForTeacherPath}?batch_obj_id=${batch_obj_id}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // Sends teacher's auth cookie
+    });
+    return await response.json(); // Returns { success, data: { weeks: [], students: [] } }
+  } catch (error) {
+    console.error("Get Batch Details (Teacher) error:", error);
+    return { success: false, message: "Network error fetching batch details." };
   }
 };

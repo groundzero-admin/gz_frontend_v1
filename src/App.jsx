@@ -13,17 +13,18 @@ import AdminListAllTeacherPage from './AdminPages/Admin_List_All_Teachers.jsx'
 import StudentLayout from './StudentPages/StudentDashboardLayout.jsx'
 import StudentWelcomePage from './StudentPages/StudentWelcomePage.jsx'
 import AdminStudentPage from './AdminPages/Admin_List_All_Students.jsx'
-import TeacherLayout from './TeacherPages/TeacherDashboardPage.jsx'
+import TeacherLayout from './TeacherPages/TeacherDashboard_layoutPage.jsx'
 import TeacherWelcome from './TeacherPages/TeacherWelcome.jsx'
 
-import TeacherStudentsPage from './TeacherPages/TeachersStudentListPage.jsx'
+
 import AdminStudentPromptHistory from './AdminPages/AdminSpecificStudentHistory.jsx'
-import TeacherStudentPromptHistory from './TeacherPages/TeacherSpecificStudentHistory.jsx'
 import StudentAskToAIPage from './StudentPages/StudentAskToAIPage.jsx'
 import AdminBatchesPage from './AdminPages/AdminBatchesPage.jsx'
 import AdminBatchWeekPage from './AdminPages/AdminBatchWeekPage.jsx'
 import StudentMyBatches from './StudentPages/StudentMyBatches.jsx'
 import StudentAllBatchesPage from './StudentPages/StudentAllBatches.jsx'
+import TeacherAllLiveBatchesPage from './TeacherPages/TeacherAllBatchesPage.jsx'
+import TeacherSpecificBatchDetailPage from './TeacherPages/TeacherSpecificBatchDetails.jsx'
 
 
 
@@ -83,10 +84,12 @@ function App() {
               {/* Default page at /admin/dashboard */}
               <Route index element={< TeacherWelcome />} /> 
               
+              <Route path="batches" element={<  TeacherAllLiveBatchesPage />} />
+              <Route path="batches/:batchId" element={<  TeacherSpecificBatchDetailPage  />} />
+
            
 
-              <Route path="students" element={< TeacherStudentsPage />} />
-               <Route path="students/:studentId" element={< TeacherStudentPromptHistory />    } />
+              
     </Route>
 
 

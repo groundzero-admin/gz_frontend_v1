@@ -127,19 +127,13 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
           isDark={isDark}
         />
         <SidebarLink
-          to="/teacher/dashboard/course"
+          to="/teacher/dashboard/batches"
           icon={<FaBook />}
-          label="My Courses"
-          isActive={isActive("/teacher/dashboard/course")}
+          label="Batches"
+          isActive={isActive("/teacher/dashboard/batches")}
           isDark={isDark}
         />
-        <SidebarLink
-          to="/teacher/dashboard/students"
-          icon={<FaUsers />}
-          label="My Students"
-          isActive={isActive("/teacher/dashboard/students")}
-          isDark={isDark}
-        />
+      
         <SidebarLink
           to="/teacher/dashboard/doubts"
           icon={<FaQuestionCircle />}
@@ -215,7 +209,7 @@ const Navbar = ({ userData, onToggleSidebar, isDark }) => (
             className="text-sm font-medium ml-2"
             style={{ color: "var(--accent-teal)" }}
           >
-            ({userData.role})
+            ({userData.user_number})
           </span>
         </h3>
       </div>
