@@ -909,7 +909,7 @@ export const getLiveBatchInfoTeacherMajor = async () => {
 
 
 
-export const getBatchDetailsForTeacher = async (batch_obj_id) => {
+export const getBatchAndSessionDetailsForTeacher = async (batch_obj_id) => {
   try {
     const response = await fetch(`${getBatchDetailsForTeacherPath}?batch_obj_id=${batch_obj_id}`, {
       method: 'GET',
