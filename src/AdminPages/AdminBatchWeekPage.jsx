@@ -1,70 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext, useParams, useNavigate, useLocation } from 'react-router-dom';
-import { FaArrowLeft, FaPlus, FaCalendarWeek, FaTimes, FaUserPlus, FaUserGraduate, FaEnvelope, FaPhone } from "react-icons/fa";
-// --- UPDATED IMPORT: Added getStudentsInBatch ---
-import { getWeeksForBatch, createBatchWeek, linkStudentToBatch, getStudentsInBatch } from "../api.js";
+import { 
+  FaArrowLeft, 
+  FaPlus, 
+  FaCalendarAlt, 
+  FaClock, 
+  FaTimes, 
+  FaUserPlus, 
+  FaUserGraduate, 
+  FaMapMarkerAlt, 
+  FaVideo,
+  FaPhone,
+  FaEdit
+} from "react-icons/fa";
+// Import the new session functions including the update function
+import { 
+  getSessionsForBatch, 
+  createSession, 
+  linkStudentToBatch, 
+  getStudentsInBatch, 
+  updateSessionDetails 
+} from "../api.js";
 
-// --- Helper: Day Selector (Unchanged) ---
-const DaySelector = ({ selectedDays, onChange, isDark }) => {
-  const days = [
-    { label: 'M', value: 1, full: 'Monday' },
-    { label: 'T', value: 2, full: 'Tuesday' },
-    { label: 'W', value: 3, full: 'Wednesday' },
-    { label: 'T', value: 4, full: 'Thursday' },
-    { label: 'F', value: 5, full: 'Friday' },
-    { label: 'S', value: 6, full: 'Saturday' },
-    { label: 'S', value: 7, full: 'Sunday' },
-  ];
-
-  const toggleDay = (value) => {
-    if (selectedDays.includes(value)) {
-      onChange(selectedDays.filter(d => d !== value));
-    } else {
-      onChange([...selectedDays, value].sort());
-    }
-  };
-
-  return (
-    <div className="mb-4">
-      <label className="block text-sm font-medium mb-2">Class Days</label>
-      <div className="flex gap-2">
-        {days.map((day) => {
-          const isSelected = selectedDays.includes(day.value);
-          return (
-            <button
-              key={day.value}
-              type="button"
-              onClick={() => toggleDay(day.value)}
-              title={day.full}
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all
-                ${isSelected 
-                  ? "bg-[var(--accent-teal)] text-white shadow-md scale-110" 
-                  : `border opacity-70 hover:opacity-100`
-                }
-              `}
-              style={{
-                borderColor: isSelected ? 'transparent' : `var(${isDark ? "--border-dark" : "--border-light"})`,
-                color: isSelected ? 'white' : `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`,
-                backgroundColor: isSelected ? undefined : 'transparent'
-              }}
-            >
-              {day.label}
-            </button>
-          );
-        })}
-      </div>
-      {selectedDays.length === 0 && <p className="text-xs text-red-400 mt-1">Select at least one day</p>}
-    </div>
-  );
-};
-
-// --- Helper: Time Picker (Unchanged) ---
+// --- Helper: Time Picker ---
 const TimePicker = ({ label, value, onChange, isDark }) => {
   const parseTime = (val) => {
-    if (!val) return { h: "12", m: "00", p: "PM" };
+    if (!val) return { h: "10", m: "00", p: "AM" };
     const [timePart, periodPart] = val.split(' ');
     const [h, m] = timePart.split(':');
-    return { h, m, p: periodPart || "PM" };
+    return { h, m, p: periodPart || "AM" };
   };
 
   const [timeState, setTimeState] = useState(parseTime(value));
@@ -72,6 +36,11 @@ const TimePicker = ({ label, value, onChange, isDark }) => {
   useEffect(() => {
     onChange(`${timeState.h}:${timeState.m} ${timeState.p}`);
   }, [timeState]);
+
+  // Update local state if the external value changes (for editing mode)
+  useEffect(() => {
+    setTimeState(parseTime(value));
+  }, [value]);
 
   const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
   const minutes = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0')); 
@@ -113,7 +82,104 @@ const TimePicker = ({ label, value, onChange, isDark }) => {
   );
 };
 
-// --- Add Student Modal (Unchanged) ---
+// --- Helper: Smart Calendar (Updated with MinDate) ---
+const SmartCalendar = ({ label, value, onChange, isDark, minDate }) => {
+  const today = new Date();
+  const initialDate = value ? new Date(value) : (minDate ? new Date(minDate) : today);
+  const [viewDate, setViewDate] = useState(initialDate);
+  
+  // Sync view when external value changes (for edit mode)
+  useEffect(() => {
+    if(value) setViewDate(new Date(value));
+  }, [value]);
+
+  const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']; 
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+  const currentYear = today.getFullYear();
+  const years = Array.from({ length: 6 }, (_, i) => currentYear + i);
+
+  const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
+  const handleDateClick = (day) => {
+    const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+    const offset = newDate.getTimezoneOffset(); 
+    const adjustedDate = new Date(newDate.getTime() - (offset*60*1000)); 
+    onChange(adjustedDate.toISOString().split('T')[0]);
+  };
+
+  const isSelectable = (day) => {
+    if (!day) return false;
+    
+    // Create date object for the specific day in the grid
+    const checkDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+    checkDate.setHours(0,0,0,0);
+
+    // Check against minDate (Batch Start Date)
+    if (minDate) {
+      const min = new Date(minDate);
+      min.setHours(0,0,0,0);
+      if (checkDate < min) return false;
+    }
+    
+    return true;
+  };
+
+  const isSelected = (day) => {
+    if (!value) return false;
+    const checkDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+    const valueDate = new Date(value);
+    return checkDate.toDateString() === valueDate.toDateString();
+  };
+
+  const daysInMonth = getDaysInMonth(viewDate.getFullYear(), viewDate.getMonth());
+  const firstDay = getFirstDayOfMonth(viewDate.getFullYear(), viewDate.getMonth());
+  const blanks = Array(firstDay).fill(null);
+  const totalSlots = [...blanks, ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
+
+  return (
+    <div className="mb-4">
+      <label className="block text-sm font-medium mb-2">{label}</label>
+      <div className="p-3 rounded-lg border max-w-[280px]" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`, backgroundColor: `var(${isDark ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.02)"})` }}>
+        <div className="flex gap-2 mb-2">
+          <select value={viewDate.getMonth()} onChange={(e) => setViewDate(new Date(viewDate.getFullYear(), parseInt(e.target.value), 1))} className="flex-1 px-1 py-1 rounded border bg-transparent text-xs font-medium" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`, color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
+            {months.map((m, i) => <option key={i} value={i}>{m}</option>)}
+          </select>
+          <select value={viewDate.getFullYear()} onChange={(e) => setViewDate(new Date(parseInt(e.target.value), viewDate.getMonth(), 1))} className="w-20 px-1 py-1 rounded border bg-transparent text-xs font-medium" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`, color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
+            {years.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+        <div className="grid grid-cols-7 mb-1 text-center">
+          {days.map(d => <span key={d} className="text-[10px] font-bold opacity-60 uppercase">{d}</span>)}
+        </div>
+        <div className="grid grid-cols-7 gap-1 place-items-center">
+          {totalSlots.map((day, index) => {
+            if (!day) return <div key={`blank-${index}`} className="h-7 w-7" />;
+            const selectable = isSelectable(day);
+            const selected = isSelected(day);
+            return (
+              <button 
+                key={day} 
+                type="button" 
+                disabled={!selectable}
+                onClick={() => handleDateClick(day)} 
+                className={`h-7 w-7 rounded-full flex items-center justify-center text-xs transition 
+                  ${selectable ? 'hover:bg-[var(--accent-purple)] hover:text-white cursor-pointer' : 'opacity-20 cursor-not-allowed'} 
+                  ${selected ? 'bg-[var(--accent-teal)] text-white font-bold shadow-sm scale-110' : ''}`} 
+                style={{ color: !selectable ? `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` : undefined }}
+              >
+                {day}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Add Student Modal ---
 const AddStudentModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId }) => {
   const [studentNumber, setStudentNumber] = useState("");
   const [batchIdInput, setBatchIdInput] = useState(batchStringId || "");
@@ -144,20 +210,9 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId }) =
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(5px)" }}>
-      <div 
-        className="relative w-full max-w-md p-6 rounded-2xl border"
-        style={{
-          backgroundColor: `var(${isDark ? "--bg-dark" : "--bg-light"})`,
-          borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
-          color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`
-        }}
-      >
+      <div className="relative w-full max-w-md p-6 rounded-2xl border" style={{ backgroundColor: `var(${isDark ? "--bg-dark" : "--bg-light"})`, borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`, color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
         <button onClick={onClose} className="absolute top-5 right-5 text-lg opacity-70 hover:opacity-100"><FaTimes /></button>
-        
-        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-          <FaUserPlus /> Add Student to Batch
-        </h2>
-        
+        <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><FaUserPlus /> Add Student</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
            {!batchStringId && (
             <div>
@@ -165,26 +220,13 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId }) =
               <input type="text" value={batchIdInput} onChange={(e) => setBatchIdInput(e.target.value)} className="w-full px-3 py-2 rounded-lg border" style={inputStyle} required placeholder="e.g. SP-A-C-01" />
             </div>
           )}
-          
           <div>
             <label className="block text-sm font-medium mb-1">Student Number</label>
-            <input 
-              type="text" 
-              value={studentNumber} 
-              onChange={(e) => setStudentNumber(e.target.value.toUpperCase())} 
-              className="w-full px-3 py-2 rounded-lg border" 
-              style={inputStyle} 
-              required 
-              placeholder="e.g. GZST001" 
-            />
-            <p className="text-xs mt-1 opacity-60">Enter the unique student ID (auto-capitalized).</p>
+            <input type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value.toUpperCase())} className="w-full px-3 py-2 rounded-lg border" style={inputStyle} required placeholder="e.g. GZST001" />
           </div>
-
           <div className="flex justify-end gap-4 mt-6">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg font-semibold border text-sm" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="px-4 py-2 rounded-lg font-semibold text-white text-sm" style={{ background: "linear-gradient(90deg, var(--accent-teal), var(--accent-purple))", opacity: isSubmitting ? 0.7 : 1 }}>
-              {isSubmitting ? "Adding..." : "Add Student"}
-            </button>
+            <button type="submit" disabled={isSubmitting} className="px-4 py-2 rounded-lg font-semibold text-white text-sm" style={{ background: "linear-gradient(90deg, var(--accent-teal), var(--accent-purple))", opacity: isSubmitting ? 0.7 : 1 }}>{isSubmitting ? "Adding..." : "Add Student"}</button>
           </div>
         </form>
       </div>
@@ -192,24 +234,41 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId }) =
   );
 };
 
-// --- Create Week Modal (Unchanged) ---
-const CreateWeekModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId }) => {
+// --- Session Modal (Handles Create AND Edit) ---
+const SessionModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId, editingSession, batchType, minDate }) => {
   const [formData, setFormData] = useState({
-    week_number: '',
+    session_number: '',
     title: '',
     description: '',
-    class_days: [],
+    date: '',
     startTime: '10:00 AM',
     endTime: '11:00 AM',
+    meetingLinkOrLocation: '',
     batchIdInput: batchStringId || '' 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Populate form if editing
   useEffect(() => {
-    if (batchStringId) {
-      setFormData(prev => ({...prev, batchIdInput: batchStringId}));
+    if (editingSession) {
+      setFormData({
+        session_number: editingSession.session_number || '',
+        title: editingSession.title || '',
+        description: editingSession.description || '',
+        date: editingSession.date ? new Date(editingSession.date).toISOString().split('T')[0] : '',
+        startTime: editingSession.startTime || '10:00 AM',
+        endTime: editingSession.endTime || '11:00 AM',
+        meetingLinkOrLocation: editingSession.meetingLinkOrLocation || '',
+        batchIdInput: batchStringId || ''
+      });
+    } else {
+      // Reset for creation if modal opens without editingSession
+      setFormData(prev => ({
+        ...prev,
+        title: '', description: '', date: '', meetingLinkOrLocation: '' 
+      }));
     }
-  }, [batchStringId]);
+  }, [editingSession, isOpen, batchStringId]);
 
   if (!isOpen) return null;
 
@@ -220,32 +279,38 @@ const CreateWeekModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId }) =
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.class_days.length === 0) {
-      alert("Please select class days.");
+    if (!formData.date) {
+      alert("Please select a Date.");
       return;
     }
     if (!formData.batchIdInput) {
-      alert("Batch ID is missing. Please enter it manually.");
+      alert("Batch ID is missing.");
       return;
     }
+
     setIsSubmitting(true);
+    
     const payload = {
       batchId: formData.batchIdInput,
-      week_number: Number(formData.week_number),
+      session_number: Number(formData.session_number),
       title: formData.title,
       description: formData.description,
-      class_days: formData.class_days,
+      date: formData.date,
       startTime: formData.startTime,
-      endTime: formData.endTime
+      endTime: formData.endTime,
+      meetingLinkOrLocation: formData.meetingLinkOrLocation // Optional
     };
-    const success = await onSubmit(payload);
+
+    const success = await onSubmit(payload, editingSession ? true : false); 
+    
     if (success) {
-      setFormData(prev => ({ 
-        ...prev, 
-        week_number: String(Number(prev.week_number) + 1), 
-        title: '', description: '', class_days: [], 
-        startTime: '10:00 AM', endTime: '11:00 AM' 
-      }));
+      if (!editingSession) {
+        setFormData(prev => ({ 
+          ...prev, 
+          session_number: String(Number(prev.session_number) + 1), 
+          title: '', description: '', date: '', meetingLinkOrLocation: '' 
+        }));
+      }
       onClose();
     }
     setIsSubmitting(false);
@@ -256,6 +321,11 @@ const CreateWeekModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId }) =
     backgroundColor: `var(${isDark ? "--bg-dark" : "--bg-light"})`,
     color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`
   };
+
+  // Logic for Dynamic Label
+  const isOffline = (batchType || '').toUpperCase() === 'OFFLINE';
+  const locationLabel = isOffline ? "Class Location" : "Meeting Link";
+  const locationPlaceholder = isOffline ? "e.g. Room 304, Main Building" : "e.g. Google Meet or Zoom Link";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(5px)" }}>
@@ -268,7 +338,10 @@ const CreateWeekModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId }) =
         }}
       >
         <button onClick={onClose} className="absolute top-5 right-5 text-lg opacity-70 hover:opacity-100"><FaTimes /></button>
-        <h2 className="text-xl font-bold mb-6">Add New Week</h2>
+        <h2 className="text-xl font-bold mb-6">
+          {editingSession ? "Edit Session" : "Create New Session"}
+        </h2>
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           {!batchStringId && (
             <div>
@@ -276,29 +349,65 @@ const CreateWeekModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId }) =
               <input type="text" id="batchIdInput" value={formData.batchIdInput} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border" style={inputStyle} required placeholder="e.g. SP-A-C-01" />
             </div>
           )}
+
           <div className="grid grid-cols-4 gap-4">
             <div className="col-span-1">
-              <label className="block text-sm font-medium mb-1">Week #</label>
-              <input type="number" id="week_number" value={formData.week_number} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border" style={inputStyle} required placeholder="1" />
+              <label className="block text-sm font-medium mb-1">Session #</label>
+              <input 
+                type="number" 
+                id="session_number" 
+                value={formData.session_number} 
+                onChange={handleChange} 
+                className="w-full px-3 py-2 rounded-lg border" 
+                style={inputStyle} 
+                required 
+                placeholder="1"
+                disabled={!!editingSession}
+              />
             </div>
             <div className="col-span-3">
-              <label className="block text-sm font-medium mb-1">Week Title</label>
-              <input type="text" id="title" value={formData.title} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border" style={inputStyle} required placeholder="e.g. Intro to Python" />
+              <label className="block text-sm font-medium mb-1">Title</label>
+              <input type="text" id="title" value={formData.title} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border" style={inputStyle} required placeholder="e.g. Intro to Logic" />
             </div>
           </div>
+
           <div>
             <label className="block text-sm font-medium mb-1">Description</label>
-            <textarea id="description" value={formData.description} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border" style={inputStyle} rows="3" placeholder="Topics covered..."></textarea>
+            <textarea id="description" value={formData.description} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border" style={inputStyle} rows="2" placeholder="Topics..."></textarea>
           </div>
-          <DaySelector isDark={isDark} selectedDays={formData.class_days} onChange={(days) => setFormData(prev => ({ ...prev, class_days: days }))} />
-          <div className="grid grid-cols-2 gap-4">
-            <TimePicker label="Start Time" isDark={isDark} value={formData.startTime} onChange={(val) => setFormData(prev => ({...prev, startTime: val}))} />
-            <TimePicker label="End Time" isDark={isDark} value={formData.endTime} onChange={(val) => setFormData(prev => ({...prev, endTime: val}))} />
+
+          <div className="grid grid-cols-2 gap-6">
+            <SmartCalendar 
+               label="Date" isDark={isDark} 
+               value={formData.date} 
+               onChange={(val) => setFormData(prev => ({...prev, date: val}))} 
+               minDate={minDate} // Passed from batch Start Date
+            />
+            <div className="space-y-4">
+              <TimePicker label="Start Time" isDark={isDark} value={formData.startTime} onChange={(val) => setFormData(prev => ({...prev, startTime: val}))} />
+              <TimePicker label="End Time" isDark={isDark} value={formData.endTime} onChange={(val) => setFormData(prev => ({...prev, endTime: val}))} />
+            </div>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              {locationLabel} <span className="opacity-50 font-normal">(Optional)</span>
+            </label>
+            <input 
+              type="text" 
+              id="meetingLinkOrLocation" 
+              value={formData.meetingLinkOrLocation} 
+              onChange={handleChange} 
+              className="w-full px-3 py-2 rounded-lg border" 
+              style={inputStyle} 
+              placeholder={locationPlaceholder}
+            />
+          </div>
+
           <div className="flex justify-end gap-4 mt-6 pt-4 border-t" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>
             <button type="button" onClick={onClose} className="px-5 py-2 rounded-lg font-semibold border text-sm" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>Cancel</button>
             <button type="submit" disabled={isSubmitting} className="px-5 py-2 rounded-lg font-semibold text-white text-sm" style={{ background: "linear-gradient(90deg, var(--accent-teal), var(--accent-purple))", opacity: isSubmitting ? 0.7 : 1 }}>
-              {isSubmitting ? "Saving..." : "Add Week"}
+              {isSubmitting ? "Saving..." : (editingSession ? "Update Session" : "Create Session")}
             </button>
           </div>
         </form>
@@ -307,39 +416,97 @@ const CreateWeekModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId }) =
   );
 };
 
-// --- Week Card (Unchanged) ---
-const WeekCard = ({ week, isDark }) => {
-  const dayMap = { 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat', 7: 'Sun' };
-  const daysString = week.class_days.map(d => dayMap[d]).join(', ');
+// --- Session Card (Updated with OnClick and Hover) ---
 
+const SessionCard = ({ session, isDark, onClick, batchType }) => {
+  const isOnline = batchType?.toUpperCase() === "ONLINE";
+
+      const openGmeet = (e) => {
+        e.stopPropagation();
+
+        const link = session.meetingLinkOrLocation?.trim();
+
+        if (!link) {
+          alert("No meeting link provided.");
+          return;
+        }
+
+        // Check if it's a valid URL
+        if (!link.startsWith("http://") && !link.startsWith("https://")) {
+          alert("Invalid meeting link. Please enter a valid URL (e.g., https://meet.google.com/...).");
+          return;
+        }
+
+        window.open(link, "_blank");
+      };
+
+      
   return (
-    <div 
-      className="p-5 rounded-xl border flex items-start gap-4 transition-all hover:shadow-md h-full"
+    <div
+      onClick={onClick}
+      className="p-5 rounded-xl border flex items-start gap-4 transition-all hover:shadow-lg cursor-pointer h-full relative group"
       style={{
         backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
         borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
       }}
     >
-      <div 
-        className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
-        style={{ backgroundColor: `var(${isDark ? "--bg-dark" : "rgba(0,0,0,0.05)"})`, color: "var(--accent-teal)" }}
-      >
-        {week.week_number}
+      {/* Hover Edit Icon */}
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition text-xs font-bold px-2 py-1 rounded bg-black/10 dark:bg-white/10 flex items-center gap-1">
+        <FaEdit /> Edit
       </div>
+
+      {/* SESSION NUMBER */}
+      <div
+        className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
+        style={{
+          backgroundColor: `var(${isDark ? "--bg-dark" : "rgba(0,0,0,0.05)"})`,
+          color: "var(--accent-teal)",
+        }}
+      >
+        {session.session_number}
+      </div>
+
       <div className="flex-grow">
-        <h3 className="text-lg font-bold">{week.title}</h3>
-        <p className="text-sm mb-3 opacity-80">{week.description}</p>
-        <div className="flex flex-wrap gap-4 text-xs font-medium opacity-70">
-          <div className="flex items-center gap-1">
-            <FaCalendarWeek /> {daysString}
+        <h3 className="text-lg font-bold">{session.title}</h3>
+        <p className="text-sm mb-3 opacity-80 line-clamp-2">{session.description || "No description"}</p>
+
+        <div className="flex flex-col gap-2 text-xs font-medium opacity-70">
+          <div className="flex items-center gap-2">
+            <FaCalendarAlt /> {new Date(session.date).toLocaleDateString()}
           </div>
+
+          <div className="flex items-center gap-2">
+            <FaClock /> {session.startTime} - {session.endTime}
+          </div>
+
+          {/* ONLINE → SHOW GMEET BUTTON */}
+          {isOnline && session.meetingLinkOrLocation && (
+            <button
+              onClick={openGmeet}
+              className="mt-2 px-3 py-1 text-white text-xs font-semibold rounded-md"
+              style={{ backgroundColor: "var(--accent-purple)" }}
+            >
+              Open GMeet
+            </button>
+          )}
+
+          {/* OFFLINE → SHOW MAP + LOCATION */}
+          {!isOnline && session.meetingLinkOrLocation && (
+            <div className="flex items-center gap-2 text-[var(--accent-purple)]">
+              <FaMapMarkerAlt /> {session.meetingLinkOrLocation}
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-// --- NEW: Student Card for this page ---
+
+
+
+
+// --- Student Card (Unchanged) ---
 const BatchStudentCard = ({ student, isDark }) => (
   <div 
     className="p-4 rounded-xl border flex items-center gap-4 transition-all hover:shadow-sm"
@@ -360,47 +527,48 @@ const BatchStudentCard = ({ student, isDark }) => (
       <p className="text-xs opacity-60 flex items-center gap-1 mt-1">
         <FaPhone className="text-[10px]" /> {student.mobile || "N/A"}
       </p>
-      <p className="text-xs opacity-60 truncate">Student number : {student.student_number}</p>
-
+      <p className="text-xs opacity-60 truncate">ID: {student.student_number}</p>
     </div>
   </div>
 );
 
 // --- Main Page ---
-const AdminBatchWeekPage = () => {
+const AdminBatchSessionPage = () => {
   const { isDark } = useOutletContext();
   const { batchId } = useParams(); // MongoDB _id
   const navigate = useNavigate();
   const location = useLocation();
   
-  const batchStringId = location.state?.batchStringId;
-
-  const [weeks, setWeeks] = useState([]);
-  const [students, setStudents] = useState([]); // State for students
+  // Destructure location state with defaults
+  const { batchStringId, batchType, startDate } = location.state || {};
+  
+  const [sessions, setSessions] = useState([]);
+  const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isWeekModalOpen, setIsWeekModalOpen] = useState(false);
+  
+  // Modal State
+  const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
+  const [editingSession, setEditingSession] = useState(null); 
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
 
-  // --- UPDATED FETCH: Fetch both weeks and students ---
   const fetchData = async () => {
     setIsLoading(true);
     
-    // Run both requests in parallel
-    const [weeksRes, studentsRes] = await Promise.all([
-      getWeeksForBatch(batchId),
+    // Fetch Sessions and Students in parallel
+    const [sessionsRes, studentsRes] = await Promise.all([
+      getSessionsForBatch(batchId),
       getStudentsInBatch(batchId)
     ]);
 
-    if (weeksRes.success) {
-      setWeeks(weeksRes.data);
+    if (sessionsRes.success) {
+      setSessions(sessionsRes.data);
     } else {
-      alert(`Error fetching weeks: ${weeksRes.message}`);
+      alert(`Error fetching sessions: ${sessionsRes.message}`);
     }
 
     if (studentsRes.success) {
       setStudents(studentsRes.data);
     } else {
-      // It's okay if there are no students, but log error if it's a failure
       console.error(studentsRes.message);
     }
 
@@ -411,11 +579,29 @@ const AdminBatchWeekPage = () => {
     if (batchId) fetchData();
   }, [batchId]);
 
-  const handleCreateWeek = async (formData) => {
-    const response = await createBatchWeek(formData);
+  // Handle both Create and Update logic
+  const handleSessionSubmit = async (formData, isUpdate) => {
+    let response;
+    
+    if (isUpdate) {
+      if (!editingSession?._id) {
+        alert("Error: Missing session ID for update.");
+        return false;
+      }
+      
+      const updatePayload = {
+        session_obj_id: editingSession._id, 
+        ...formData
+      };
+      
+      response = await updateSessionDetails(updatePayload);
+    } else {
+      response = await createSession(formData);
+    }
+
     alert(response.message);
     if (response.success) {
-      fetchData(); // Reload data
+      fetchData();
       return true;
     }
     return false;
@@ -425,10 +611,20 @@ const AdminBatchWeekPage = () => {
     const response = await linkStudentToBatch(bId, studentNum);
     alert(response.message);
     if (response.success) {
-      fetchData(); // Reload data to show new student
+      fetchData();
       return true;
     }
     return false;
+  };
+
+  const openCreateModal = () => {
+    setEditingSession(null); 
+    setIsSessionModalOpen(true);
+  };
+
+  const openEditModal = (session) => {
+    setEditingSession(session); 
+    setIsSessionModalOpen(true);
   };
 
   return (
@@ -444,13 +640,13 @@ const AdminBatchWeekPage = () => {
             <FaArrowLeft />
           </button>
           <div>
-            <h1 className="text-3xl font-bold">Batch Schedule</h1>
+            <h1 className="text-3xl font-bold">Batch Sessions</h1>
             {batchStringId ? (
               <h2 className="text-2xl font-extrabold mt-1" style={{ color: "var(--accent-teal)" }}>
-                For Batch: {batchStringId}
+                {batchStringId}
               </h2>
             ) : (
-               <p className="text-sm opacity-60">Manage weeks</p>
+               <p className="text-sm opacity-60">Manage sessions</p>
             )}
           </div>
         </div>
@@ -465,11 +661,11 @@ const AdminBatchWeekPage = () => {
           </button>
 
           <button 
-            onClick={() => setIsWeekModalOpen(true)}
+            onClick={openCreateModal}
             className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-white shadow-lg transition hover:scale-105"
             style={{ background: "linear-gradient(90deg, var(--accent-teal), var(--accent-purple))" }}
           >
-            <FaPlus /> Add Week
+            <FaPlus /> Add Session
           </button>
         </div>
       </div>
@@ -479,12 +675,21 @@ const AdminBatchWeekPage = () => {
       ) : (
         <div className="space-y-10">
           
-          {/* --- WEEKS SECTION --- */}
+          {/* --- SESSIONS SECTION --- */}
           <section>
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <FaCalendarAlt className="text-[var(--accent-purple)]" /> Scheduled Sessions
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {weeks.length > 0 ? (
-                weeks.map(week => (
-                  <WeekCard key={week.week_number} week={week} isDark={isDark} />
+              {sessions.length > 0 ? (
+                sessions.map(session => (
+                  <SessionCard 
+                    key={session._id || session.session_number} 
+                    session={session} 
+                    isDark={isDark} 
+                    onClick={() => openEditModal(session)}
+                     batchType={batchType}
+                  />
                 ))
               ) : (
                 <div 
@@ -494,14 +699,14 @@ const AdminBatchWeekPage = () => {
                     backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`
                   }}
                 >
-                  <h3 className="text-xl font-bold mb-2">No Weeks Added</h3>
-                  <p className="opacity-60">Start by adding Week 1 to this batch.</p>
+                  <h3 className="text-xl font-bold mb-2">No Sessions Created</h3>
+                  <p className="opacity-60">Start by adding Session 1 to this batch.</p>
                 </div>
               )}
             </div>
           </section>
 
-          {/* --- NEW: STUDENTS SECTION --- */}
+          {/* --- STUDENTS SECTION --- */}
           <section>
             <div className="flex items-center gap-3 mb-6 border-b pb-4" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>
               <FaUserGraduate className="text-2xl text-[var(--accent-purple)]" />
@@ -525,13 +730,16 @@ const AdminBatchWeekPage = () => {
         </div>
       )}
 
-      {/* Modal for Creating Week */}
-      <CreateWeekModal 
-        isOpen={isWeekModalOpen}
-        onClose={() => setIsWeekModalOpen(false)}
-        onSubmit={handleCreateWeek}
+      {/* Unified Modal for Creating / Editing Session */}
+      <SessionModal 
+        isOpen={isSessionModalOpen}
+        onClose={() => setIsSessionModalOpen(false)}
+        onSubmit={handleSessionSubmit}
         isDark={isDark}
         batchStringId={batchStringId}
+        editingSession={editingSession}
+        batchType={batchType} // Pass for dynamic labels
+        minDate={startDate}   // Pass for date validation
       />
 
       {/* Modal for Adding Student */}
@@ -546,4 +754,4 @@ const AdminBatchWeekPage = () => {
   );
 };
 
-export default AdminBatchWeekPage;
+export default AdminBatchSessionPage;
