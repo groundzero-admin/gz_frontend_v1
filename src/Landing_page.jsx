@@ -28,7 +28,7 @@ const LandingPage = () => {
   const navigate = useNavigate()
   // --- END ADDED STATE & HOOKS ---
 
-  useEffect(() => {
+  useEffect(() => { 
     if (isDark) {
       document.documentElement.classList.add("dark")
     } else {
