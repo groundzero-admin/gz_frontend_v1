@@ -121,13 +121,13 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen }) => {
           isDark={isDark}
         />
 
-          <SidebarLink 
+          {/* <SidebarLink 
             to="/student/dashboard/allbatches" 
             icon={<FaBook />} 
             label="All Batches" 
             isActive={isActive("/student/dashboard/allbatches")}
             isDark={isDark}
-          />
+          /> */}
 
          <SidebarLink 
           to="/student/dashboard/asktoai" 

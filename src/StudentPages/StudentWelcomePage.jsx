@@ -7,7 +7,8 @@ import {
   FaChalkboardTeacher, 
   FaRocket, 
   FaLightbulb, 
-  FaBolt 
+  FaBolt,
+  FaVideo
 } from 'react-icons/fa';
 
 import { getMyLiveBatches, getTodaysLiveBatchInfo } from '../api.js';
@@ -32,7 +33,7 @@ const BatchChip = ({ label, isSelected, onClick, isDark }) => (
 );
 
 // --- Helper: Info Pill ---
-const InfoPill = ({ icon, label, value, isDark }) => (
+const InfoPill = ({ icon, label, value, isDark, isLink }) => (
   <div 
     className="flex flex-col p-3 rounded-xl border"
     style={{
@@ -45,7 +46,13 @@ const InfoPill = ({ icon, label, value, isDark }) => (
     >
       {icon} {label}
     </div>
-    <div className="text-base font-bold">{value}</div>
+    <div className={`text-base font-bold ${isLink ? 'text-blue-500 truncate underline' : ''}`}>
+      {isLink ? (
+        <a href={value} target="_blank" rel="noopener noreferrer">Join Link</a>
+      ) : (
+        value
+      )}
+    </div>
   </div>
 );
 
@@ -55,12 +62,12 @@ const StudentDashboardPage = () => {
 
   // State
   const [liveBatches, setLiveBatches] = useState([]);
-  const [selectedBatchId, setSelectedBatchId] = useState(null);
+  const [selectedBatchId, setSelectedBatchId] = useState(null); // This will store the _id
   const [batchInfo, setBatchInfo] = useState(null);
   const [isLoadingBatches, setIsLoadingBatches] = useState(true);
   const [isLoadingInfo, setIsLoadingInfo] = useState(false);
 
-  // Fetch Live Batches
+  // 1. Fetch Live Batches
   useEffect(() => {
     const fetchBatches = async () => {
       setIsLoadingBatches(true);
@@ -68,7 +75,8 @@ const StudentDashboardPage = () => {
       if (response.success) {
         setLiveBatches(response.data);
         if (response.data.length > 0) {
-          setSelectedBatchId(response.data[0].batch_obj_id);
+          // New controller returns formattedBatches with _id
+          setSelectedBatchId(response.data[0]._id);
         }
       }
       setIsLoadingBatches(false);
@@ -76,46 +84,78 @@ const StudentDashboardPage = () => {
     fetchBatches();
   }, []);
 
-  // Fetch Batch Info
+  // 2. Fetch Batch Info when selectedBatchId changes
   useEffect(() => {
     if (!selectedBatchId) return;
 
     const fetchInfo = async () => {
       setIsLoadingInfo(true);
+      // We pass the selectedBatchId (which corresponds to _id) to the API
+      // API call expects { batch_obj_id: ... } in body, handled by api.js helper
       const response = await getTodaysLiveBatchInfo(selectedBatchId);
+      
       if (response.success) {
         setBatchInfo(response.data);
-
+      } else {
+        // Fallback or error handling
+        setBatchInfo(null);
       }
       setIsLoadingInfo(false);
     };
     fetchInfo();
   }, [selectedBatchId]);
 
-  // Helper: Current batch name
+  // Helper: Get name of currently selected batch
   const getSelectedBatchName = () => {
-    const batch = liveBatches.find(b => b.batch_obj_id === selectedBatchId);
+    const batch = liveBatches.find(b => b._id === selectedBatchId);
     return batch ? batch.batchId : "Unknown Batch";
   };
 
-  // --- Format Today's Date ---
+  // --- Helpers for Display Data ---
+  
+  // Date formatting
   const todayStr = new Date().toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
     weekday: 'short'
   });
 
-  // --- Format Next Class Date ---
-  const nextClassValue = batchInfo?.nextClassDate
-    ? (isNaN(new Date(batchInfo.nextClassDate).getTime())
-        ? "Update Soon"
-        : new Date(batchInfo.nextClassDate).toLocaleDateString(undefined, {
-            month: 'short',
-            day: 'numeric',
-            weekday: 'short'
-          })
-      )
-    : "Update Soon";
+  const nextClassValue = batchInfo?.nextClassDate || "Update Soon";
+
+  // Determine Location Display
+  // Logic: If there is a specific session today, use its location/link. 
+  // Otherwise, fallback to the batch's default location.
+  const getLocationDisplay = () => {
+    if (!batchInfo) return "--";
+    
+    // Check specific session details first
+    if (batchInfo.sessionDetails?.meetingLinkOrLocation) {
+      return batchInfo.sessionDetails.meetingLinkOrLocation;
+    }
+    
+    // Fallback to default (Online or Class Location)
+    return batchInfo.defaultLocation || "N/A";
+  };
+
+  const isLocationUrl = () => {
+    const loc = getLocationDisplay();
+    return loc && (loc.startsWith('http') || loc.startsWith('www'));
+  };
+
+  // Determine Timings
+  const getTimings = () => {
+    if (batchInfo?.sessionDetails?.startTime && batchInfo?.sessionDetails?.endTime) {
+      return `${batchInfo.sessionDetails.startTime} - ${batchInfo.sessionDetails.endTime}`;
+    }
+    return "N/A";
+  };
+
+  // Determine Week/Session Number
+  const getSessionNumber = () => {
+    return batchInfo?.sessionDetails?.session_number 
+      ? `Session ${batchInfo.sessionDetails.session_number}`
+      : "No Class Today";
+  };
 
   return (
     <div className="flex flex-col gap-5 pb-10">
@@ -153,16 +193,16 @@ const StudentDashboardPage = () => {
         {isLoadingBatches ? (
           <p className="opacity-50 text-sm">Loading batches...</p>
         ) : liveBatches.length === 0 ? (
-          <p className="opacity-50 italic text-sm">You are not enrolled in any batches.</p>
+          <p className="opacity-50 italic text-sm">You are not enrolled in any live batches.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {liveBatches.map(batch => (
               <BatchChip
-                key={batch.batch_obj_id}
+                key={batch._id} // Updated: using _id from new controller
                 label={batch.batchId}
                 isDark={isDark}
-                isSelected={selectedBatchId === batch.batch_obj_id}
-                onClick={() => setSelectedBatchId(batch.batch_obj_id)}
+                isSelected={selectedBatchId === batch._id}
+                onClick={() => setSelectedBatchId(batch._id)}
               />
             ))}
           </div>
@@ -188,7 +228,7 @@ const StudentDashboardPage = () => {
                 </div>
               </div>
 
-              <div className="px-3 py-1 rounded-lg border text-[10px] font-bold uppercase"
+              <div className={`px-3 py-1 rounded-lg border text-[10px] font-bold uppercase ${batchInfo?.hasClassToday ? 'bg-green-100 text-green-800 border-green-200' : ''}`}
                 style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`}}
               >
                 {batchInfo?.hasClassToday ? "Class Today" : "No Class Today"}
@@ -201,18 +241,17 @@ const StudentDashboardPage = () => {
               </div>
             ) : batchInfo ? (
               <>
-                {/* --- Updated Order --- */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
 
-                  {/* 1. CURRENT WEEK */}
+                  {/* 1. SESSION NUMBER / WEEK */}
                   <InfoPill 
                     isDark={isDark}
                     icon={<FaCalendarAlt />}
-                    label="Current Week"
-                    value={`Week ${batchInfo.calculatedWeek || "N/A"}`}
+                    label="Current Session"
+                    value={getSessionNumber()}
                   />
 
-                  {/* 2. TODAY (DATE + DAY) */}
+                  {/* 2. TODAY DATE */}
                   <InfoPill 
                     isDark={isDark}
                     icon={<FaChalkboardTeacher />}
@@ -220,37 +259,22 @@ const StudentDashboardPage = () => {
                     value={todayStr}
                   />
 
-                   <InfoPill 
-                  isDark={isDark}
-                  icon={<FaClock />}
-                  label="Timings"
-                  value={
-                    batchInfo.startTime 
-                      ? `${batchInfo.startTime} - ${batchInfo.endTime}` 
-                      : "N/A"
-                  }
-                />
-
                   {/* 3. TIMINGS */}
-                  <InfoPill 
+                   <InfoPill 
                     isDark={isDark}
                     icon={<FaClock />}
-                    label="Location"
-                    value={
-                      batchInfo.classLocation 
-                        ?   batchInfo.classLocation 
-                        : "--"
-                    }
+                    label="Timings"
+                    value={getTimings()}
                   />
 
-                  {/* 4. NEXT CLASS DATE (ALWAYS) */}
+                  {/* 4. LOCATION (Dynamic: Online Link or Physical) */}
                   <InfoPill 
                     isDark={isDark}
-                    icon={<FaMapMarkerAlt />}
-                    label="Next Class"
-                    value={nextClassValue}
+                    icon={isLocationUrl() ? <FaVideo /> : <FaMapMarkerAlt />}
+                    label={batchInfo.batchType === "ONLINE" ? "Meeting Link" : "Location"}
+                    value={getLocationDisplay()}
+                    isLink={isLocationUrl()}
                   />
-
                 </div>
 
                 {/* --- Topic Section --- */}
@@ -261,28 +285,36 @@ const StudentDashboardPage = () => {
                     borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
                   }}
                 >
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest mb-1 text-[var(--accent-purple)]">
-                    Learning Focus
-                  </h4>
+                  <div className="flex justify-between items-start">
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest mb-1 text-[var(--accent-purple)]">
+                      Topic of the Day
+                    </h4>
+                    
+                    {/* Next Class Badge Inside Topic Card */}
+                    <span className="text-[15px] font-mono opacity-100 white bold">
+                      Next: {nextClassValue}
+                    </span>
+                  </div>
+
                   <h3 className="text-xl font-bold mb-1">
-                    {batchInfo.weekTitle || "No topic scheduled"}
+                    {batchInfo.sessionDetails?.title || batchInfo.weekTitle || "No active session topic"}
                   </h3>
                   <p className="opacity-70 text-sm max-w-3xl line-clamp-2">
-                    {batchInfo.weekDescription || "Check back later for details."}
+                    {batchInfo.sessionDetails?.description || batchInfo.weekDescription || "Check back closer to class time for details."}
                   </p>
                 </div>
 
                 {/* --- Action Buttons --- */}
                 <div className="flex flex-col sm:flex-row gap-3 mt-auto">
                   <button 
-                    className="flex-1 py-3 rounded-xl font-bold text-sm text-white shadow-lg transition"
+                    className="flex-1 py-3 rounded-xl font-bold text-sm text-white shadow-lg transition hover:shadow-xl active:scale-95"
                     style={{ background: "linear-gradient(90deg,#8B5CF6,#6D28D9)" }}
                     onClick={() => navigate("asktoai")}
                   >
                     ✨ Open AI Chat
                   </button>
                   <button 
-                    className="flex-1 py-3 rounded-xl font-bold text-sm border"
+                    className="flex-1 py-3 rounded-xl font-bold text-sm border transition hover:bg-[var(--bg-hover)]"
                     style={{ 
                       borderColor: 'var(--accent-teal)', 
                       color: 'var(--accent-teal)',

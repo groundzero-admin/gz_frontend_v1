@@ -62,14 +62,14 @@ export const getMyChildHistoryPath = `${BASE_URL}/parent/mychildhistory`;
 
 
 
-export const getMyLiveBatchesPath = `${BASE_URL}/student/mylivebatchlist`;
-export const getTodaysLiveBatchInfoPath = `${BASE_URL}/student/todayslivebatchinfo`;
+export const getMyLiveBatchesPath = `${BASE_URL}/student/mylivebatches`;
+export const getTodaysLiveBatchInfoPath = `${BASE_URL}/student/gettodaylivebatchinfo`;
 
 
 export const getMyEnrolledBatchesPath = `${BASE_URL}/student/myenrolledbatches`;
-export const getWeeksForBatchStudentPath = `${BASE_URL}/student/weeksinfoofbatch`;
+export const getSessionsForBatchStudentPath = `${BASE_URL}/student/getsessionforabatch`;
 
-export const getAllBatchesForStudentPath = `${BASE_URL}/student/getallbatches`;
+// export const getAllBatchesForStudentPath = `${BASE_URL}/student/getallbatches`;
 
 export const getLiveBatchInfoTeacherPath = `${BASE_URL}/teacher/getlivebatchinfo`;
 export const getTodaysLiveBatchesForTeacherPath = `${BASE_URL}/teacher/todayslivebatchinfo`  ;
@@ -809,13 +809,13 @@ export const getMyEnrolledBatches = async () => {
   }
 };
 
-/**
- * (STUDENT) Fetches the weeks/schedule for a specific batch.
- * @param {string} batch_obj_id - The MongoDB _id of the batch
- */
-export const getWeeksForBatchStudent = async (batch_obj_id) => {
+// /**
+//  * (STUDENT) Fetches the weeks/schedule for a specific batch.
+//  * @param {string} batch_obj_id - The MongoDB _id of the batch
+//  */
+export const getSessiosnForBatchStudent  = async (batch_obj_id) => {
   try {
-    const response = await fetch(`${getWeeksForBatchStudentPath}?batch_obj_id=${batch_obj_id}`, {
+    const response = await fetch(`${getSessionsForBatchStudentPath}?batch_obj_id=${batch_obj_id}`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -829,19 +829,19 @@ export const getWeeksForBatchStudent = async (batch_obj_id) => {
 
 
 
-export const getAllBatchesForStudent = async () => {
-  try {
-    const response = await fetch(getAllBatchesForStudentPath, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-    });
-    return await response.json(); // Returns { success, data: [{ ..., amIEnrolled: true/false }] }
-  } catch (error) {
-    console.error("Get All Batches for Student error:", error);
-    return { success: false, message: "Network error fetching batches." };
-  }
-};
+// export const getAllBatchesForStudent = async () => {
+//   try {
+//     const response = await fetch(getAllBatchesForStudentPath, {
+//       method: 'GET',
+//       headers: { 'Content-Type': 'application/json' },
+//       credentials: 'include',
+//     });
+//     return await response.json(); // Returns { success, data: [{ ..., amIEnrolled: true/false }] }
+//   } catch (error) {
+//     console.error("Get All Batches for Student error:", error);
+//     return { success: false, message: "Network error fetching batches." };
+//   }
+// };
 
 
 
