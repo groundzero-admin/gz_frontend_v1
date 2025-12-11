@@ -27,6 +27,7 @@ import TeacherAllLiveBatchesPage from './TeacherPages/TeacherAllBatchesPage.jsx'
 import TeacherSpecificBatchDetailPage from './TeacherPages/TeacherSpecificBatchDetails.jsx'
 import StudentDoubtsPage from './StudentPages/StudentDoubtPage.jsx'
 import TeacherDoubtsPage from './TeacherPages/TeacherDoubts.jsx'
+import AttendancePage from './AdminPages/AdminAttendance.jsx'
 
 
 
@@ -65,6 +66,9 @@ function App() {
               <Route path="teacher" element={<AdminListAllTeacherPage />} />
               <Route path="student" element={<AdminStudentPage />} />
               <Route path="student/:studentId" element={< AdminStudentPromptHistory />    } />
+
+              <Route path="attendance" element={< AttendancePage />} />
+
       </Route>
 
 
