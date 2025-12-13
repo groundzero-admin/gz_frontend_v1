@@ -233,6 +233,9 @@ const fetchBatches = async () => {
     );
 
     if (res.success) {
+
+       alert(res.message);
+       
       setSessionStudents(prev => prev.map(s => 
         s.student_obj_id === student.student_obj_id 
           ? { ...s, status: newStatus } 

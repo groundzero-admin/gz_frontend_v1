@@ -14,7 +14,13 @@ import {
   FaTimes,
   FaSun,
   FaMoon,
+FaFire
+
+
 } from "react-icons/fa"
+
+
+
 
 import { GiArtificialHive } from "react-icons/gi";
 
@@ -23,6 +29,14 @@ import { useNavigate, Link, Outlet, useLocation } from "react-router-dom"
 // Assuming api.js and color.css are in the parent directory
 import "../color.css" 
 import { checkRole, logout } from "../api.js" 
+
+
+
+const getTotalCredits = (creditArray) => {
+  if (!Array.isArray(creditArray)) return 0;
+  return creditArray.reduce((sum, item) => sum + (item.amount || 0), 0);
+};
+
 
 // --- Helper: Full Page Message (for Auth Errors) ---
 const FullPageMessage = ({ isDark, children }) => (
@@ -190,37 +204,51 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen }) => {
 };
 
 // --- Navbar Component (Unchanged) ---
-const Navbar = ({ userData, onToggleSidebar, isDark }) => (
-  <header
-    className="h-20 fixed top-0 left-0 right-0 flex items-center justify-between px-6 z-20
-      md:left-72
-    "
-    style={{
-      backgroundColor: `var(${isDark ? "rgba(11, 12, 27, 0.8)" : "rgba(248, 249, 250, 0.8)"})`,
-      borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
-      borderBottomWidth: "1px",
-      backdropFilter: "blur(10px)"
-    }}
-  >
-    <div className="flex items-center gap-4">
-      <button onClick={onToggleSidebar} className="p-2 md:hidden">
-        <FaBars className="text-2xl" />
-      </button>
-      <div className="hidden sm:block">
-        <h3 className="font-bold text-lg">
-          Welcome, {userData.username}!
-          <span className="text-sm font-medium ml-2" style={{ color: 'var(--accent-teal)'}}>
-            ({userData.user_number})
-          </span>
-        </h3>
+// --- Navbar Component (Updated for Credit Display) ---
+const Navbar = ({ userData, onToggleSidebar, isDark }) => {
+  const totalCredits = getTotalCredits(userData.credit); // <-- calculate credit sum
+
+  return (
+    <header
+      className="h-20 fixed top-0 left-0 right-0 flex items-center justify-between px-6 z-20
+        md:left-72
+      "
+      style={{
+        backgroundColor: `var(${isDark ? "rgba(11, 12, 27, 0.8)" : "rgba(248, 249, 250, 0.8)"})`,
+        borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
+        borderBottomWidth: "1px",
+        backdropFilter: "blur(10px)"
+      }}
+    >
+      {/* LEFT SIDE */}
+      <div className="flex items-center gap-4">
+        <button onClick={onToggleSidebar} className="p-2 md:hidden">
+          <FaBars className="text-2xl" />
+        </button>
+
+        <div className="hidden sm:block">
+          <h3 className="font-bold text-lg">
+            Welcome, {userData.username}!
+            <span className="text-sm font-medium ml-2" style={{ color: 'var(--accent-teal)'}}>
+              ({userData.user_number})
+            </span>
+          </h3>
+        </div>
       </div>
-    </div>
-    <div className="flex items-center gap-4">
-      <span className="font-bold hidden sm:block">{userData.username}</span>
-      <FaUserCircle className="text-3xl" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}} />
-    </div>
-  </header>
-);
+
+      {/* RIGHT SIDE — CREDIT DISPLAY */}
+      <div className="flex items-center gap-3">
+        <FaRegLightbulb className="text-3xl text-yellow-400 animate-pulse" />
+
+        <div className="text-right">
+          <p className="text-lg font-bold">{totalCredits}</p>
+          <p className="text-sm opacity-80">Credits Left</p>
+        </div>
+      </div>
+    </header>
+  );
+};
+
 
 // --- The Main Layout Component (Unchanged Auth Logic) ---
 const StudentLayout = () => {

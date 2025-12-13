@@ -7,25 +7,26 @@ import {
   FaChevronRight, 
   FaTimes, 
   FaVideo,
-  FaPlayCircle,
   FaClock,
   FaMapMarkerAlt,
-  FaGlobe,
-  FaLaptop
+  FaGlobe
 } from 'react-icons/fa'; 
 
-// Assuming these are your actual imports
+// API helpers (keep your actual function names)
 import { getMyLiveBatches, getSessiosnForBatchStudent } from '../api.js';
+
+/**
+ * StudentMyBatches.jsx
+ * - Shows live/upcoming batch cards
+ * - Clicking a batch opens a modal with sessions
+ * - If backend returns "No Credit" for meetingLinkOrLocation it shows a disabled "Not Enough Credit" button
+ * - Offline sessions show location; online sessions show Join/Upcoming depending on timing and credit
+ */
 
 // --- Helper: Batch Card Component ---
 const BatchCard = ({ batch, isDark, onClick }) => {
-
-  // 1. Determine Status Colors (Live vs Upcoming)
   const statusBg = batch.isLive ? "bg-green-500" : "bg-purple-500";
   const statusLabel = batch.isLive ? "LIVE" : "UPCOMING";
-  const StatusIcon = batch.isLive ? null : FaFire;
-
-  // 2. Determine Type Logic (Online vs Offline)
   const isOnline = batch.batchType === 'ONLINE';
 
   return (
@@ -35,17 +36,14 @@ const BatchCard = ({ batch, isDark, onClick }) => {
       style={{
         backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
         borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
-        minHeight: '280px' // Ensure consistent height
+        minHeight: '280px'
       }}
     >
-      {/* Top Glow */}
       <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${batch.isLive ? 'from-green-400 to-teal-500' : 'from-purple-500 to-pink-500'}`}></div>
 
       <div>
-        {/* Header: Status and Type */}
         <div className="flex justify-between items-start mb-4">
           <div className="flex gap-2">
-            {/* Live/Upcoming Badge */}
             <div 
               className={`flex items-center gap-2 px-3 py-1 rounded-full bg-opacity-10 border border-opacity-20 text-xs font-bold tracking-wider ${statusBg}`}
               style={{ color: "white", borderColor: batch.isLive ? "green" : "purple" }}
@@ -54,16 +52,12 @@ const BatchCard = ({ batch, isDark, onClick }) => {
               {statusLabel}
             </div>
 
-            {/* Online/Offline Badge */}
             <div className={`flex items-center gap-2 px-3 py-1 rounded-full border border-opacity-20 text-xs font-bold tracking-wider ${isOnline ? 'bg-blue-500/10 text-blue-500 border-blue-500' : 'bg-orange-500/10 text-orange-500 border-orange-500'}`}>
                {isOnline ? 'ONLINE' : 'OFFLINE'}
             </div>
           </div>
-
-          {StatusIcon && <StatusIcon className="text-xl text-orange-400" />}
         </div>
 
-        {/* Title */}
         <h3 className="text-xl font-bold mb-1" style={{ color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
           {batch.batchId}
         </h3>
@@ -72,12 +66,10 @@ const BatchCard = ({ batch, isDark, onClick }) => {
           {batch.cohort ? batch.cohort.charAt(0).toUpperCase() + batch.cohort.slice(1) : 'Cohort'} Level • {batch.level ? batch.level.charAt(0).toUpperCase() + batch.level.slice(1) : ''}
         </p>
 
-        {/* Info Grid */}
         <div 
           className="grid grid-cols-2 gap-4 p-4 rounded-xl mb-4"
           style={{ backgroundColor: `var(${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"})` }}
         >
-          {/* Start Date */}
           <div>
             <p className="text-[10px] font-bold uppercase opacity-50 mb-1"
               style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` }}>
@@ -90,7 +82,6 @@ const BatchCard = ({ batch, isDark, onClick }) => {
             </div>
           </div>
 
-          {/* Location Logic - FIX APPLIED HERE */}
           <div>
             <p className="text-[10px] font-bold uppercase opacity-50 mb-1"
               style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` }}>
@@ -98,7 +89,6 @@ const BatchCard = ({ batch, isDark, onClick }) => {
             </p>
             <div className="flex items-start gap-2 text-sm font-medium"
               style={{ color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
-              
               {isOnline ? (
                 <>
                   <FaGlobe className="opacity-70 mt-0.5 text-blue-400" />
@@ -131,7 +121,6 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
   const textColor = isDark ? "var(--text-dark-primary)" : "var(--text-light-primary)";
   const borderColor = isDark ? "var(--border-dark)" : "var(--border-light)";
   const secondaryText = isDark ? "var(--text-dark-secondary)" : "var(--text-light-secondary)";
-
   const isOnlineBatch = batch.batchType === 'ONLINE';
 
   return (
@@ -158,7 +147,6 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
               <span className={`text-sm px-3 py-1 rounded-full border text-white ${batch.isLive ? 'bg-green-500 border-green-500' : 'bg-purple-500 border-purple-500'}`}>
                 {batch.isLive ? 'LIVE' : 'UPCOMING'}
               </span>
-              {/* Added Batch Type Badge to Modal Header */}
               <span className={`text-sm px-3 py-1 rounded-full border ${isOnlineBatch ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-orange-100 text-orange-700 border-orange-200'}`}>
                  {isOnlineBatch ? <FaGlobe className="inline mr-1"/> : <FaMapMarkerAlt className="inline mr-1"/>}
                  {isOnlineBatch ? 'Online' : 'Offline'}
@@ -167,7 +155,6 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
             <p className="text-base mt-2" style={{ color: secondaryText }}>
               {batch.description || "No description available for this batch."}
             </p>
-            {/* Show full location in header if offline */}
             {!isOnlineBatch && (
               <p className="text-sm mt-1 text-orange-400 flex items-center gap-2">
                  <FaMapMarkerAlt /> {batch.classLocation}, {batch.cityCode}
@@ -202,10 +189,29 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
           ) : (
             <div className="space-y-4">
               {sessions.map((session) => {
-                
-                // --- FIX: Logic to check if meeting link is actually a URL ---
+                // normalized fields: topic, start_time, end_time, meeting_link
                 const hasValidLink = session.meeting_link && (session.meeting_link.startsWith('http') || session.meeting_link.startsWith('www'));
-                
+                const noCredit = session.meeting_link === "No Credit";
+
+                // compute one-hour-before logic (only if start_time present and session.date)
+                let linkHidden = false;
+                if (isOnlineBatch && hasValidLink && session.date && session.start_time) {
+                  try {
+                    const sessionStart = new Date(session.date);
+                    const [timeStr, modifier] = session.start_time.split(" ");
+                    let [hours, minutes] = timeStr.split(":").map(Number);
+                    if (modifier === "PM" && hours !== 12) hours += 12;
+                    if (modifier === "AM" && hours === 12) hours = 0;
+                    sessionStart.setHours(hours, minutes, 0, 0);
+                    const oneHourBefore = new Date(sessionStart.getTime() - 60 * 60 * 1000);
+                    const now = new Date();
+                    if (now < oneHourBefore) linkHidden = true;
+                  } catch (e) {
+                    // if parsing fails, default to not hiding
+                    linkHidden = false;
+                  }
+                }
+
                 return (
                   <div 
                     key={session._id}
@@ -225,13 +231,11 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
                       <h4 className="font-bold text-lg">{session.topic || "Untitled Session"}</h4>
                       
                       <div className="flex flex-wrap items-center gap-4 mt-2 text-sm" style={{ color: secondaryText }}>
-                        {/* Date */}
                         <span className="flex items-center gap-1.5">
                             <FaCalendarAlt className="opacity-70" />
                             {session.date ? new Date(session.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : "Date TBA"}
                         </span>
 
-                        {/* Time */}
                         <span className="flex items-center gap-1.5">
                             <FaClock className="opacity-70" />
                             {session.start_time || "--:--"} - {session.end_time || "--:--"}
@@ -241,21 +245,21 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
 
                     {/* Actions */}
                     <div className="flex gap-3 w-full md:w-auto mt-2 md:mt-0">
-                      {/* Recording Link */}
-                      {session.recording_link && (
-                        <a 
-                          href={session.recording_link} 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border transition hover:bg-white/10"
-                          style={{ borderColor: "var(--border-light)", color: textColor }}
+                      {/* ACTION LOGIC:
+                        - If meeting_link === "No Credit" -> show Not Enough Credit (disabled)
+                        - Else if hasValidLink && (not hidden by 1-hour rule) -> Join Class
+                        - Else if offline -> show location (meeting_link used as location)
+                        - Else (online & hidden) -> Upcoming
+                      */}
+                      {noCredit ? (
+                        <button 
+                          disabled
+                          className="flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-semibold border cursor-not-allowed"
+                          style={{ borderColor, color: "red", opacity: 0.9 }}
                         >
-                          <FaPlayCircle className="text-red-500" /> Recording
-                        </a>
-                      )}
-                      
-                      {/* Meeting Link Button Logic */}
-                      {hasValidLink ? (
+                          Not Enough Credit
+                        </button>
+                      ) : (hasValidLink && !linkHidden) ? (
                         <a 
                           href={session.meeting_link} 
                           target="_blank" 
@@ -265,16 +269,15 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
                         >
                           <FaVideo /> Join Class
                         </a>
-                      ) : !isOnlineBatch ? (
-                        // If OFFLINE and no link, show Location indicator instead of Join button
+                      ) : (!isOnlineBatch) ? (
                         <div 
-                          className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border opacity-80"
-                          style={{ borderColor: borderColor, color: secondaryText }}
+                          className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border opacity-90"
+                          style={{ borderColor, color: secondaryText }}
                         >
-                          <FaMapMarkerAlt className="text-orange-500"/> {session.meetingLinkOrLocation}
+                          <FaMapMarkerAlt className="text-orange-500"/> {session.meeting_link || "Location TBA"}
                         </div>
                       ) : (
-                         <button 
+                        <button 
                           disabled 
                           className="flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-semibold border opacity-30 cursor-not-allowed"
                           style={{ borderColor }}
@@ -316,29 +319,23 @@ const StudentMyBatches = () => {
   const [batchSessions, setBatchSessions] = useState([]);
   const [isSessionsLoading, setIsSessionsLoading] = useState(false);
 
-  // 1. Fetch only user's batches (Live & Upcoming)
+  // 1. Fetch user's batches (Live & Upcoming)
   useEffect(() => {
     const fetchBatches = async () => {
       setIsLoading(true);
       try {
         const response = await getMyLiveBatches();
-        
-        // Log to debug if needed
-        // console.log("API Response:", response);
 
         if (response && response.success && Array.isArray(response.data)) {
           const today = new Date();
-
           const normalized = response.data.map(b => {
             const start = new Date(b.startDate);
-            // Ensure we keep existing fields like batchType, classLocation etc
             return {
               ...b,
               isLive: start <= today,
               isUpcoming: start > today
             };
           });
-
           setBatches(normalized);
         } else {
             console.error("Invalid response format", response);
@@ -370,10 +367,12 @@ const StudentMyBatches = () => {
             start_time: s.startTime,          
             end_time: s.endTime,              
             meeting_link: s.meetingLinkOrLocation, 
-            recording_link: s.recordingLink || null
+            // recording removed intentionally per request
           }));
 
           setBatchSessions(normalized);
+        } else {
+          console.error("Invalid sessions response", response);
         }
     } catch (error) {
         console.error("Error fetching sessions:", error);

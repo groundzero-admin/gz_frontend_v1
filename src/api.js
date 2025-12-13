@@ -11,8 +11,8 @@ export const validateInvitePath = `${BASE_URL}/invite-validate`;
 export const onboardUserPath = `${BASE_URL}/onboard`;
 export const checkRolePath = `${BASE_URL}/checkrole`;
 export const logoutPath = `${BASE_URL}/logout`;
-export const getAllRequestsPath = `${BASE_URL}/admin/getallrequest`;
-export const actionRequestPath = `${BASE_URL}/admin/actionrequest`;
+// export const getAllRequestsPath = `${BASE_URL}/admin/getallrequest`;
+// export const actionRequestPath = `${BASE_URL}/admin/actionrequest`;
 export const sendInvitePath = `${BASE_URL}/admin/invite`;
 export const listAllTeachersPath = `${BASE_URL}/admin/listallteachers`; // <-- NEW PATH
 
@@ -219,40 +219,40 @@ export const logout = async (navigate) => {
 /**
  * (ADMIN) Fetches all pending access requests.
  */
-export const getAllAccessRequests = async () => {
-  try {
-    const response = await fetch(getAllRequestsPath, {
-      method: 'GET',
-      credentials: 'include', // Sends admin cookie
-    });
-    return await response.json(); // Returns { success, message, data: [...] }
-  } catch (error) {
-    console.error("Get All Requests error:", error);
-    return { success: false, message: "Network error fetching requests." };
-  }
-};
+// export const getAllAccessRequests = async () => {
+//   try {
+//     const response = await fetch(getAllRequestsPath, {
+//       method: 'GET',
+//       credentials: 'include', // Sends admin cookie
+//     });
+//     return await response.json(); // Returns { success, message, data: [...] }
+//   } catch (error) {
+//     console.error("Get All Requests error:", error);
+//     return { success: false, message: "Network error fetching requests." };
+//   }
+// };
 
 /**
  * (ADMIN) Approves an access request.
  * @param {string} requestId - The _id of the request to approve.
  */
-export const approveAccessRequest = async (requestId) => {
-  try {
-    const response = await fetch(actionRequestPath, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // Sends admin cookie
-      body: JSON.stringify({ 
-        requestId: requestId,
-        action: "allow" 
-      }),
-    });
-    return await response.json(); // Returns { success, message }
-  } catch (error) {
-    console.error("Action Request error:", error);
-    return { success: false, message: "Network error processing action." };
-  }
-};
+// export const approveAccessRequest = async (requestId) => {
+//   try {
+//     const response = await fetch(actionRequestPath, {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       credentials: 'include', // Sends admin cookie
+//       body: JSON.stringify({ 
+//         requestId: requestId,
+//         action: "allow" 
+//       }),
+//     });
+//     return await response.json(); // Returns { success, message }
+//   } catch (error) {
+//     console.error("Action Request error:", error);
+//     return { success: false, message: "Network error processing action." };
+//   }
+// };
 
 
 
@@ -1199,6 +1199,85 @@ export const updateSessionDetails = async (sessionData) => {
     return await handleResponse(response);
   } catch (error) {
     console.error("Error updating session:", error);
+    throw error;
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Fetch the list of new joiners (Orders where credentials aren't sent yet)
+export const getNewJoinersList = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/newjoinneslist`, {
+      method: "GET",
+      credentials: "include",
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    console.error("Error fetching new joiners:", error);
+    throw error;
+  }
+};
+
+// Send credentials to the user
+export const sendCredentials = async (orderId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/send-credentials`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ course_order_id : orderId }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    console.error(`Error sending credentials for order ID ${orderId}:`, error);
+    throw error;
+  }
+};
+
+
+
+
+
+// --- Validate invitation token ---
+export const validateInvitation = async (token) => {
+  try {
+    const response = await fetch(`${BASE_URL}/validate-invitation?token=${token}`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    return await handleResponse(response);
+  } catch (error) {
+    console.error("Error validating token:", error);
+    throw error;
+  }
+};
+
+// --- Complete Student Registration ---
+export const completeRegistration = async (payload) => {
+  try {
+    const response = await fetch(`${BASE_URL}/complete-student-registration`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    return await handleResponse(response);
+  } catch (error) {
+    console.error("Error completing registration:", error);
     throw error;
   }
 };

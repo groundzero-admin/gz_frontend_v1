@@ -28,6 +28,10 @@ import TeacherSpecificBatchDetailPage from './TeacherPages/TeacherSpecificBatchD
 import StudentDoubtsPage from './StudentPages/StudentDoubtPage.jsx'
 import TeacherDoubtsPage from './TeacherPages/TeacherDoubts.jsx'
 import AttendancePage from './AdminPages/AdminAttendance.jsx'
+import BuyCourse from './BuyCourse.jsx'
+import PaymentSuccess from './paymentsuccess.jsx'
+import PaymentFailure from './paymentfailure.jsx'
+import StudentRegistration from './StudentNewOnBoardingPage.jsx'
 
 
 
@@ -39,6 +43,15 @@ function App() {
     <Routes>
       {/* Route for the Landing Page */}
       <Route path="/" element={<Landing_Page />} />
+      <Route path="/buycourse" element={<BuyCourse />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
+      <Route path="/payment-failed" element={< PaymentFailure />} />
+
+      <Route path="/register-student" element={<StudentRegistration />} />
+
+
+
+
       
       {/* Route for the Login/Auth Page */}
       <Route path="/login" element={<AuthPage />} />
