@@ -195,23 +195,32 @@ const StudentAskToAIPage = () => {
   const [threadId, setThreadId] = useState(null);
 
   // Chat activation handler
-  const handleActivateChat = async () => {
-    setIsChatLoading(true);
-    try {
-      // Use the new GENERAL chat setup
-      const setupRes = await setupGeneralChatThread();
-      
-      if (setupRes.success) {
-        setThreadId(setupRes.data.thread_id);
-        setIsChatActive(true); // Show the chatbox
+const handleActivateChat = async () => {
+  setIsChatLoading(true);
+  try {
+    const setupRes = await setupGeneralChatThread();
+
+    // If backend says no credit → show nice UI message
+    if (!setupRes.success) {
+      if (setupRes.message.includes("credit")) {
+        alert("Not enough credit to start the chat."); 
       } else {
         alert(setupRes.message);
       }
-    } catch (error) {
-      alert("An error occurred while setting up the chat.");
+      setIsChatLoading(false);
+      return;
     }
-    setIsChatLoading(false);
-  };
+
+    // Success → open chat
+    setThreadId(setupRes.data.thread_id);
+    setIsChatActive(true);
+
+  } catch (error) {
+    alert("An error occurred while setting up the chat.");
+  }
+  setIsChatLoading(false);
+};
+
 
   return (
     <div>

@@ -180,3 +180,6 @@ const TeacherAllLiveBatchesPage = () => {
 };
 
 export default TeacherAllLiveBatchesPage;
+
+
+

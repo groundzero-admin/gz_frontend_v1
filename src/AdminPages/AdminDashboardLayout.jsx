@@ -13,7 +13,7 @@ import {
   FaBars, // Hamburger
   FaTimes, // Close
   FaSun,
-  FaMoon,
+  FaMoon
 } from "react-icons/fa"
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom"
 import "../color.css" // Your color.css file
@@ -30,7 +30,11 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
     { to: "/admin/dashboard/teacher", icon: <FaChalkboardTeacher />, label: "Teachers" },
     { to: "/admin/dashboard/student", icon: <FaUserGraduate />, label: "Students" },
     { to: "/admin/dashboard/invitation", icon: <FaEnvelopeOpenText />, label: "Invitations" },
+
+    // ✅ NEW ATTENDANCE ROUTE ADDED
+    { to: "/admin/dashboard/attendance", icon: <FaUserGraduate />, label: "Attendance" },
   ]
+
 
   return (
     <>

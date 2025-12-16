@@ -11,21 +11,46 @@ const StudentRow = ({ student, isDark, navigate }) => (
     style={{
       borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
       backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
-      // Remove hover opacity since the button is the main action
     }}
   >
+    {/* Name */}
     <td className="p-4 flex items-center gap-4">
       <FaUserGraduate className="text-[var(--accent-purple)] flex-shrink-0" />
       <span className="font-semibold">{student.username}</span>
     </td>
-    <td className="p-4 text-sm" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}>
+
+    {/* Email */}
+    <td className="p-4 text-sm"
+      style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}
+    >
       {student.email}
     </td>
+
+    {/* Class */}
     <td className="p-4 font-medium text-[var(--accent-teal)]">
-      {student.class}
+      {student.class || "-"}
     </td>
+
+    {/* Student Number */}
+    <td className="p-4 font-bold">
+      {student.student_number}
+    </td>
+
+    {/* Credit */}
     <td className="p-4">
-      {/* --- UPDATED BUTTON --- */}
+      <span 
+        className="px-3 py-1 rounded-lg font-semibold text-sm"
+        style={{
+          backgroundColor: "var(--accent-purple)",
+          color: "white"
+        }}
+      >
+        {student.credit?.total ?? 0}
+      </span>
+    </td>
+
+    {/* Action Button */}
+    <td className="p-4">
       <button 
         onClick={() => navigate(`/admin/dashboard/student/${student._id}`)}
         className="px-4 py-2 rounded-lg text-xs font-semibold text-white transition-all duration-300 hover:opacity-90"
@@ -35,7 +60,6 @@ const StudentRow = ({ student, isDark, navigate }) => (
       >
         View Profile
       </button>
-      {/* --- END UPDATE --- */}
     </td>
   </tr>
 );
@@ -126,10 +150,13 @@ const AdminStudentPage = () => {
                 style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`}}
                 className="border-b"
               >
-                <th className="p-4 w-1/3">Name</th>
-                <th className="p-4 w-1/3">Email</th>
-                <th className="p-4 w-auto">Class</th>
-                <th className="p-4 w-auto">Actions</th>
+              <th className="p-4">Name</th>
+<th className="p-4">Email</th>
+<th className="p-4">Class</th>
+<th className="p-4">Student No.</th>
+<th className="p-4">Credit</th>
+<th className="p-4">Actions</th>
+
               </tr>
             </thead>
             <tbody>

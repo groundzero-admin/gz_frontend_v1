@@ -20,13 +20,18 @@ import TeacherWelcome from './TeacherPages/TeacherWelcome.jsx'
 import AdminStudentPromptHistory from './AdminPages/AdminSpecificStudentHistory.jsx'
 import StudentAskToAIPage from './StudentPages/StudentAskToAIPage.jsx'
 import AdminBatchesPage from './AdminPages/AdminBatchesPage.jsx'
-import AdminBatchWeekPage from './AdminPages/AdminBatchWeekPage.jsx'
+import AdminBatchWeekPage from './AdminPages/AdminBatchSessionPage.jsx'
 import StudentMyBatches from './StudentPages/StudentMyBatches.jsx'
-import StudentAllBatchesPage from './StudentPages/StudentAllBatches.jsx'
+// import StudentAllBatchesPage from './StudentPages/StudentAllBatches.jsx'
 import TeacherAllLiveBatchesPage from './TeacherPages/TeacherAllBatchesPage.jsx'
 import TeacherSpecificBatchDetailPage from './TeacherPages/TeacherSpecificBatchDetails.jsx'
 import StudentDoubtsPage from './StudentPages/StudentDoubtPage.jsx'
 import TeacherDoubtsPage from './TeacherPages/TeacherDoubts.jsx'
+import AttendancePage from './AdminPages/AdminAttendance.jsx'
+import BuyCourse from './BuyCourse.jsx'
+import PaymentSuccess from './paymentsuccess.jsx'
+import PaymentFailure from './paymentfailure.jsx'
+import StudentRegistration from './StudentNewOnBoardingPage.jsx'
 
 
 
@@ -38,6 +43,15 @@ function App() {
     <Routes>
       {/* Route for the Landing Page */}
       <Route path="/" element={<Landing_Page />} />
+      <Route path="/buycourse" element={<BuyCourse />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
+      <Route path="/payment-failed" element={< PaymentFailure />} />
+
+      <Route path="/register-student" element={<StudentRegistration />} />
+
+
+
+
       
       {/* Route for the Login/Auth Page */}
       <Route path="/login" element={<AuthPage />} />
@@ -65,6 +79,9 @@ function App() {
               <Route path="teacher" element={<AdminListAllTeacherPage />} />
               <Route path="student" element={<AdminStudentPage />} />
               <Route path="student/:studentId" element={< AdminStudentPromptHistory />    } />
+
+              <Route path="attendance" element={< AttendancePage />} />
+
       </Route>
 
 
@@ -76,7 +93,7 @@ function App() {
               <Route index element={< StudentWelcomePage />} /> 
               <Route path="asktoai" element={< StudentAskToAIPage />} />
               <Route path = "mybatches" element={ <StudentMyBatches/>     } />
-              <Route path = "allbatches" element={ <StudentAllBatchesPage/>     } />
+              {/* <Route path = "allbatches" element={ <StudentAllBatchesPage/>     } /> */}
               <Route path = "doubts" element={ <StudentDoubtsPage/>     } />
     </Route>
 
