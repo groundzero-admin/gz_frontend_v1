@@ -13,7 +13,7 @@ export const checkRolePath = `${BASE_URL}/checkrole`;
 export const logoutPath = `${BASE_URL}/logout`;
 // export const getAllRequestsPath = `${BASE_URL}/admin/getallrequest`;
 // export const actionRequestPath = `${BASE_URL}/admin/actionrequest`;
-export const sendInvitePath = `${BASE_URL}/admin/invite`;
+// export const sendInvitePath = `${BASE_URL}/admin/invite`;
 export const listAllTeachersPath = `${BASE_URL}/admin/listallteachers`; // <-- NEW PATH
 
 
@@ -261,25 +261,25 @@ export const logout = async (navigate) => {
 
 
 
-export const sendInvite = async (email, role, parentEmails = [], childEmails = []) => {
-  try {
-    const response = await fetch(sendInvitePath, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // Sends admin cookie
-      body: JSON.stringify({ 
-        email, 
-        role, 
-        parentEmails, 
-        childEmails 
-      }),
-    });
-    return await response.json(); // Returns { success, message }
-  } catch (error) {
-    console.error("Send Invite error:", error);
-    return { success: false, message: "Network error sending invite." };
-  }
-};
+// export const sendInvite = async (email, role, parentEmails = [], childEmails = []) => {
+//   try {
+//     const response = await fetch(sendInvitePath, {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       credentials: 'include', // Sends admin cookie
+//       body: JSON.stringify({ 
+//         email, 
+//         role, 
+//         parentEmails, 
+//         childEmails 
+//       }),
+//     });
+//     return await response.json(); // Returns { success, message }
+//   } catch (error) {
+//     console.error("Send Invite error:", error);
+//     return { success: false, message: "Network error sending invite." };
+//   }
+// };
 
 
 

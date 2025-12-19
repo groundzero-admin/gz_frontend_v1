@@ -1,7 +1,15 @@
+////////////////// whole page is useless dummy redeign it pls 
+
+
+
+
+
+
+
 import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { FaEnvelope, FaUsers, FaChevronDown, FaChild, FaUserFriends } from 'react-icons/fa';
-import { sendInvite } from '../api.js';
+// import { sendInvite } from '../api.js';
 
 // --- Reusable Input Component for this form ---
 const FormInput = ({ id, label, icon, placeholder, value, onChange, type = "text", isDark }) => {
@@ -57,18 +65,18 @@ const AdminInvitationsPage = () => {
     const parentEmailsArr = parentEmails.split(',').map(e => e.trim()).filter(Boolean);
     const childEmailsArr = childEmails.split(',').map(e => e.trim()).filter(Boolean);
 
-    const response = await sendInvite(email, role, parentEmailsArr, childEmailsArr);
+    // const response = await sendInvite(email, role, parentEmailsArr, childEmailsArr);
     
-    // All backend responses (400, 409, 200, 500) have a 'message'
-    alert(response.message); 
+    // // All backend responses (400, 409, 200, 500) have a 'message'
+    // alert(response.message); 
 
-    if (response.success) {
-      // Clear form on success
-      setEmail('');
-      setRole('');
-      setParentEmails('');
-      setChildEmails('');
-    }
+    // if (response.success) {
+    //   // Clear form on success
+    //   setEmail('');
+    //   setRole('');
+    //   setParentEmails('');
+    //   setChildEmails('');
+    // }
     setIsLoading(false);
   };
 

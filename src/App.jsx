@@ -5,7 +5,7 @@ import AuthPage from './Login_Page'         // The component you just made
 import InviteOnboardPage from './registration_onboarding.jsx'
 import AdminDashBoardLayout from './AdminPages/AdminDashboardLayout.jsx'
 import AdminWelcomePage from './AdminPages/AdminWelcome.jsx'
-import AdminRequestPage from './AdminPages/AdminLoginRequestPage.jsx'
+import AdminRequestPage from './AdminPages/AdminNewJoineesRequestPage.jsx'
 import AdminNewInvitationsPage from './AdminPages/AdminNewInvitationPage.jsx'
 import ParentDashboardPage from './ParentDahboardPage.jsx'
 import AdminListAllTeacherPage from './AdminPages/Admin_List_All_Teachers.jsx'

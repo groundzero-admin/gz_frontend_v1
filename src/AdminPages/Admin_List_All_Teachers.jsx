@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { FaChalkboardTeacher, FaEnvelope, FaPhone, FaPlus, FaTimes, FaUserPlus } from "react-icons/fa";
 // 1. Import sendInvite (assuming api.js is in the same directory)
-import { listAllTeachers, sendInvite } from "../api.js"; 
+import { listAllTeachers  } from "../api.js"; 
 
 // --- Reusable Input Component for Modal ---
 const ModalInput = ({ id, label, icon, isDark, ...props }) => (
@@ -227,15 +227,15 @@ const AdminTeacherPage = () => {
   // 5. Add submit handler for the modal
   const handleSendInvite = async (email) => {
     // Call the API with email and "teacher" role
-    const response = await sendInvite(email, "teacher");
+    // const response = await sendInvite(email, "teacher");
     
-    alert(response.message); // Show success or error message
+    // alert(response.message); // Show success or error message
     
-    if (response.success) {
-      // You could re-fetch teachers here if you had an
-      // "Invited" status, but for now, just return success.
-      return true;
-    }
+    // if (response.success) {
+    //   // You could re-fetch teachers here if you had an
+    //   // "Invited" status, but for now, just return success.
+    //   return true;
+    // }
     return false; // Tell modal submission failed
   };
 
