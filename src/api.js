@@ -6,7 +6,7 @@ const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL  ;
 // --- Paths (add these) ---
 export const whoamipath = `${BASE_URL}/whoami`;
 export const loginPath = `${BASE_URL}/login`;
-export const requestAccessPath = `${BASE_URL}/requestaccess`;
+// export const requestAccessPath = `${BASE_URL}/requestaccess`;
 export const validateInvitePath = `${BASE_URL}/invite-validate`;
 export const onboardUserPath = `${BASE_URL}/onboard`;
 export const checkRolePath = `${BASE_URL}/checkrole`;
@@ -130,22 +130,22 @@ export const login = async (email, password, navigate) => {
 };
 
 // --- requestAccess ---
-export const requestAccess = async (name, email, role) => {
-  try {
-    const response = await fetch(requestAccessPath, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, role }),
-    });
-    const data = await response.json();
-    alert(data.message);
-    return data.success;
-  } catch (error) {
-    console.error("Request Access error:", error);
-    alert("Request failed: Network error or server is down.");
-    return false;
-  }
-};
+// export const requestAccess = async (name, email, role) => {
+//   try {
+//     const response = await fetch(requestAccessPath, {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ name, email, role }),
+//     });
+//     const data = await response.json();
+//     alert(data.message);
+//     return data.success;
+//   } catch (error) {
+//     console.error("Request Access error:", error);
+//     alert("Request failed: Network error or server is down.");
+//     return false;
+//   }
+// };
 
 // --- validateInvite ---
 export const validateInvite = async (token, role) => {
