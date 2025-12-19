@@ -38,7 +38,7 @@ const FaChevronUpIcon = ({ className }) => (
 );
 // --- End SVG Icons ---
 
-import { getMyDoubts, raiseDoubt, getMyEnrolledBatches } from '../api.js';
+import { getMyDoubts, raiseDoubt, getMyLiveBatches } from '../api.js';
 
 // --- Modal to Raise Doubt ---
 const RaiseDoubtModal = ({ isOpen, onClose, isDark, onDoubtRaised }) => {
@@ -51,7 +51,7 @@ const RaiseDoubtModal = ({ isOpen, onClose, isDark, onDoubtRaised }) => {
   useEffect(() => {
     if (isOpen) {
       const fetchBatches = async () => {
-        const response = await getMyEnrolledBatches();
+        const response = await getMyLiveBatches();
         if (response.success) {
           setBatches(response.data);
           // Select first batch by default

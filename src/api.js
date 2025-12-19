@@ -66,7 +66,7 @@ export const getMyLiveBatchesPath = `${BASE_URL}/student/mylivebatches`;
 export const getTodaysLiveBatchInfoPath = `${BASE_URL}/student/gettodaylivebatchinfo`;
 
 
-export const getMyEnrolledBatchesPath = `${BASE_URL}/student/myenrolledbatches`;
+// export const getMyEnrolledBatchesPath = `${BASE_URL}/student/myenrolledbatches`;
 export const getSessionsForBatchStudentPath = `${BASE_URL}/student/getsessionforabatch`;
 
 // export const getAllBatchesForStudentPath = `${BASE_URL}/student/getallbatches`;
@@ -795,19 +795,19 @@ export const getTodaysLiveBatchInfo = async (batch_obj_id) => {
 
 
 
-export const getMyEnrolledBatches = async () => {
-  try {
-    const response = await fetch(getMyEnrolledBatchesPath, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-    });
-    return await response.json();
-  } catch (error) {
-    console.error("Get My Enrolled Batches error:", error);
-    return { success: false, message: "Network error fetching batches." };
-  }
-};
+// export const getMyEnrolledBatches = async () => {
+//   try {
+//     const response = await fetch(getMyEnrolledBatchesPath, {
+//       method: 'GET',
+//       headers: { 'Content-Type': 'application/json' },
+//       credentials: 'include',
+//     });
+//     return await response.json();
+//   } catch (error) {
+//     console.error("Get My Enrolled Batches error:", error);
+//     return { success: false, message: "Network error fetching batches." };
+//   }
+// };
 
 // /**
 //  * (STUDENT) Fetches the weeks/schedule for a specific batch.
