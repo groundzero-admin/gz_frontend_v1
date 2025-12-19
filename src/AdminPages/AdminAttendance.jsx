@@ -70,7 +70,7 @@ const api = {
 
   markAttendance: async (student_obj_id, session_obj_id, status) => {
     try {
-      const response = await fetch(`${BASE_URL}/teacher/mark-attendance`, {
+      const response = await fetch(`${BASE_URL}/admin/mark-attendance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
