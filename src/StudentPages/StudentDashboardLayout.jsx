@@ -161,7 +161,7 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen }) => {
         <SidebarLink 
           to="/student/dashboard/doubts" 
           icon={<FaQuestionCircle />} 
-          label="Doubts" 
+          label="Reflections" 
           isActive={isActive("/student/dashboard/doubts")}
           isDark={isDark}
         />

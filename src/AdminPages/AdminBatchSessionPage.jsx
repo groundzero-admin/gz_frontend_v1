@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
 import { 
   FaArrowLeft, 
   FaPlus, 
@@ -11,9 +11,14 @@ import {
   FaMapMarkerAlt, 
   FaVideo,
   FaPhone,
-  FaEdit
+  FaEdit,
+  FaLayerGroup,
+  FaChalkboardTeacher,
+  FaExternalLinkAlt,
+  FaCopy,
+  FaCheck
 } from "react-icons/fa";
-// Import the new session functions including the update function
+// Import API functions
 import { 
   getSessionsForBatch, 
   createSession, 
@@ -37,7 +42,6 @@ const TimePicker = ({ label, value, onChange, isDark }) => {
     onChange(`${timeState.h}:${timeState.m} ${timeState.p}`);
   }, [timeState]);
 
-  // Update local state if the external value changes (for editing mode)
   useEffect(() => {
     setTimeState(parseTime(value));
   }, [value]);
@@ -82,13 +86,12 @@ const TimePicker = ({ label, value, onChange, isDark }) => {
   );
 };
 
-// --- Helper: Smart Calendar (Updated with MinDate) ---
+// --- Helper: Smart Calendar ---
 const SmartCalendar = ({ label, value, onChange, isDark, minDate }) => {
   const today = new Date();
   const initialDate = value ? new Date(value) : (minDate ? new Date(minDate) : today);
   const [viewDate, setViewDate] = useState(initialDate);
   
-  // Sync view when external value changes (for edit mode)
   useEffect(() => {
     if(value) setViewDate(new Date(value));
   }, [value]);
@@ -111,18 +114,12 @@ const SmartCalendar = ({ label, value, onChange, isDark, minDate }) => {
 
   const isSelectable = (day) => {
     if (!day) return false;
-    
-    // Create date object for the specific day in the grid
-    const checkDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-    checkDate.setHours(0,0,0,0);
-
-    // Check against minDate (Batch Start Date)
     if (minDate) {
+      const selectedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
       const min = new Date(minDate);
-      min.setHours(0,0,0,0);
-      if (checkDate < min) return false;
+      min.setHours(0, 0, 0, 0);
+      return selectedDate >= min;
     }
-    
     return true;
   };
 
@@ -180,19 +177,14 @@ const SmartCalendar = ({ label, value, onChange, isDark, minDate }) => {
 };
 
 // --- Add Student Modal ---
-const AddStudentModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId }) => {
+const AddStudentModal = ({ isOpen, onClose, onSubmit, isDark }) => {
   const [studentNumber, setStudentNumber] = useState("");
-  const [batchIdInput, setBatchIdInput] = useState(batchStringId || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (batchStringId) setBatchIdInput(batchStringId);
-  }, [batchStringId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const success = await onSubmit(batchIdInput, studentNumber);
+    const success = await onSubmit(studentNumber);
     if (success) {
       setStudentNumber(""); 
       onClose();
@@ -214,12 +206,6 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId }) =
         <button onClick={onClose} className="absolute top-5 right-5 text-lg opacity-70 hover:opacity-100"><FaTimes /></button>
         <h2 className="text-xl font-bold mb-6 flex items-center gap-2"><FaUserPlus /> Add Student</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-           {!batchStringId && (
-            <div>
-              <label className="block text-sm font-medium mb-1">Batch ID</label>
-              <input type="text" value={batchIdInput} onChange={(e) => setBatchIdInput(e.target.value)} className="w-full px-3 py-2 rounded-lg border" style={inputStyle} required placeholder="e.g. SP-A-C-01" />
-            </div>
-          )}
           <div>
             <label className="block text-sm font-medium mb-1">Student Number</label>
             <input type="text" value={studentNumber} onChange={(e) => setStudentNumber(e.target.value.toUpperCase())} className="w-full px-3 py-2 rounded-lg border" style={inputStyle} required placeholder="e.g. GZST001" />
@@ -235,7 +221,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId }) =
 };
 
 // --- Session Modal (Handles Create AND Edit) ---
-const SessionModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId, editingSession, batchType, minDate }) => {
+const SessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSession, batchDetails }) => {
   const [formData, setFormData] = useState({
     session_number: '',
     title: '',
@@ -244,11 +230,13 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId, editin
     startTime: '10:00 AM',
     endTime: '11:00 AM',
     meetingLinkOrLocation: '',
-    batchIdInput: batchStringId || '' 
+    googleClassroomLink: '' // Added for Online sessions
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Populate form if editing
+  // Determine if this is an online batch based on passed details
+  const isOnline = (batchDetails?.batchType || '').toUpperCase() === 'ONLINE';
+
   useEffect(() => {
     if (editingSession) {
       setFormData({
@@ -259,16 +247,15 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId, editin
         startTime: editingSession.startTime || '10:00 AM',
         endTime: editingSession.endTime || '11:00 AM',
         meetingLinkOrLocation: editingSession.meetingLinkOrLocation || '',
-        batchIdInput: batchStringId || ''
+        googleClassroomLink: editingSession.googleClassroomLink || ''
       });
     } else {
-      // Reset for creation if modal opens without editingSession
       setFormData(prev => ({
         ...prev,
-        title: '', description: '', date: '', meetingLinkOrLocation: '' 
+        title: '', description: '', date: '', meetingLinkOrLocation: '', googleClassroomLink: ''
       }));
     }
-  }, [editingSession, isOpen, batchStringId]);
+  }, [editingSession, isOpen]);
 
   if (!isOpen) return null;
 
@@ -283,22 +270,18 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId, editin
       alert("Please select a Date.");
       return;
     }
-    if (!formData.batchIdInput) {
-      alert("Batch ID is missing.");
-      return;
-    }
 
     setIsSubmitting(true);
     
     const payload = {
-      batchId: formData.batchIdInput,
       session_number: Number(formData.session_number),
       title: formData.title,
       description: formData.description,
       date: formData.date,
       startTime: formData.startTime,
       endTime: formData.endTime,
-      meetingLinkOrLocation: formData.meetingLinkOrLocation // Optional
+      meetingLinkOrLocation: formData.meetingLinkOrLocation,
+      googleClassroomLink: formData.googleClassroomLink
     };
 
     const success = await onSubmit(payload, editingSession ? true : false); 
@@ -308,7 +291,7 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId, editin
         setFormData(prev => ({ 
           ...prev, 
           session_number: String(Number(prev.session_number) + 1), 
-          title: '', description: '', date: '', meetingLinkOrLocation: '' 
+          title: '', description: '', date: '', meetingLinkOrLocation: '', googleClassroomLink: '' 
         }));
       }
       onClose();
@@ -322,10 +305,8 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId, editin
     color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`
   };
 
-  // Logic for Dynamic Label
-  const isOffline = (batchType || '').toUpperCase() === 'OFFLINE';
-  const locationLabel = isOffline ? "Class Location" : "Meeting Link";
-  const locationPlaceholder = isOffline ? "e.g. Room 304, Main Building" : "e.g. Google Meet or Zoom Link";
+  const locationLabel = isOnline ? "Google Meet / Meeting Link" : "Class Location";
+  const locationPlaceholder = isOnline ? "https://meet.google.com/..." : "e.g. Room 304";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(5px)" }}>
@@ -343,13 +324,7 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId, editin
         </h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!batchStringId && (
-            <div>
-              <label className="block text-sm font-medium mb-1">Batch ID</label>
-              <input type="text" id="batchIdInput" value={formData.batchIdInput} onChange={handleChange} className="w-full px-3 py-2 rounded-lg border" style={inputStyle} required placeholder="e.g. SP-A-C-01" />
-            </div>
-          )}
-
+          
           <div className="grid grid-cols-4 gap-4">
             <div className="col-span-1">
               <label className="block text-sm font-medium mb-1">Session #</label>
@@ -381,7 +356,7 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId, editin
                label="Date" isDark={isDark} 
                value={formData.date} 
                onChange={(val) => setFormData(prev => ({...prev, date: val}))} 
-               minDate={minDate} // Passed from batch Start Date
+               minDate={batchDetails?.startDate}
             />
             <div className="space-y-4">
               <TimePicker label="Start Time" isDark={isDark} value={formData.startTime} onChange={(val) => setFormData(prev => ({...prev, startTime: val}))} />
@@ -404,6 +379,24 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId, editin
             />
           </div>
 
+          {/* Show Google Classroom Link field ONLY for Online Batches */}
+          {isOnline && (
+            <div>
+              <label className="block text-sm font-medium mb-1 flex items-center gap-2">
+                <FaChalkboardTeacher /> Google Classroom Link <span className="opacity-50 font-normal">(Optional)</span>
+              </label>
+              <input 
+                type="text" 
+                id="googleClassroomLink" 
+                value={formData.googleClassroomLink} 
+                onChange={handleChange} 
+                className="w-full px-3 py-2 rounded-lg border" 
+                style={inputStyle} 
+                placeholder="https://classroom.google.com/..."
+              />
+            </div>
+          )}
+
           <div className="flex justify-end gap-4 mt-6 pt-4 border-t" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>
             <button type="button" onClick={onClose} className="px-5 py-2 rounded-lg font-semibold border text-sm" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>Cancel</button>
             <button type="submit" disabled={isSubmitting} className="px-5 py-2 rounded-lg font-semibold text-white text-sm" style={{ background: "linear-gradient(90deg, var(--accent-teal), var(--accent-purple))", opacity: isSubmitting ? 0.7 : 1 }}>
@@ -416,31 +409,57 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, batchStringId, editin
   );
 };
 
-// --- Session Card (Updated with OnClick and Hover) ---
+// --- Helper: Link Action Button ---
+const LinkActionButton = ({ url, label, icon: Icon, colorClass, isDark }) => {
+  const [copied, setCopied] = useState(false);
 
+  const handleCopy = (e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleOpen = (e) => {
+    e.stopPropagation();
+    window.open(url, '_blank');
+  };
+
+  if (!url) return null;
+
+  return (
+    <div 
+      className="flex items-center justify-between p-2 rounded-md text-xs mt-2"
+      style={{ backgroundColor: `var(${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"})` }}
+    >
+      <div className="flex items-center gap-2 overflow-hidden mr-2">
+        <Icon className={`${colorClass} flex-shrink-0`} />
+        <span className="truncate opacity-80">{label}</span>
+      </div>
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <button 
+          onClick={handleCopy}
+          className="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition"
+          title="Copy Link"
+        >
+          {copied ? <FaCheck className="text-green-500" /> : <FaCopy />}
+        </button>
+        <button 
+          onClick={handleOpen}
+          className="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition"
+          title="Open Link"
+        >
+          <FaExternalLinkAlt />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// --- Session Card ---
 const SessionCard = ({ session, isDark, onClick, batchType }) => {
-  const isOnline = batchType?.toUpperCase() === "ONLINE";
+  const isOnline = (batchType || '').toUpperCase() === "ONLINE";
 
-      const openGmeet = (e) => {
-        e.stopPropagation();
-
-        const link = session.meetingLinkOrLocation?.trim();
-
-        if (!link) {
-          alert("No meeting link provided.");
-          return;
-        }
-
-        // Check if it's a valid URL
-        if (!link.startsWith("http://") && !link.startsWith("https://")) {
-          alert("Invalid meeting link. Please enter a valid URL (e.g., https://meet.google.com/...).");
-          return;
-        }
-
-        window.open(link, "_blank");
-      };
-
-      
   return (
     <div
       onClick={onClick}
@@ -466,47 +485,59 @@ const SessionCard = ({ session, isDark, onClick, batchType }) => {
         {session.session_number}
       </div>
 
-      <div className="flex-grow">
-        <h3 className="text-lg font-bold">{session.title}</h3>
+      <div className="flex-grow min-w-0">
+        <h3 className="text-lg font-bold truncate pr-6">{session.title}</h3>
         <p className="text-sm mb-3 opacity-80 line-clamp-2">{session.description || "No description"}</p>
 
-        <div className="flex flex-col gap-2 text-xs font-medium opacity-70">
+        <div className="flex flex-col gap-1 text-xs font-medium opacity-70">
           <div className="flex items-center gap-2">
             <FaCalendarAlt /> {new Date(session.date).toLocaleDateString()}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-1">
             <FaClock /> {session.startTime} - {session.endTime}
           </div>
-
-          {/* ONLINE → SHOW GMEET BUTTON */}
-          {isOnline && session.meetingLinkOrLocation && (
-            <button
-              onClick={openGmeet}
-              className="mt-2 px-3 py-1 text-white text-xs font-semibold rounded-md"
-              style={{ backgroundColor: "var(--accent-purple)" }}
-            >
-              Open GMeet
-            </button>
-          )}
-
-          {/* OFFLINE → SHOW MAP + LOCATION */}
-          {!isOnline && session.meetingLinkOrLocation && (
-            <div className="flex items-center gap-2 text-[var(--accent-purple)]">
-              <FaMapMarkerAlt /> {session.meetingLinkOrLocation}
-            </div>
-          )}
         </div>
+
+        {/* ONLINE LINKS BLOCK */}
+        {isOnline && (
+          <div className="mt-2 space-y-1">
+            {/* Meeting Link */}
+            {session.meetingLinkOrLocation && (
+              <LinkActionButton 
+                url={session.meetingLinkOrLocation}
+                label="Meeting Link"
+                icon={FaVideo}
+                colorClass="text-purple-500"
+                isDark={isDark}
+              />
+            )}
+            
+            {/* Classroom Link */}
+            {session.googleClassroomLink && (
+              <LinkActionButton 
+                url={session.googleClassroomLink}
+                label="Classroom"
+                icon={FaChalkboardTeacher}
+                colorClass="text-green-500"
+                isDark={isDark}
+              />
+            )}
+          </div>
+        )}
+
+        {/* OFFLINE Location Text */}
+        {!isOnline && session.meetingLinkOrLocation && (
+          <div className="flex items-center gap-2 text-[var(--accent-purple)] mt-2 text-xs font-medium">
+            <FaMapMarkerAlt /> {session.meetingLinkOrLocation}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-
-
-
-
-// --- Student Card (Unchanged) ---
+// --- Student Card ---
 const BatchStudentCard = ({ student, isDark }) => (
   <div 
     className="p-4 rounded-xl border flex items-center gap-4 transition-all hover:shadow-sm"
@@ -527,7 +558,7 @@ const BatchStudentCard = ({ student, isDark }) => (
       <p className="text-xs opacity-60 flex items-center gap-1 mt-1">
         <FaPhone className="text-[10px]" /> {student.mobile || "N/A"}
       </p>
-      <p className="text-xs opacity-60 truncate">ID: {student.student_number}</p>
+      <p className="text-xs opacity-60 truncate font-mono">ID: {student.student_number}</p>
     </div>
   </div>
 );
@@ -535,13 +566,11 @@ const BatchStudentCard = ({ student, isDark }) => (
 // --- Main Page ---
 const AdminBatchSessionPage = () => {
   const { isDark } = useOutletContext();
-  const { batchId } = useParams(); // MongoDB _id
+  const { batchId } = useParams(); // MongoDB _id from URL
   const navigate = useNavigate();
-  const location = useLocation();
   
-  // Destructure location state with defaults
-  const { batchStringId, batchType, startDate } = location.state || {};
-  
+  // State for Batch Info & Sessions
+  const [batchDetails, setBatchDetails] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -554,25 +583,29 @@ const AdminBatchSessionPage = () => {
   const fetchData = async () => {
     setIsLoading(true);
     
-    // Fetch Sessions and Students in parallel
-    const [sessionsRes, studentsRes] = await Promise.all([
-      getSessionsForBatch(batchId),
-      getStudentsInBatch(batchId)
-    ]);
+    try {
+      // 1. Fetch Batch Info & Sessions (New Structure)
+      const sessionsRes = await getSessionsForBatch(batchId);
+      
+      if (sessionsRes.success && sessionsRes.data) {
+        setBatchDetails(sessionsRes.data.batch);
+        setSessions(sessionsRes.data.sessions || []);
+      } else {
+        alert(`Error fetching sessions: ${sessionsRes.message}`);
+      }
 
-    if (sessionsRes.success) {
-      setSessions(sessionsRes.data);
-    } else {
-      alert(`Error fetching sessions: ${sessionsRes.message}`);
+      // 2. Fetch Students
+      const studentsRes = await getStudentsInBatch(batchId);
+      if (studentsRes.success) {
+        setStudents(studentsRes.data);
+      } else {
+        console.error("Error fetching students:", studentsRes.message);
+      }
+    } catch (error) {
+      console.error("Fetch Data Error:", error);
+    } finally {
+      setIsLoading(false);
     }
-
-    if (studentsRes.success) {
-      setStudents(studentsRes.data);
-    } else {
-      console.error(studentsRes.message);
-    }
-
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -589,14 +622,26 @@ const AdminBatchSessionPage = () => {
         return false;
       }
       
+      // Update Payload: session_obj_id + fields
       const updatePayload = {
         session_obj_id: editingSession._id, 
-        ...formData
+        title: formData.title,
+        description: formData.description,
+        date: formData.date,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        meetingLinkOrLocation: formData.meetingLinkOrLocation,
+        googleClassroomLink: formData.googleClassroomLink // Added to payload
       };
       
       response = await updateSessionDetails(updatePayload);
     } else {
-      response = await createSession(formData);
+      // Create Payload: batch_obj_id + fields
+      const createPayload = {
+        batch_obj_id: batchId, // Use ID from URL params
+        ...formData
+      };
+      response = await createSession(createPayload);
     }
 
     alert(response.message);
@@ -607,8 +652,12 @@ const AdminBatchSessionPage = () => {
     return false;
   };
 
-  const handleAddStudent = async (bId, studentNum) => {
-    const response = await linkStudentToBatch(bId, studentNum);
+  const handleAddStudent = async (studentNum) => {
+    const payload = {
+        batch_obj_id: batchId,
+        student_number: studentNum
+    };
+    const response = await linkStudentToBatch(payload.batch_obj_id, payload.student_number);
     alert(response.message);
     if (response.success) {
       fetchData();
@@ -634,19 +683,48 @@ const AdminBatchSessionPage = () => {
         <div className="flex items-center gap-4">
           <button 
             onClick={() => navigate("/admin/dashboard/batches")}
-            className="p-3 rounded-full transition"
+            className="p-3 rounded-full transition hover:bg-opacity-80"
             style={{ backgroundColor: `var(${isDark ? "--card-dark" : "--border-light"})` }}
           >
             <FaArrowLeft />
           </button>
+          
+          {/* Dynamic Header Info */}
           <div>
-            <h1 className="text-3xl font-bold">Batch Sessions</h1>
-            {batchStringId ? (
-              <h2 className="text-2xl font-extrabold mt-1" style={{ color: "var(--accent-teal)" }}>
-                {batchStringId}
-              </h2>
+            <div className="flex items-center gap-2">
+               <h1 className="text-3xl font-bold">Batch Details</h1>
+               {batchDetails?.batchType && (
+                 <span className={`text-[10px] px-2 py-0.5 rounded border font-bold ${
+                   batchDetails.batchType === "OFFLINE" ? "border-orange-500 text-orange-500" : "border-blue-500 text-blue-500"
+                 }`}>
+                   {batchDetails.batchType}
+                 </span>
+               )}
+            </div>
+            
+            {batchDetails ? (
+              <div className="flex flex-col gap-1 mt-1">
+                <h2 className="text-2xl font-extrabold" style={{ color: "var(--accent-teal)" }}>
+                  {batchDetails.batchName} <span className="text-lg opacity-60 font-normal">| Level: {batchDetails.level}</span>
+                </h2>
+
+                <p className="text-sm opacity-70 mt-1 flex items-center gap-2">
+                  <FaCalendarAlt size={12} />
+                  Batch Start Date:{" "}
+                  <strong>
+                    {new Date(batchDetails.startDate).toLocaleDateString()}
+                  </strong>
+                </p>
+
+                {/* Location Info (Only if Offline) */}
+                {batchDetails.batchType === "OFFLINE" && (
+                  <p className="text-sm opacity-70 flex items-center gap-1">
+                    <FaMapMarkerAlt size={12}/> {batchDetails.classLocation} ({batchDetails.cityCode})
+                  </p>
+                )}
+              </div>
             ) : (
-               <p className="text-sm opacity-60">Manage sessions</p>
+               <p className="text-sm opacity-60">Loading details...</p>
             )}
           </div>
         </div>
@@ -671,15 +749,21 @@ const AdminBatchSessionPage = () => {
       </div>
 
       {isLoading ? (
-        <p className="text-lg opacity-70">Loading batch data...</p>
+        <div className="text-center py-20 opacity-60">
+            <div className="animate-spin text-4xl mb-2 inline-block"><FaClock /></div>
+            <p>Loading batch ecosystem...</p>
+        </div>
       ) : (
         <div className="space-y-10">
           
           {/* --- SESSIONS SECTION --- */}
           <section>
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-              <FaCalendarAlt className="text-[var(--accent-purple)]" /> Scheduled Sessions
+              <FaLayerGroup className="text-[var(--accent-purple)]" /> 
+              Curriculum Sessions 
+              <span className="text-sm opacity-50 font-normal ml-2">({sessions.length})</span>
             </h2>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {sessions.length > 0 ? (
                 sessions.map(session => (
@@ -688,19 +772,20 @@ const AdminBatchSessionPage = () => {
                     session={session} 
                     isDark={isDark} 
                     onClick={() => openEditModal(session)}
-                     batchType={batchType}
+                    batchType={batchDetails?.batchType}
                   />
                 ))
               ) : (
                 <div 
-                  className="col-span-full p-10 rounded-2xl border text-center"
+                  className="col-span-full p-10 rounded-2xl border text-center border-dashed"
                   style={{
                     borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
-                    backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`
+                    backgroundColor: `var(${isDark ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.02)"})`
                   }}
                 >
-                  <h3 className="text-xl font-bold mb-2">No Sessions Created</h3>
-                  <p className="opacity-60">Start by adding Session 1 to this batch.</p>
+                  <FaCalendarAlt className="mx-auto text-4xl mb-3 opacity-30" />
+                  <h3 className="text-xl font-bold mb-1">No Sessions Yet</h3>
+                  <p className="opacity-60 text-sm">Create the first session to get started.</p>
                 </div>
               )}
             </div>
@@ -709,7 +794,7 @@ const AdminBatchSessionPage = () => {
           {/* --- STUDENTS SECTION --- */}
           <section>
             <div className="flex items-center gap-3 mb-6 border-b pb-4" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>
-              <FaUserGraduate className="text-2xl text-[var(--accent-purple)]" />
+              <FaUserGraduate className="text-2xl text-[var(--accent-teal)]" />
               <h2 className="text-2xl font-bold">Enrolled Students</h2>
               <span className="px-2 py-1 rounded-md text-xs font-bold" style={{ backgroundColor: `var(${isDark ? "--bg-dark" : "--border-light"})` }}>
                 {students.length}
@@ -723,7 +808,7 @@ const AdminBatchSessionPage = () => {
                 ))}
               </div>
             ) : (
-              <p className="opacity-50 italic">No students have been added to this batch yet.</p>
+              <p className="opacity-50 italic pl-1">No students have been linked to this batch yet.</p>
             )}
           </section>
 
@@ -736,10 +821,8 @@ const AdminBatchSessionPage = () => {
         onClose={() => setIsSessionModalOpen(false)}
         onSubmit={handleSessionSubmit}
         isDark={isDark}
-        batchStringId={batchStringId}
+        batchDetails={batchDetails} // Pass details for dynamic rendering
         editingSession={editingSession}
-        batchType={batchType} // Pass for dynamic labels
-        minDate={startDate}   // Pass for date validation
       />
 
       {/* Modal for Adding Student */}
@@ -748,7 +831,6 @@ const AdminBatchSessionPage = () => {
         onClose={() => setIsStudentModalOpen(false)}
         onSubmit={handleAddStudent}
         isDark={isDark}
-        batchStringId={batchStringId}
       />
     </div>
   );

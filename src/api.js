@@ -943,13 +943,13 @@ export const getBatchAndSessionDetailsForTeacher = async (batch_obj_id) => {
 /**
  * (STUDENT) Raises a new doubt for a specific batch.
  */
-export const raiseDoubt = async (batchId, doubt_content) => {
+export const raiseDoubt = async (batch_obj_id, doubt_content) => {
   try {
     const response = await fetch(raiseDoubtPath, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ batchId, doubt_content }),
+      body: JSON.stringify({ batch_obj_id, doubt_content }),
     });
     return await response.json(); 
   } catch (error) {
@@ -979,10 +979,10 @@ export const getMyDoubts = async () => {
 
 
 
-export const getUnresolvedDoubts = async (batchId = "") => {
+export const getUnresolvedDoubts = async (batch_obj_id = "") => {
   try {
-    const url = batchId 
-      ? `${getUnresolvedDoubtsPath}?batchId=${batchId}` 
+    const url = batch_obj_id 
+      ? `${getUnresolvedDoubtsPath}?batch_obj_id=${batch_obj_id}` 
       : getUnresolvedDoubtsPath;
 
     const response = await fetch(url, {
@@ -1080,8 +1080,8 @@ export const getStudentsInBatch = async (batch_obj_id) => {
   try { return await (await fetch(`${getStudentsInBatchPath}?batch_obj_id=${batch_obj_id}`, { method: 'GET', credentials: 'include' })).json(); } catch (e) { return { success: false }; }
 };
 
-export const linkStudentToBatch = async (batchId, student_number) => {
-  try { return await (await fetch(linkStudentToBatchPath, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify({ batchId, student_number }) })).json(); } catch (e) { return { success: false }; }
+export const linkStudentToBatch = async (batch_obj_id, student_number) => {
+  try { return await (await fetch(linkStudentToBatchPath, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify({ batch_obj_id, student_number }) })).json(); } catch (e) { return { success: false }; }
 };
 
 
@@ -1158,7 +1158,7 @@ export const listAllActiveBatches = async () => {
  * Updates the status of a specific batch.
  * Route: POST /api/admin/updatebatchstatus
  */
-export const updateBatchStatus = async (batchId, status) => {
+export const updateBatchStatus = async (batch_obj_id, status) => {
   try {
     const response = await fetch(`${BASE_URL}/admin/updatebatchstatus`, {
       method: 'POST', 
@@ -1166,11 +1166,11 @@ export const updateBatchStatus = async (batchId, status) => {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ batchId, status }),
+      body: JSON.stringify({ batch_obj_id, status }),
     });
     return await handleResponse(response);
   } catch (error) {
-    console.error(`Error updating batch status for ID ${batchId}:`, error);
+    console.error(`Error updating batch status for ID ${batch_obj_id}:`, error);
     throw error;
   }
 };

@@ -8,7 +8,8 @@ import {
   FaRocket, 
   FaLightbulb, 
   FaBolt,
-  FaVideo
+  FaVideo,
+  FaGoogle 
 } from 'react-icons/fa';
 
 import { getMyLiveBatches, getTodaysLiveBatchInfo } from '../api.js';
@@ -62,10 +63,25 @@ const StudentDashboardPage = () => {
 
   // State
   const [liveBatches, setLiveBatches] = useState([]);
-  const [selectedBatchId, setSelectedBatchId] = useState(null); // This will store the _id
+  const [selectedBatchId, setSelectedBatchId] = useState(null); 
   const [batchInfo, setBatchInfo] = useState(null);
   const [isLoadingBatches, setIsLoadingBatches] = useState(true);
   const [isLoadingInfo, setIsLoadingInfo] = useState(false);
+
+  // --- Logic to extract Classroom Link ---
+  const getClassroomLink = () => {
+    // Return the value directly (even if it is "No Credit")
+    return batchInfo?.sessionDetails?.googleClassroomLink || null;
+  };
+
+  const shouldShowClassroom = () => {
+    const link = getClassroomLink();
+    // Show card if batch is ONLINE and link exists (even if "No Credit")
+    return (
+      batchInfo?.batchType === "ONLINE" && 
+      link !== null && link !== ""
+    );
+  };
 
   // 1. Fetch Live Batches
   useEffect(() => {
@@ -75,8 +91,7 @@ const StudentDashboardPage = () => {
       if (response.success) {
         setLiveBatches(response.data);
         if (response.data.length > 0) {
-          // New controller returns formattedBatches with _id
-          setSelectedBatchId(response.data[0]._id);
+          setSelectedBatchId(response.data[0].batch_obj_id);
         }
       }
       setIsLoadingBatches(false);
@@ -90,14 +105,11 @@ const StudentDashboardPage = () => {
 
     const fetchInfo = async () => {
       setIsLoadingInfo(true);
-      // We pass the selectedBatchId (which corresponds to _id) to the API
-      // API call expects { batch_obj_id: ... } in body, handled by api.js helper
       const response = await getTodaysLiveBatchInfo(selectedBatchId);
       
       if (response.success) {
         setBatchInfo(response.data);
       } else {
-        // Fallback or error handling
         setBatchInfo(null);
       }
       setIsLoadingInfo(false);
@@ -107,13 +119,11 @@ const StudentDashboardPage = () => {
 
   // Helper: Get name of currently selected batch
   const getSelectedBatchName = () => {
-    const batch = liveBatches.find(b => b._id === selectedBatchId);
-    return batch ? batch.batchId : "Unknown Batch";
+    const batch = liveBatches.find(b => b.batch_obj_id === selectedBatchId);
+    return batch ? batch.batchName : "Unknown Batch";
   };
 
   // --- Helpers for Display Data ---
-  
-  // Date formatting
   const todayStr = new Date().toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
@@ -122,27 +132,20 @@ const StudentDashboardPage = () => {
 
   const nextClassValue = batchInfo?.nextClassDate || "Update Soon";
 
-  // Determine Location Display
-  // Logic: If there is a specific session today, use its location/link. 
-  // Otherwise, fallback to the batch's default location.
   const getLocationDisplay = () => {
     if (!batchInfo) return "--";
-    
-    // Check specific session details first
     if (batchInfo.sessionDetails?.meetingLinkOrLocation) {
       return batchInfo.sessionDetails.meetingLinkOrLocation;
     }
-    
-    // Fallback to default (Online or Class Location)
     return batchInfo.defaultLocation || "N/A";
   };
 
   const isLocationUrl = () => {
     const loc = getLocationDisplay();
-    return loc && (loc.startsWith('http') || loc.startsWith('www'));
+    // Basic check if it's a URL (http, https, www) and NOT "No Credit"
+    return loc && (loc.startsWith('http') || loc.startsWith('www')) && loc !== "No Credit";
   };
 
-  // Determine Timings
   const getTimings = () => {
     if (batchInfo?.sessionDetails?.startTime && batchInfo?.sessionDetails?.endTime) {
       return `${batchInfo.sessionDetails.startTime} - ${batchInfo.sessionDetails.endTime}`;
@@ -150,7 +153,6 @@ const StudentDashboardPage = () => {
     return "N/A";
   };
 
-  // Determine Week/Session Number
   const getSessionNumber = () => {
     return batchInfo?.sessionDetails?.session_number 
       ? `Session ${batchInfo.sessionDetails.session_number}`
@@ -198,11 +200,11 @@ const StudentDashboardPage = () => {
           <div className="flex flex-wrap gap-2">
             {liveBatches.map(batch => (
               <BatchChip
-                key={batch._id} // Updated: using _id from new controller
-                label={batch.batchId}
+                key={batch.batch_obj_id}
+                label={batch.batchName} 
                 isDark={isDark}
-                isSelected={selectedBatchId === batch._id}
-                onClick={() => setSelectedBatchId(batch._id)}
+                isSelected={selectedBatchId === batch.batch_obj_id}
+                onClick={() => setSelectedBatchId(batch.batch_obj_id)}
               />
             ))}
           </div>
@@ -267,7 +269,7 @@ const StudentDashboardPage = () => {
                     value={getTimings()}
                   />
 
-                  {/* 4. LOCATION (Dynamic: Online Link or Physical) */}
+                  {/* 4. LOCATION */}
                   <InfoPill 
                     isDark={isDark}
                     icon={isLocationUrl() ? <FaVideo /> : <FaMapMarkerAlt />}
@@ -275,6 +277,19 @@ const StudentDashboardPage = () => {
                     value={getLocationDisplay()}
                     isLink={isLocationUrl()}
                   />
+
+                  {/* 5. GOOGLE CLASSROOM (Conditional) */}
+                  {shouldShowClassroom() && (
+                    <InfoPill 
+                      isDark={isDark}
+                      icon={<FaGoogle />} 
+                      label="Classroom"
+                      value={getClassroomLink()}
+                      // Only make it a link if it is NOT "No Credit"
+                      isLink={getClassroomLink() !== "No Credit"}
+                    />
+                  )}
+
                 </div>
 
                 {/* --- Topic Section --- */}
@@ -290,7 +305,6 @@ const StudentDashboardPage = () => {
                       Topic of the Day
                     </h4>
                     
-                    {/* Next Class Badge Inside Topic Card */}
                     <span className="text-[15px] font-mono opacity-100 white bold">
                       Next: {nextClassValue}
                     </span>

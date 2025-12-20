@@ -1,5 +1,3 @@
-// FULL UPDATED FILE — All requested fixes applied
-
 import React, { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
 import { 
@@ -159,9 +157,8 @@ const SmartCalendar = ({ label, value, onChange, isDark }) => {
 // --- Create Batch Modal ---
 const CreateBatchModal = ({ isOpen, onClose, onSubmit, isDark }) => {
   const [formData, setFormData] = useState({
-    cohort: "spark",
-    level: "alpha",
-    type: "society",
+    batchName: "", // Typeable now
+    level: "",     // Typeable now
     batchType: "ONLINE",
     citycode: "",
     classLocation: "",
@@ -210,12 +207,12 @@ const CreateBatchModal = ({ isOpen, onClose, onSubmit, isDark }) => {
     }
 
     setIsSubmitting(true);
+    // Send data to parent (controller expects: batchName, level, description, startDate, batchType, citycode, classLocation)
     const success = await onSubmit(formData);
     if (success) {
       setFormData({
-        cohort: "spark",
-        level: "alpha",
-        type: "society",
+        batchName: "",
+        level: "",
         batchType: "ONLINE",
         citycode: "",
         classLocation: "",
@@ -259,29 +256,22 @@ const CreateBatchModal = ({ isOpen, onClose, onSubmit, isDark }) => {
           className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2"
         >
           <div>
-            <ModalSelect
-              label="Cohort"
+            <ModalInput
+              label="Batch Name / Cohort"
               isDark={isDark}
-              value={formData.cohort}
-              onChange={(e) => handleChange(e, "cohort")}
-              options={[
-                { value: "spark", label: "Spark" },
-                { value: "blaze", label: "Blaze" },
-                { value: "ignite", label: "Ignite" },
-                { value: "inferno", label: "Inferno" },
-              ]}
+              placeholder="e.g. Spark, Ignite"
+              value={formData.batchName}
+              onChange={(e) => handleChange(e, "batchName")}
+              required
             />
 
-            <ModalSelect
+            <ModalInput
               label="Level"
               isDark={isDark}
+              placeholder="e.g. Alpha, Beta"
               value={formData.level}
               onChange={(e) => handleChange(e, "level")}
-              options={[
-                { value: "alpha", label: "Alpha" },
-                { value: "beta", label: "Beta" },
-                { value: "gamma", label: "Gamma" },
-              ]}
+              required
             />
 
             <ModalSelect
@@ -294,21 +284,6 @@ const CreateBatchModal = ({ isOpen, onClose, onSubmit, isDark }) => {
                 { value: "OFFLINE", label: "Offline" },
               ]}
             />
-
-            {/* Type only when OFFLINE */}
-            {isOffline && (
-              <ModalSelect
-                label="Type"
-                isDark={isDark}
-                value={formData.type}
-                onChange={(e) => handleChange(e, "type")}
-                options={[
-                  { value: "society", label: "Society" },
-                  { value: "school", label: "School" },
-                  { value: "individual", label: "Individual" },
-                ]}
-              />
-            )}
 
             {isOffline && (
               <div className="animate-fadeIn">
@@ -345,6 +320,7 @@ const CreateBatchModal = ({ isOpen, onClose, onSubmit, isDark }) => {
                 placeholder="Batch description..."
                 value={formData.description}
                 onChange={(e) => handleChange(e, "description")}
+                required={false}
               />
             </div>
           </div>
@@ -387,31 +363,39 @@ const CreateBatchModal = ({ isOpen, onClose, onSubmit, isDark }) => {
   );
 };
 
-// --- Batch Card (with new rule: cannot go live before start date) ---
+// --- Batch Card ---
+
+// --- Batch Card ---
 const BatchCard = ({ batch, isDark, onStatusUpdate }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const navigate = useNavigate();
 
-  const isUpcoming = batch.status === "UPCOMING";
   const isOffline = batch.batchType === "OFFLINE";
 
-  // New Rule: Can only go live on or after start date
+  // Can only go live on or after start date
   const today = new Date();
-  today.setHours(0,0,0,0);
-  const start = new Date(batch.startDate);
-  start.setHours(0,0,0,0);
+  today.setHours(0, 0, 0, 0);
 
-  const canGoLive = start <= today; // TRUE only if startDate has arrived
+  const start = new Date(batch.startDate);
+  start.setHours(0, 0, 0, 0);
+
+  const canGoLive = start <= today;
 
   const handleCardClick = () => {
-    navigate(`/admin/dashboard/batches/${batch._id}`, {
-      state: { batchStringId: batch.batchId ,  batchType :  batch.batchType  , startDate : batch.startDate  },
+    navigate(`/admin/dashboard/batches/${batch.batch_obj_id}`, {
+      state: {
+        batchName: batch.batchName,
+        batchType: batch.batchType,
+        startDate: batch.startDate,
+        batch_obj_id: batch.batch_obj_id,
+      },
     });
   };
 
   const handleAction = async (e) => {
     e.stopPropagation();
-    if (!canGoLive && !batch.isLive) return; // cannot go live prematurely
+
+    if (!canGoLive && !batch.isLive) return;
 
     if (
       !window.confirm(
@@ -419,12 +403,13 @@ const BatchCard = ({ batch, isDark, onStatusUpdate }) => {
           batch.isLive ? "ENDED" : "LIVE"
         }?`
       )
-    )
+    ) {
       return;
+    }
 
     setIsUpdating(true);
     const newStatus = batch.isLive ? "ENDED" : "LIVE";
-    await onStatusUpdate(batch.batchId, newStatus);
+    await onStatusUpdate(batch.batch_obj_id, newStatus);
     setIsUpdating(false);
   };
 
@@ -433,13 +418,25 @@ const BatchCard = ({ batch, isDark, onStatusUpdate }) => {
   return (
     <div
       onClick={handleCardClick}
-      className="p-6 rounded-2xl border flex flex-col h-full transition-all duration-300 hover:shadow-lg cursor-pointer"
+      className="relative p-6 rounded-2xl border flex flex-col h-full transition-all duration-300 hover:shadow-lg cursor-pointer"
       style={{
         backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
         borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
         backdropFilter: "blur(10px)",
       }}
     >
+      {/* ONLINE / OFFLINE BADGE */}
+      <span
+        className={`absolute top-4 right-4 text-[10px] px-2 py-1 rounded border font-bold tracking-wide ${
+          isOffline
+            ? "border-orange-500 text-orange-500 bg-orange-500/10"
+            : "border-blue-500 text-blue-500 bg-blue-500/10"
+        }`}
+      >
+        {isOffline ? "OFFLINE" : "ONLINE"}
+      </span>
+
+      {/* HEADER */}
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
           <span
@@ -449,40 +446,33 @@ const BatchCard = ({ batch, isDark, onStatusUpdate }) => {
           >
             <FaLayerGroup className={statusColor} />
           </span>
+
           <div>
-            <h3 className="text-xl font-bold">{batch.batchId}</h3>
-            <div className="flex items-center gap-2">
-              <span
-                className={`text-xs font-bold uppercase tracking-wider ${statusColor}`}
-              >
-                {batch.status}
-              </span>
-              <span
-                className={`text-[10px] px-1.5 py-0.5 rounded border font-bold ${
-                  isOffline
-                    ? "border-orange-500 text-orange-500"
-                    : "border-blue-500 text-blue-500"
-                }`}
-              >
-                {isOffline ? "OFFLINE" : "ONLINE"}
-              </span>
-            </div>
+            <h3 className="text-xl font-bold">{batch.batchName}</h3>
+            <span
+              className={`text-xs font-bold uppercase tracking-wider ${statusColor}`}
+            >
+              {batch.status}
+            </span>
           </div>
         </div>
       </div>
 
+      {/* CONTENT */}
       <div className="space-y-2 flex-grow mb-6">
+        {batch.description && (
+          <p
+            className="text-sm font-medium opacity-90 leading-relaxed border-l-4 pl-3 mb-2 
+                       break-words break-all whitespace-normal line-clamp-3"
+            style={{ borderColor: "var(--accent-teal)" }}
+          >
+            {batch.description}
+          </p>
+        )}
+
         <p className="text-sm flex items-center gap-2 opacity-80">
-          <span className="capitalize font-semibold">{batch.cohort}</span> •
-          <span className="capitalize font-semibold">{batch.level}</span> •
-          <span className="capitalize">
-            {batch.type === "C"
-              ? "Society"
-              : batch.type === "I"
-              ? "Individual"
-              : batch.type === "S"
-              ? "School"
-              : batch.type}
+          <span className="capitalize font-semibold">
+            Level: {batch.level}
           </span>
         </p>
 
@@ -497,19 +487,12 @@ const BatchCard = ({ batch, isDark, onStatusUpdate }) => {
           <FaCalendarAlt />
           Starts: {new Date(batch.startDate).toLocaleDateString()}
         </p>
-
-        {batch.description && (
-          <p className="text-xs mt-2 opacity-60 italic line-clamp-2">
-            {batch.description}
-          </p>
-        )}
       </div>
 
+      {/* ACTION BUTTON */}
       <button
         onClick={handleAction}
-        disabled={
-          isUpdating || (!batch.isLive && !canGoLive) // cannot make live early
-        }
+        disabled={isUpdating || (!batch.isLive && !canGoLive)}
         className={`w-full py-2 rounded-lg font-bold text-sm transition text-white
           ${
             batch.isLive
@@ -533,6 +516,9 @@ const BatchCard = ({ batch, isDark, onStatusUpdate }) => {
   );
 };
 
+
+
+
 // --- Main Page Component ---
 const AdminBatchesPage = () => {
   const { isDark } = useOutletContext();
@@ -546,11 +532,11 @@ const AdminBatchesPage = () => {
     if (response.success) {
       setBatches(response.data);
     } else {
-      if (response.message !== "No active batches found.") {
-        alert(response.message);
-      } else {
-        setBatches([]);
+      if (response.message !== "No active batches.") {
+        // Only show alert if it's a real error, not just empty list
+        console.warn("Fetch message:", response.message);
       }
+      setBatches([]);
     }
     setIsLoading(false);
   };
@@ -559,8 +545,9 @@ const AdminBatchesPage = () => {
     fetchBatches();
   }, []);
 
-  const handleStatusUpdate = async (batchId, newStatus) => {
-    const response = await updateBatchStatus(batchId, newStatus);
+  const handleStatusUpdate = async (batch_obj_id, newStatus) => {
+    // API call now uses batch_obj_id
+    const response = await updateBatchStatus(batch_obj_id, newStatus);
     alert(response.message);
     if (response.success) {
       fetchBatches();
@@ -570,6 +557,7 @@ const AdminBatchesPage = () => {
   };
 
   const handleCreateBatch = async (formData) => {
+    // formData keys match controller expectations (batchName, level, etc.)
     const response = await createBatch(formData);
     alert(response.message);
     if (response.success) {
@@ -612,7 +600,7 @@ const AdminBatchesPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {liveBatches.map((batch) => (
                   <BatchCard
-                    key={batch._id}
+                    key={batch.batch_obj_id}
                     batch={batch}
                     isDark={isDark}
                     onStatusUpdate={handleStatusUpdate}
@@ -640,7 +628,7 @@ const AdminBatchesPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {upcomingBatches.map((batch) => (
                   <BatchCard
-                    key={batch._id}
+                    key={batch.batch_obj_id}
                     batch={batch}
                     isDark={isDark}
                     onStatusUpdate={handleStatusUpdate}
