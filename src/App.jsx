@@ -32,6 +32,8 @@ import BuyCourse from './BuyCourse.jsx'
 import PaymentSuccess from './paymentsuccess.jsx'
 import PaymentFailure from './paymentfailure.jsx'
 import StudentRegistration from './StudentNewOnBoardingPage.jsx'
+import StudentRemainingSessionPurchase from './StudentPages/StudentRemainingSessionPurchase.jsx'
+import StudentPaymentStatusHandler from './StudentPages/StudentPaymentStatusHandler.jsx'
 
 
 
@@ -95,6 +97,8 @@ function App() {
               <Route path = "mybatches" element={ <StudentMyBatches/>     } />
               {/* <Route path = "allbatches" element={ <StudentAllBatchesPage/>     } /> */}
               <Route path = "doubts" element={ <StudentDoubtsPage/>     } />
+              <Route path = "remaingsessionpurchase" element={ <StudentRemainingSessionPurchase/>     } />
+              <Route path = "payment-result" element={ < StudentPaymentStatusHandler/>     } />
     </Route>
 
 

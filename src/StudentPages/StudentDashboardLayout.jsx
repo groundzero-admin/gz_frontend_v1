@@ -204,20 +204,37 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen }) => {
 };
 
 // --- Navbar Component (Unchanged) ---
-// --- Navbar Component (Updated for Credit Display) ---
+// --- Navbar Component (FINAL: Remaining Classes From Credit) ---
 const Navbar = ({ userData, onToggleSidebar, isDark }) => {
-  const totalCredits = getTotalCredits(userData.credit); // <-- calculate credit sum
+  const ONLINE_UNIT = 1000
+  const OFFLINE_UNIT = 1500
+
+  // Credits are already REMAINING
+  const onlineCredit =
+    typeof userData?.credit?.online === "number"
+      ? userData.credit.online
+      : null
+
+  const offlineCredit =
+    typeof userData?.credit?.offline === "number"
+      ? userData.credit.offline
+      : null
+
+  // Convert credits to number of classes
+  const onlineClasses =
+    onlineCredit !== null ? Math.floor(onlineCredit / ONLINE_UNIT) : null
+
+  const offlineClasses =
+    offlineCredit !== null ? Math.floor(offlineCredit / OFFLINE_UNIT) : null
 
   return (
     <header
-      className="h-20 fixed top-0 left-0 right-0 flex items-center justify-between px-6 z-20
-        md:left-72
-      "
+      className="h-20 fixed top-0 left-0 right-0 flex items-center justify-between px-6 z-20 md:left-72"
       style={{
         backgroundColor: `var(${isDark ? "rgba(11, 12, 27, 0.8)" : "rgba(248, 249, 250, 0.8)"})`,
         borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
         borderBottomWidth: "1px",
-        backdropFilter: "blur(10px)"
+        backdropFilter: "blur(10px)",
       }}
     >
       {/* LEFT SIDE */}
@@ -229,25 +246,47 @@ const Navbar = ({ userData, onToggleSidebar, isDark }) => {
         <div className="hidden sm:block">
           <h3 className="font-bold text-lg">
             Welcome, {userData.username}!
-            <span className="text-sm font-medium ml-2" style={{ color: 'var(--accent-teal)'}}>
+            <span
+              className="text-sm font-medium ml-2"
+              style={{ color: "var(--accent-teal)" }}
+            >
               ({userData.user_number})
             </span>
           </h3>
         </div>
       </div>
 
-      {/* RIGHT SIDE — CREDIT DISPLAY */}
-      <div className="flex items-center gap-3">
-        <FaRegLightbulb className="text-3xl text-yellow-400 animate-pulse" />
+      {/* RIGHT SIDE — REMAINING CLASSES */}
+      <div className="flex items-center gap-6">
 
-        <div className="text-right">
-          <p className="text-lg font-bold">{totalCredits}</p>
-          <p className="text-sm opacity-80">Credits Left</p>
-        </div>
+        {/* ONLINE */}
+        {onlineClasses !== null && (
+          <div className="flex items-center gap-3">
+            <FaRegLightbulb className="text-2xl text-yellow-400" />
+            <div className="text-right">
+              <p className="text-lg font-bold">{onlineClasses}</p>
+              <p className="text-xs opacity-80">Online Classes Remaining</p>
+            </div>
+          </div>
+        )}
+
+        {/* OFFLINE */}
+        {offlineClasses !== null && (
+          <div className="flex items-center gap-3">
+            <FaFire className="text-2xl text-orange-500" />
+            <div className="text-right">
+              <p className="text-lg font-bold">{offlineClasses}</p>
+              <p className="text-xs opacity-80">Offline Classes Remaining</p>
+            </div>
+          </div>
+        )}
+
       </div>
     </header>
-  );
-};
+  )
+}
+
+
 
 
 // --- The Main Layout Component (Unchanged Auth Logic) ---

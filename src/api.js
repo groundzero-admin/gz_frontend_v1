@@ -1281,3 +1281,133 @@ export const completeRegistration = async (payload) => {
     throw error;
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Assuming you have your base URL or paths defined similar to getStudentHistoryPath
+const updateStudentCreditsPath = `${BASE_URL}/admin/update-credits`;
+
+export const updateStudentCreditWallet = async (studentId, studentNumber, onlineCredits, offlineCredits) => {
+  try {
+    const response = await fetch(updateStudentCreditsPath, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Sends admin/teacher auth cookie
+      body: JSON.stringify({
+        student_obj_id: studentId,
+        student_number: studentNumber,
+        online_amount: onlineCredits,
+        offline_amount: offlineCredits
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { success: false, message: data.message || "Failed to update credits." };
+    }
+    
+    // Returns { success: true, message: "Credits updated successfully.", data: { ... } }
+    return data;
+
+  } catch (error) {
+    console.error("Update Student Credits error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not update credits." 
+    };
+  }
+};
+
+
+
+
+
+
+
+// Add this to your api.js file
+
+// Assuming the route is /api/student/remaining-session-info
+const remainingSessionInfoPath = `${BASE_URL}/student/remaining-session-info`; 
+
+export const remainingSessionInfoBatchForStudent = async () => {
+  try {
+    const response = await fetch(remainingSessionInfoPath, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Sends auth cookie
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { success: false, message: data.message || "Failed to fetch session info." };
+    }
+    
+    return data;
+    
+  } catch (error) {
+    console.error("Remaining Session Info error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not fetch session info." 
+    };
+  }
+};
+
+
+
+// Path to the top-up session creation
+const createTopUpSessionPath = `${BASE_URL}/student/create-credit-topup-session`  ;
+
+
+
+export const createCreditTopUpSession = async (batchId, batchType, noOfClasses, description) => {
+  try {
+    const response = await fetch(createTopUpSessionPath, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Important: Sends the student auth cookie
+      body: JSON.stringify({
+        batch_obj_id: batchId,
+        batchType: batchType,      // 'ONLINE' or 'OFFLINE'
+        no_of_classes: noOfClasses,
+        purchaseType: description  // Description string
+      })
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { success: false, message: data.message || "Failed to initiate payment." };
+    }
+    
+    // Returns { success: true, data: { url: "...", amount: ... } }
+    return data;
+    
+  } catch (error) {
+    console.error("Create TopUp Session error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not connect to payment gateway." 
+    };
+  }
+};
