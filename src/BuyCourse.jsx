@@ -40,7 +40,7 @@ const BuyCourse = () => {
     if (!isValidType) {
       setRedirecting(true);
       const timer = setTimeout(() => {
-        navigate("/");
+        navigate("/spark");
       }, 3000);
       return () => clearTimeout(timer);
     }

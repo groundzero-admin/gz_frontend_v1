@@ -82,7 +82,7 @@ const AuthPage = () => {
 
       {/* Back Button */}
       <button
-        onClick={() => navigate("/")}
+        onClick={() => navigate("/spark")}
         className="absolute top-6 left-6 z-20 p-3 rounded-full hover:opacity-80 transition"
         style={{
           backgroundColor: `var(${isDark ? "--card-dark" : "--card-light"})`,

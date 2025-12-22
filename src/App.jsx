@@ -37,6 +37,10 @@ import StudentPaymentStatusHandler from './StudentPages/StudentPaymentStatusHand
 import TeacherSignupPage from './TeacherPages/TeacherSignupPage.jsx'
 import ParentSignupPage from './ParentPages/ParentRegistration.jsx'
 import StudentSignupDirectPage from './StudentPages/StudentSignupDirectPage.jsx'
+import LandingPageMain from './LandingPageMain.jsx'
+import BookingPage from './BookDiscoveryCall.jsx'
+import BookOneOnOneSession from './BookOneOnOneSessions.jsx'
+import FormSquad from './FormSquad.jsx'
 
 
 
@@ -47,7 +51,12 @@ function App() {
   return (
     <Routes>
       {/* Route for the Landing Page */}
-      <Route path="/" element={<Landing_Page />} />
+      <Route path="/" element={< LandingPageMain />} />
+      <Route path="/book-discovery-call" element={< BookingPage />} />
+      <Route path="/book-one-on-one-session" element={< BookOneOnOneSession />} />
+      <Route path="/form-a-squad" element={< FormSquad />} />
+
+      <Route path="/spark" element={<Landing_Page />} />
       <Route path="/buycourse" element={<BuyCourse />} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/payment-failed" element={< PaymentFailure />} />

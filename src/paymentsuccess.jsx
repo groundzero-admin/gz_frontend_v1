@@ -14,7 +14,7 @@ const PaymentSuccess = () => {
     }, 1000);
 
     const redirectTimeout = setTimeout(() => {
-      navigate("/");
+      navigate("/spark");
     }, 60000); // 60 seconds
 
     return () => {
@@ -116,7 +116,7 @@ const PaymentSuccess = () => {
                 </p>
                 
                 <button
-                    onClick={() => navigate("/")}
+                    onClick={() => navigate("/spark")}
                     className="flex items-center gap-2 px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-all hover:scale-105 active:scale-95"
                     style={{ background: 'linear-gradient(90deg, var(--accent-teal), var(--accent-purple))' }}
                 >

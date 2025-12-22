@@ -213,7 +213,7 @@ export const logout = async (navigate) => {
   } catch (error) {
     console.error("Logout error:", error);
   }
-  navigate('/'); // Always redirect to login
+  navigate("/spark"); // Always redirect to login
 };
 
 /**
