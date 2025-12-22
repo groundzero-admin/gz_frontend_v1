@@ -1231,14 +1231,42 @@ export const getNewJoinersList = async () => {
   }
 };
 
-// Send credentials to the user
-export const sendCredentials = async (orderId) => {
+
+
+
+// Fetch list of active batches
+export const getBatches = async () => {
+  try {
+    // ✅ Updated endpoint
+    const response = await fetch(`${BASE_URL}/admin/listallactivebatches`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    console.error("Error fetching batches:", error);
+    return { success: false, message: "Network Error" };
+  }
+};
+
+
+
+// Updated sendCredentials to include batch info
+export const sendCredentials = async (orderId, selectedBatches = []) => {
   try {
     const response = await fetch(`${BASE_URL}/admin/send-credentials`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ course_order_id : orderId }),
+      body: JSON.stringify({ 
+        course_order_id: orderId,
+        // Send as an array. Backend should handle this loop or single assignment.
+        assigned_batches: selectedBatches.map(b => ({
+            batch_obj_id: b.batch_obj_id,
+            batchName: b.batchName
+        }))
+      }),
     });
     return await handleResponse(response);
   } catch (error) {
@@ -1246,6 +1274,9 @@ export const sendCredentials = async (orderId) => {
     throw error;
   }
 };
+
+
+
 
 
 
@@ -1409,5 +1440,293 @@ export const createCreditTopUpSession = async (batchId, batchType, noOfClasses, 
       success: false, 
       message: "Network error: Could not connect to payment gateway." 
     };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ... existing imports and setup ...
+
+export const inviteTeacher = async (email) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/invite-teacher`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Assuming you use cookies for auth, otherwise add Authorization header
+      credentials: 'include', 
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return { 
+        success: false, 
+        message: data.message || "Failed to invite teacher." 
+      };
+    }
+
+    return { success: true, message: data.message };
+  } catch (error) {
+    console.error("Invite Teacher API Error:", error);
+    return { success: false, message: "Network error. Please try again." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// --- Teacher Onboarding APIs ---
+
+export const validateTeacherInvite = async (token) => {
+  try {
+    // We send token as query param
+    const response = await fetch(`${BASE_URL}/validate-teacher-invite?token=${token}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { success: false, message: data.message || "Invalid invitation link." };
+    }
+    
+    // Returns { success: true, data: { email: "..." } }
+    return data;
+
+  } catch (error) {
+    console.error("Validate Invite Error:", error);
+    return { success: false, message: "Network error validating token." };
+  }
+};
+
+export const completeTeacherOnboarding = async (payload) => {
+  try {
+    const response = await fetch(`${BASE_URL}/complete-teacher-onboarding`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { success: false, message: data.message || "Registration failed." };
+    }
+    
+    return data; // { success: true, ... }
+
+  } catch (error) {
+    console.error("Onboarding Error:", error);
+    return { success: false, message: "Network error during registration." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+// --- Admin Invitation APIs ---
+
+export const inviteParentOnly = async (parentEmail, studentEmail) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/invite-parent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include', // Sends admin cookie
+      body: JSON.stringify({ parentEmail, studentEmail }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { success: false, message: data.message || "Failed to invite parent." };
+    }
+    return { success: true, message: data.message };
+  } catch (error) {
+    console.error("Invite Parent Error:", error);
+    return { success: false, message: "Network error." };
+  }
+};
+
+export const inviteStudentAndParent = async (studentEmail, parentEmail, onlineCredit, offlineCredit) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/invite-student-direct`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ 
+        studentEmail, 
+        parentEmail, 
+        onlineCredit: Number(onlineCredit), 
+        offlineCredit: Number(offlineCredit) 
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      return { success: false, message: data.message || "Failed to send invites." };
+    }
+    return { success: true, message: data.message };
+  } catch (error) {
+    console.error("Invite Student+Parent Error:", error);
+    return { success: false, message: "Network error." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// --- Parent Onboarding APIs ---
+
+export const validateParentInvite = async (token) => {
+  try {
+    const response = await fetch(`${BASE_URL}/validate-parent-invite?token=${token}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { success: false, message: data.message || "Invalid invitation link." };
+    }
+    
+    // Returns { success: true, data: { email: "parent@...", ... } }
+    return data;
+
+  } catch (error) {
+    console.error("Validate Parent Invite Error:", error);
+    return { success: false, message: "Network error validating token." };
+  }
+};
+
+export const completeParentOnboarding = async (payload) => {
+  try {
+    const response = await fetch(`${BASE_URL}/complete-parent-onboarding`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { success: false, message: data.message || "Registration failed." };
+    }
+    
+    return data;
+
+  } catch (error) {
+    console.error("Parent Onboarding Error:", error);
+    return { success: false, message: "Network error during registration." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// --- Student Direct Onboarding APIs ---
+
+export const validateDirectStudentInvite = async (token) => {
+  try {
+    const response = await fetch(`${BASE_URL}/validate-direct-student-invite?token=${token}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { success: false, message: data.message || "Invalid invitation link." };
+    }
+    
+    // Returns { success: true, data: { email: "...", parentEmail: "..." } }
+    return data;
+
+  } catch (error) {
+    console.error("Validate Student Invite Error:", error);
+    return { success: false, message: "Network error validating token." };
+  }
+};
+
+export const completeDirectStudentOnboarding = async (payload) => {
+  try {
+    const response = await fetch(`${BASE_URL}/complete-direct-student-onboarding`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return { success: false, message: data.message || "Registration failed." };
+    }
+    
+    return data;
+
+  } catch (error) {
+    console.error("Student Onboarding Error:", error);
+    return { success: false, message: "Network error during registration." };
   }
 };

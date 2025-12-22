@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { FaChalkboardTeacher, FaEnvelope, FaPhone, FaPlus, FaTimes, FaUserPlus } from "react-icons/fa";
-// 1. Import sendInvite (assuming api.js is in the same directory)
-import { listAllTeachers  } from "../api.js"; 
+
+// 1. Import the new inviteTeacher function along with listAllTeachers
+import { listAllTeachers, inviteTeacher } from "../api.js"; 
 
 // --- Reusable Input Component for Modal ---
 const ModalInput = ({ id, label, icon, isDark, ...props }) => (
@@ -30,7 +31,7 @@ const ModalInput = ({ id, label, icon, isDark, ...props }) => (
   </div>
 );
 
-// --- 2. New Invite Teacher Modal Component ---
+// --- Invite Teacher Modal Component ---
 const InviteTeacherModal = ({ isOpen, onClose, onSubmit, isDark }) => {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,17 +40,16 @@ const InviteTeacherModal = ({ isOpen, onClose, onSubmit, isDark }) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Call the parent's submit function, passing only the email
+    // Call the parent's submit function
     const success = await onSubmit(email);
 
+    setIsSubmitting(false);
+
     if (success) {
-      setEmail(""); // Clear form
-      setIsSubmitting(false);
+      setEmail(""); // Clear form on success
       onClose(); // Close modal
-    } else {
-      // If it failed, stop loading so user can try again
-      setIsSubmitting(false);
     }
+    // If failed, we keep the modal open and data preserved so user can fix it
   };
 
   if (!isOpen) return null;
@@ -66,13 +66,13 @@ const InviteTeacherModal = ({ isOpen, onClose, onSubmit, isDark }) => {
       style={{ backgroundColor: "rgba(0, 0, 0, 0.6)", backdropFilter: "blur(5px)" }}
     >
       <div 
-        className="relative w-full max-w-lg p-8 rounded-2xl border"
+        className="relative w-full max-w-lg p-8 rounded-2xl border shadow-2xl"
         style={{ backgroundColor: modalBG, color: textColor, borderColor: modalBorder }}
       >
         {/* Close Button */}
         <button 
           onClick={onClose}
-          className="absolute top-6 right-6 p-2 rounded-full transition"
+          className="absolute top-6 right-6 p-2 rounded-full transition hover:opacity-80"
           style={{ color: secondaryText, backgroundColor: `var(${isDark ? "--card-dark" : "rgba(0,0,0,0.05)"})`}}
         >
           <FaTimes />
@@ -93,7 +93,7 @@ const InviteTeacherModal = ({ isOpen, onClose, onSubmit, isDark }) => {
             required
           />
           <div 
-            className="p-3 rounded-lg text-sm"
+            className="p-3 rounded-lg text-sm mb-6"
             style={{
               backgroundColor: `var(${isDark ? "--bg-dark" : "rgba(0,0,0,0.03)"})`,
               color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`
@@ -107,7 +107,7 @@ const InviteTeacherModal = ({ isOpen, onClose, onSubmit, isDark }) => {
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 rounded-lg font-semibold"
+              className="px-6 py-2 rounded-lg font-semibold transition hover:opacity-80"
               style={{
                 backgroundColor: `var(${isDark ? "--border-dark" : "rgba(0,0,0,0.05)"})`,
                 color: textColor
@@ -118,10 +118,11 @@ const InviteTeacherModal = ({ isOpen, onClose, onSubmit, isDark }) => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 rounded-lg font-semibold text-white transition flex items-center gap-2"
+              className="px-6 py-2 rounded-lg font-semibold text-white transition flex items-center gap-2 hover:scale-105 active:scale-95"
               style={{
                 background: "linear-gradient(90deg, var(--accent-teal), var(--accent-purple))",
-                opacity: isSubmitting ? 0.7 : 1
+                opacity: isSubmitting ? 0.7 : 1,
+                cursor: isSubmitting ? 'not-allowed' : 'pointer'
               }}
             >
               <FaUserPlus />
@@ -134,7 +135,7 @@ const InviteTeacherModal = ({ isOpen, onClose, onSubmit, isDark }) => {
   );
 };
 
-// --- Individual Teacher Card Component (Unchanged) ---
+// --- Individual Teacher Card Component ---
 const TeacherCard = ({ teacher, isDark }) => (
   <div 
     className="p-6 rounded-2xl border flex flex-col transition-all duration-300 hover:shadow-lg"
@@ -171,9 +172,8 @@ const TeacherCard = ({ teacher, isDark }) => (
       </p>
     </div>
     
-    {/* Action Button */}
     <button 
-      className="w-full mt-6 px-4 py-2 rounded-lg font-semibold transition"
+      className="w-full mt-6 px-4 py-2 rounded-lg font-semibold transition hover:bg-opacity-80"
       style={{
         backgroundColor: `var(${isDark ? "--border-dark" : "rgba(0,0,0,0.05)"})`,
         color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`
@@ -184,11 +184,11 @@ const TeacherCard = ({ teacher, isDark }) => (
   </div>
 );
 
-// --- 3. "Add Teacher" Card (Updated with onClick) ---
+// --- "Add Teacher" Card ---
 const AddTeacherCard = ({ isDark, onClick }) => (
   <button 
-    onClick={onClick} // Added onClick prop
-    className="p-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center min-h-[268px] transition-all duration-300 hover:shadow-lg"
+    onClick={onClick}
+    className="p-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center min-h-[268px] transition-all duration-300 hover:shadow-lg hover:border-[var(--accent-teal)] cursor-pointer w-full"
     style={{
       borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
       color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`
@@ -204,69 +204,62 @@ const AdminTeacherPage = () => {
   const { isDark } = useOutletContext(); 
   const [teachers, setTeachers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // 4. Add modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchTeachers = async () => {
-      setIsLoading(true);
-      const response = await listAllTeachers();
-      
-      if (response.success) {
-        setTeachers(response.data);
-      } else {
-        alert(response.message);
-      }
-      setIsLoading(false);
-    };
-
     fetchTeachers();
-  }, []); // Runs once on page load
+  }, []);
 
-  // 5. Add submit handler for the modal
+  const fetchTeachers = async () => {
+    setIsLoading(true);
+    const response = await listAllTeachers();
+    
+    if (response.success) {
+      setTeachers(response.data);
+    } else {
+      console.error(response.message);
+    }
+    setIsLoading(false);
+  };
+
+  // --- 2. Implement the Handle Invite Logic ---
   const handleSendInvite = async (email) => {
-    // Call the API with email and "teacher" role
-    // const response = await sendInvite(email, "teacher");
+    const response = await inviteTeacher(email);
     
-    // alert(response.message); // Show success or error message
-    
-    // if (response.success) {
-    //   // You could re-fetch teachers here if you had an
-    //   // "Invited" status, but for now, just return success.
-    //   return true;
-    // }
-    return false; // Tell modal submission failed
+    if (response.success) {
+      alert("Invitation sent successfully!");
+      // Optional: Re-fetch teachers if the list should update immediately
+      // fetchTeachers(); 
+      return true; // Signals success to the modal
+    } else {
+      alert(response.message); // Show error to user
+      return false; // Signals failure
+    }
   };
 
   return (
     <div>
       <h1 className="text-3xl font-bold mb-8">Manage Teachers</h1>
 
-      {/* Loading State */}
       {isLoading ? (
         <p>Loading teachers...</p>
-      
-      // Empty State
       ) : teachers.length === 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <AddTeacherCard isDark={isDark} onClick={() => setIsModalOpen(true)} />
-          <p className="p-6" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}>
-            No teachers found. Use the '+' card to add one.
+          <p className="p-6 col-span-full" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}>
+            No teachers found. Use the card above to add one.
           </p>
         </div>
-
-      // Data State
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {teachers.map(teacher => (
             <TeacherCard key={teacher._id} teacher={teacher} isDark={isDark} />
           ))}
+          {/* Add Teacher Card is now the last item in the grid */}
           <AddTeacherCard isDark={isDark} onClick={() => setIsModalOpen(true)} />
         </div>
       )}
 
-      {/* 6. Render the modal */}
       <InviteTeacherModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

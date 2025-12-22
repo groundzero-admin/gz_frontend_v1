@@ -34,6 +34,9 @@ import PaymentFailure from './paymentfailure.jsx'
 import StudentRegistration from './StudentNewOnBoardingPage.jsx'
 import StudentRemainingSessionPurchase from './StudentPages/StudentRemainingSessionPurchase.jsx'
 import StudentPaymentStatusHandler from './StudentPages/StudentPaymentStatusHandler.jsx'
+import TeacherSignupPage from './TeacherPages/TeacherSignupPage.jsx'
+import ParentSignupPage from './ParentPages/ParentRegistration.jsx'
+import StudentSignupDirectPage from './StudentPages/StudentSignupDirectPage.jsx'
 
 
 
@@ -50,6 +53,11 @@ function App() {
       <Route path="/payment-failed" element={< PaymentFailure />} />
 
       <Route path="/register-student" element={<StudentRegistration />} />
+      <Route path="/teacher-signup" element={<TeacherSignupPage />} />
+
+      <Route path="/parent-signup" element={<ParentSignupPage />} />
+
+      <Route path="/student-signup-direct" element={<StudentSignupDirectPage />} />
 
 
 

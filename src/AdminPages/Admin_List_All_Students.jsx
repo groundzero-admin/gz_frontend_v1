@@ -22,10 +22,10 @@ const StudentRow = ({ student, isDark, navigate }) => {
       : null
 
   const onlineClasses =
-    onlineCredit !== null ? Math.floor(onlineCredit / ONLINE_UNIT) : null
+    onlineCredit !== null ? Math.floor(onlineCredit ) : null
 
   const offlineClasses =
-    offlineCredit !== null ? Math.floor(offlineCredit / OFFLINE_UNIT) : null
+    offlineCredit !== null ? Math.floor(offlineCredit ) : null
 
   return (
     <tr
@@ -103,11 +103,11 @@ const StudentRow = ({ student, isDark, navigate }) => {
 }
 
 // ================================
-// Add Student Button
+// Add Student Button (Updated)
 // ================================
-const AddStudentButton = () => (
+const AddStudentButton = ({ onClick }) => (
   <button
-    onClick={() => alert("I’ll add this feature soon")}
+    onClick={onClick}
     className="px-6 py-3 rounded-xl font-bold text-sm text-white transition-all duration-300 flex items-center gap-2 hover:opacity-90"
     style={{
       background:
@@ -155,7 +155,9 @@ const AdminStudentPage = () => {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Manage Students</h1>
-        <AddStudentButton />
+        
+        {/* Pass the navigation handler here */}
+        <AddStudentButton onClick={() => navigate("/admin/dashboard/invitation")} />
       </div>
 
       {isLoading ? (
