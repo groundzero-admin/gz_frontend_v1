@@ -12,14 +12,9 @@ import { useNavigate } from "react-router-dom"
 import "./color.css"
 import { login } from "./api.js"
 
-<<<<<<< HEAD
 // --- REUSABLE INPUT COMPONENT (Unchanged) ---
 
 const InputField = ({ 
-=======
-// --- REUSABLE INPUT COMPONENT ---
-const InputField = ({
->>>>>>> localdev
   icon,
   type,
   placeholder,
