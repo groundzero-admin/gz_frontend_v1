@@ -1582,7 +1582,17 @@ export const inviteParentOnly = async (parentEmail, studentEmail) => {
   }
 };
 
-export const inviteStudentAndParent = async (studentEmail, parentEmail, onlineCredit, offlineCredit) => {
+
+
+
+
+
+
+
+
+
+
+export const inviteStudentAndParent = async (studentEmail, parentEmail, onlineCredit, offlineCredit, batches = []) => {
   try {
     const response = await fetch(`${BASE_URL}/admin/invite-student-direct`, {
       method: 'POST',
@@ -1594,7 +1604,8 @@ export const inviteStudentAndParent = async (studentEmail, parentEmail, onlineCr
         studentEmail, 
         parentEmail, 
         onlineCredit: Number(onlineCredit), 
-        offlineCredit: Number(offlineCredit) 
+        offlineCredit: Number(offlineCredit),
+        batches // Passing array of { batch_obj_id, batchName }
       }),
     });
 
@@ -1608,7 +1619,6 @@ export const inviteStudentAndParent = async (studentEmail, parentEmail, onlineCr
     return { success: false, message: "Network error." };
   }
 };
-
 
 
 

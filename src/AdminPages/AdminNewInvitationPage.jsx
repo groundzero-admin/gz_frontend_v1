@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { 
   FaUserPlus, 
@@ -10,10 +10,13 @@ import {
   FaMinus,
   FaPlus,
   FaWifi,
-  FaBan
+  FaBan,
+  FaLayerGroup,
+  FaCheckCircle
 } from 'react-icons/fa';
 
-import { inviteParentOnly, inviteStudentAndParent } from "../api.js";
+// Import getBatches along with invite functions
+import { inviteParentOnly, inviteStudentAndParent, getBatches } from "../api.js";
 
 // --- Reusable Components ---
 
@@ -47,7 +50,7 @@ const FormInput = ({ id, label, icon, placeholder, value, onChange, type = "text
   </div>
 );
 
-// --- New Credit Counter Component ---
+// Credit Counter Component
 const CreditCounter = ({ label, value, onChange, step, isDark, icon: Icon, colorClass }) => {
   const handleDecrement = () => {
     if (value - step >= 0) {
@@ -98,10 +101,6 @@ const CreditCounter = ({ label, value, onChange, step, isDark, icon: Icon, color
           <FaPlus size={12} />
         </button>
       </div>
-      
-      {/* <p className="text-[10px] opacity-40 uppercase tracking-widest font-bold">
-        Step: {step}
-      </p> */}
     </div>
   );
 };
@@ -135,9 +134,24 @@ const AdminInvitationsPage = () => {
   const [studentEmail, setStudentEmail] = useState('');
   const [parentEmail, setParentEmail] = useState('');
   
-  // Credits start at 0
+  // Credits
   const [onlineCredit, setOnlineCredit] = useState(0);
   const [offlineCredit, setOfflineCredit] = useState(0);
+
+  // Batches
+  const [availableBatches, setAvailableBatches] = useState([]);
+  const [selectedBatchIds, setSelectedBatchIds] = useState([]);
+
+  // Fetch batches on mount
+  useEffect(() => {
+    const loadBatches = async () => {
+      const response = await getBatches();
+      if (response.success) {
+        setAvailableBatches(response.data || []);
+      }
+    };
+    loadBatches();
+  }, []);
 
   const handleTabSwitch = (tab) => {
     setActiveTab(tab);
@@ -145,6 +159,15 @@ const AdminInvitationsPage = () => {
     setParentEmail('');
     setOnlineCredit(0);
     setOfflineCredit(0);
+    setSelectedBatchIds([]); // Reset selected batches
+  };
+
+  const toggleBatchSelection = (batchId) => {
+    setSelectedBatchIds(prev => 
+      prev.includes(batchId) 
+        ? prev.filter(id => id !== batchId) 
+        : [...prev, batchId]
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -154,7 +177,21 @@ const AdminInvitationsPage = () => {
     let response;
 
     if (activeTab === 'newStudent') {
-      response = await inviteStudentAndParent(studentEmail, parentEmail, onlineCredit, offlineCredit);
+      // Filter full batch objects based on selected IDs
+      const batchesToSend = availableBatches
+        .filter(b => selectedBatchIds.includes(b.batch_obj_id))
+        .map(b => ({
+            batch_obj_id: b.batch_obj_id,
+            batchName: b.batchName
+        }));
+
+      response = await inviteStudentAndParent(
+        studentEmail, 
+        parentEmail, 
+        onlineCredit, 
+        offlineCredit, 
+        batchesToSend // Pass array of batches
+      );
     } else {
       response = await inviteParentOnly(parentEmail, studentEmail);
     }
@@ -167,6 +204,7 @@ const AdminInvitationsPage = () => {
       setParentEmail('');
       setOnlineCredit(0);
       setOfflineCredit(0);
+      setSelectedBatchIds([]);
     }
   };
 
@@ -216,11 +254,11 @@ const AdminInvitationsPage = () => {
                  }}>
               {activeTab === 'newStudent' ? (
                 <p>
-                  <strong>Onboard a new family:</strong> This will create pending accounts for both the Student and Parent, link them, and assign initial credits. Both will receive invitation emails.
+                  <strong>Onboard a new family:</strong> Create accounts for Student and Parent, assign credits, and optionally enroll them in batches immediately.
                 </p>
               ) : (
                 <p>
-                  <strong>Link an existing student:</strong> Use this if the student is already registered but their parent has not joined yet. Requires the student's existing email.
+                  <strong>Link an existing student:</strong> Use this if the student is already registered but their parent has not joined yet.
                 </p>
               )}
             </div>
@@ -250,37 +288,79 @@ const AdminInvitationsPage = () => {
               />
             </div>
 
-            {/* NEW Credits Section (Only for New Student Flow) */}
+            {/* NEW: Credits & Batches Section (Only for New Student Flow) */}
             {activeTab === 'newStudent' && (
-              <div className="mt-6 pt-6 border-t" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>
-                <h3 className="font-bold mb-4 flex items-center gap-2">
-                  <FaCoins className="text-yellow-500" /> Initial Wallet Balance
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Online Credit Counter (+1000) */}
-                  <CreditCounter 
-                    label="Online Credits"
-                    value={onlineCredit}
-                    onChange={setOnlineCredit}
-                    step={1000}
-                    isDark={isDark}
-                    icon={FaWifi}
-                    colorClass="text-blue-500"
-                  />
-
-                  {/* Offline Credit Counter (+1500) */}
-                  <CreditCounter 
-                    label="Offline Credits"
-                    value={offlineCredit}
-                    onChange={setOfflineCredit}
-                    step={1500}
-                    isDark={isDark}
-                    icon={FaBan}
-                    colorClass="text-orange-500"
-                  />
+              <>
+                {/* 1. Credits */}
+                <div className="mt-6 pt-6 border-t" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>
+                  <h3 className="font-bold mb-4 flex items-center gap-2">
+                    <FaCoins className="text-yellow-500" /> Initial Wallet Balance
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <CreditCounter 
+                      label="Online Credits"
+                      value={onlineCredit}
+                      onChange={setOnlineCredit}
+                      step={1000}
+                      isDark={isDark}
+                      icon={FaWifi}
+                      colorClass="text-blue-500"
+                    />
+                    <CreditCounter 
+                      label="Offline Credits"
+                      value={offlineCredit}
+                      onChange={setOfflineCredit}
+                      step={1500}
+                      isDark={isDark}
+                      icon={FaBan}
+                      colorClass="text-orange-500"
+                    />
+                  </div>
                 </div>
-              </div>
+
+                {/* 2. Assign Batches */}
+                <div className="mt-6 pt-6 border-t" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>
+                  <h3 className="font-bold mb-2 flex items-center gap-2">
+                    <FaLayerGroup className="text-[var(--accent-purple)]" /> Assign Batches (Optional)
+                  </h3>
+                  <p className="text-xs opacity-60 mb-4">Select any batches to enroll the student immediately.</p>
+                  
+                  <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2 custom-scroll">
+                    {availableBatches.length === 0 ? (
+                        <p className="text-sm opacity-50 italic">No active batches available.</p>
+                    ) : (
+                        availableBatches.map(batch => {
+                            const isSelected = selectedBatchIds.includes(batch.batch_obj_id);
+                            return (
+                                <div 
+                                    key={batch.batch_obj_id}
+                                    onClick={() => toggleBatchSelection(batch.batch_obj_id)}
+                                    className={`
+                                      flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-all
+                                      ${isSelected 
+                                        ? 'bg-[var(--accent-purple)] bg-opacity-10 border-[var(--accent-purple)]' 
+                                        : 'hover:bg-white/5 border-transparent bg-black/5 dark:bg-white/5'
+                                      }
+                                    `}
+                                    style={{
+                                        borderColor: isSelected ? 'var(--accent-purple)' : `var(${isDark ? "--border-dark" : "--border-light"})`
+                                    }}
+                                >
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-sm">{batch.batchName}</span>
+                                        <span className="text-[10px] opacity-70">{batch.batchType} • {batch.status}</span>
+                                    </div>
+                                    <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${isSelected ? 'bg-[var(--accent-purple)] border-[var(--accent-purple)]' : 'border-gray-500'}`}>
+                                        {isSelected && <FaCheckCircle className="text-white text-xs" />}
+                                    </div>
+                                </div>
+                            )
+                        })
+                    )}
+                  </div>
+                </div>
+              </>
             )}
 
             {/* Submit Button */}
