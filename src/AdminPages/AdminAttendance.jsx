@@ -1,4 +1,3 @@
-// AttendancePage.jsx
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { 
@@ -70,7 +69,7 @@ const api = {
 
   markAttendance: async (student_obj_id, session_obj_id, status) => {
     try {
-      const response = await fetch(`${BASE_URL}/teacher/mark-attendance`, {
+      const response = await fetch(`${BASE_URL}/admin/mark-attendance`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -157,19 +156,20 @@ export default function AttendancePage() {
   }, []);
 
   // 1. Fetch Batches
-const fetchBatches = async () => {
-  setLoadingBatches(true);
-  const res = await api.getAllLiveBatches();
+  const fetchBatches = async () => {
+    setLoadingBatches(true);
+    const res = await api.getAllLiveBatches();
 
-  if (res.success) {
-    const onlyLive = (res.data || []).filter(
-      batch => batch.status === "LIVE" || batch.isLive === true
-    );
-    setBatches(onlyLive);
-  }
+    if (res.success) {
+      // Endpoint is 'listallactivebatches', so we trust the backend to return active batches.
+      // No extra filtering needed.
+      setBatches(res.data || []);
+    } else {
+      setBatches([]);
+    }
 
-  setLoadingBatches(false);
-};
+    setLoadingBatches(false);
+  };
 
 
   // 2. Fetch All Students (Bottom Section)
@@ -198,9 +198,14 @@ const fetchBatches = async () => {
     setLoadingSessions(true);
     setBatchSessions([]); // Clear previous
     
-    const res = await api.getAllSessionsForBatch(batch._id);
-    if (res.success) setBatchSessions(res.data || []);
-    else setBatchSessions([]);
+    const res = await api.getAllSessionsForBatch(batch.batch_obj_id);
+  if (res.success) {
+  setBatchSessions(res.data.sessions || []);
+} else {
+  setBatchSessions([]);
+}
+
+    // else setBatchSessions([]);
     
     setLoadingSessions(false);
   };
@@ -233,8 +238,8 @@ const fetchBatches = async () => {
     );
 
     if (res.success) {
-
-       alert(res.message);
+       // Ideally use a toast here instead of alert
+       console.log(res.message);
        
       setSessionStudents(prev => prev.map(s => 
         s.student_obj_id === student.student_obj_id 
@@ -242,7 +247,7 @@ const fetchBatches = async () => {
           : s
       ));
     } else {
-      alert("Failed to update status. Please try again.");
+      console.error("Failed to update status. Please try again.");
     }
     setUpdatingId(null);
   };
@@ -329,38 +334,71 @@ const fetchBatches = async () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {batches.map(batch => (
-                <div 
-                  key={batch._id}
-                  onClick={() => handleBatchClick(batch)}
-                  role="button"
-                  className="rounded-2xl p-6 cursor-pointer group"
-                  style={{
-                    backgroundColor: `var(${isDark ? '--card-dark' : '--card-light'})`,
-                    border: `1px solid var(${isDark ? '--border-dark' : '--border-light'})`,
-                    transition: 'transform .25s',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-                    <span style={{
-                      backgroundColor: 'transparent',
-                      color: 'var(--accent-purple)',
-                      border: `1px solid rgba(138,43,226,0.18)`,
-                      padding: '6px 10px',
-                      borderRadius: 999,
-                      fontSize: 12,
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: 0.6
-                    }}>{batch.batchId}</span>
+            {batches.map(batch => (
+  <div
+    key={batch.batch_obj_id}
+    onClick={() => handleBatchClick(batch)}
+    role="button"
+    className="rounded-2xl p-6 cursor-pointer group"
+    style={{
+      backgroundColor: `var(${isDark ? '--card-dark' : '--card-light'})`,
+      border: `1px solid var(${isDark ? '--border-dark' : '--border-light'})`,
+      transition: 'transform .25s',
+    }}
+  >
+    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+      <span
+        style={{
+          color: batch.batchType === "OFFLINE" ? "#fb923c" : "#60a5fa",
+          fontSize: 11,
+          fontWeight: 800,
+          border: `1px solid ${
+            batch.batchType === "OFFLINE" ? "#fb923c" : "#60a5fa"
+          }`,
+          padding: "4px 10px",
+          borderRadius: 999,
+          textTransform: "uppercase",
+          letterSpacing: 0.6
+        }}
+      >
+        {batch.batchType}
+      </span>
 
-                    <ChevronRight className="group-hover" style={{ color: `var(${isDark ? '--text-dark-secondary' : '--text-light-secondary'})` }} />
-                  </div>
+      <ChevronRight />
+    </div>
 
-                  <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: `var(${isDark ? '--text-dark-primary' : '--text-light-primary'})` }}>{batch.title || batch.batchId}</h3>
-                  <p style={{ color: `var(${isDark ? '--text-dark-secondary' : '--text-light-secondary'})`, marginTop: 6 }}>{batch.cohort} • {batch.level}</p>
-                </div>
-              ))}
+    <h3
+      style={{
+        fontSize: 18,
+        fontWeight: 800,
+        color: `var(${isDark ? '--text-dark-primary' : '--text-light-primary'})`
+      }}
+    >
+      {batch.batchName}
+    </h3>
+
+    <p
+      style={{
+        marginTop: 6,
+        fontSize: 13,
+        color: `var(${isDark ? '--text-dark-secondary' : '--text-light-secondary'})`
+      }}
+    >
+      Level: {batch.level}
+    </p>
+
+    <p
+      style={{
+        marginTop: 6,
+        fontSize: 12,
+        opacity: 0.7
+      }}
+    >
+      Starts: {new Date(batch.startDate).toLocaleDateString()}
+    </p>
+  </div>
+))}
+
               {!loadingBatches && batches.length === 0 && (
                 <p style={{ color: `var(${isDark ? '--text-dark-secondary' : '--text-light-secondary'})` }}>No active batches found.</p>
               )}
@@ -450,7 +488,7 @@ const fetchBatches = async () => {
               <div style={{ padding: 20, borderBottom: `1px solid var(${isDark ? '--border-dark' : '--border-light'})`, backgroundColor: `var(${isDark ? '--card-dark' : '--card-light'})` }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: `var(${isDark ? '--text-dark-primary' : '--text-light-primary'})` }}>{selectedBatch.title || selectedBatch.batchId}</h3>
+                    <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: `var(${isDark ? '--text-dark-primary' : '--text-light-primary'})` }}>{selectedBatch.batchName}</h3>
                     <div style={{ marginTop: 6, color: `var(${isDark ? '--text-dark-secondary' : '--text-light-secondary'})`, fontFamily: 'monospace' }}>
                       Batch ID: {selectedBatch.batchId} {selectedBatch.batchType ? `• ${selectedBatch.batchType}` : ''}
                     </div>
@@ -587,66 +625,66 @@ const fetchBatches = async () => {
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
 
-  {updatingId === student.student_obj_id ? (
-    <Loader2 className="animate-spin" style={{ width: 20, height: 20 }} />
-  ) : student.status === "UNMARKED" ? (
-    <>
-      {/* Mark Present Button */}
-      <button
-        onClick={() => toggleAttendance({ ...student, status: "ABSENT" })} // calling ABSENT will flip to PRESENT
-        style={{
-          padding: "10px 14px",
-          borderRadius: 10,
-          fontWeight: 700,
-          border: "1px solid var(--accent-teal)",
-          background: "transparent",
-          color: "var(--accent-teal)",
-          cursor: "pointer"
-        }}
-      >
-        Mark Present
-      </button>
+                          {updatingId === student.student_obj_id ? (
+                            <Loader2 className="animate-spin" style={{ width: 20, height: 20 }} />
+                          ) : student.status === "UNMARKED" ? (
+                            <>
+                              {/* Mark Present Button */}
+                              <button
+                                onClick={() => toggleAttendance({ ...student, status: "ABSENT" })} // calling ABSENT will flip to PRESENT in toggle function
+                                style={{
+                                  padding: "10px 14px",
+                                  borderRadius: 10,
+                                  fontWeight: 700,
+                                  border: "1px solid var(--accent-teal)",
+                                  background: "transparent",
+                                  color: "var(--accent-teal)",
+                                  cursor: "pointer"
+                                }}
+                              >
+                                Mark Present
+                              </button>
 
-      {/* Mark Absent Button */}
-      <button
-        onClick={() => toggleAttendance({ ...student, status: "PRESENT" })} // calling PRESENT will flip to ABSENT
-        style={{
-          padding: "10px 14px",
-          borderRadius: 10,
-          fontWeight: 700,
-          border: "1px solid #ff6b6b",
-          background: "transparent",
-          color: "#ff6b6b",
-          cursor: "pointer"
-        }}
-      >
-        Mark Absent
-      </button>
-    </>
-  ) : (
-    // EXISTING PRESENT/ABSENT UI
-    <button
-      onClick={() => toggleAttendance(student)}
-      disabled={updatingId === student.student_obj_id}
-      style={{
-        width: "100%",
-        maxWidth: 260,
-        padding: "10px 14px",
-        borderRadius: 10,
-        fontWeight: 700,
-        cursor: "pointer",
-        border: "1px solid",
-        borderColor:
-          student.status === "PRESENT" ? "var(--accent-teal)" : "#ff6b6b",
-        background: "transparent",
-        color: student.status === "PRESENT" ? "var(--accent-teal)" : "#ff6b6b"
-      }}
-    >
-      {student.status === "PRESENT" ? "Present — Mark Absent" : "Absent — Mark Present"}
-    </button>
-  )}
+                              {/* Mark Absent Button */}
+                              <button
+                                onClick={() => toggleAttendance({ ...student, status: "PRESENT" })} // calling PRESENT will flip to ABSENT in toggle function
+                                style={{
+                                  padding: "10px 14px",
+                                  borderRadius: 10,
+                                  fontWeight: 700,
+                                  border: "1px solid #ff6b6b",
+                                  background: "transparent",
+                                  color: "#ff6b6b",
+                                  cursor: "pointer"
+                                }}
+                              >
+                                Mark Absent
+                              </button>
+                            </>
+                          ) : (
+                            // EXISTING PRESENT/ABSENT UI
+                            <button
+                              onClick={() => toggleAttendance(student)}
+                              disabled={updatingId === student.student_obj_id}
+                              style={{
+                                width: "100%",
+                                maxWidth: 260,
+                                padding: "10px 14px",
+                                borderRadius: 10,
+                                fontWeight: 700,
+                                cursor: "pointer",
+                                border: "1px solid",
+                                borderColor:
+                                  student.status === "PRESENT" ? "var(--accent-teal)" : "#ff6b6b",
+                                background: "transparent",
+                                color: student.status === "PRESENT" ? "var(--accent-teal)" : "#ff6b6b"
+                              }}
+                            >
+                              {student.status === "PRESENT" ? "Present — Mark Absent" : "Absent — Mark Present"}
+                            </button>
+                          )}
 
-</div>
+                        </div>
 
                         </div>
                       ))

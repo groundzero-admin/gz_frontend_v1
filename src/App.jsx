@@ -5,7 +5,7 @@ import AuthPage from './Login_Page'         // The component you just made
 import InviteOnboardPage from './registration_onboarding.jsx'
 import AdminDashBoardLayout from './AdminPages/AdminDashboardLayout.jsx'
 import AdminWelcomePage from './AdminPages/AdminWelcome.jsx'
-import AdminRequestPage from './AdminPages/AdminLoginRequestPage.jsx'
+import AdminRequestPage from './AdminPages/AdminNewJoineesRequestPage.jsx'
 import AdminNewInvitationsPage from './AdminPages/AdminNewInvitationPage.jsx'
 import ParentDashboardPage from './ParentDahboardPage.jsx'
 import AdminListAllTeacherPage from './AdminPages/Admin_List_All_Teachers.jsx'
@@ -32,6 +32,15 @@ import BuyCourse from './BuyCourse.jsx'
 import PaymentSuccess from './paymentsuccess.jsx'
 import PaymentFailure from './paymentfailure.jsx'
 import StudentRegistration from './StudentNewOnBoardingPage.jsx'
+import StudentRemainingSessionPurchase from './StudentPages/StudentRemainingSessionPurchase.jsx'
+import StudentPaymentStatusHandler from './StudentPages/StudentPaymentStatusHandler.jsx'
+import TeacherSignupPage from './TeacherPages/TeacherSignupPage.jsx'
+import ParentSignupPage from './ParentPages/ParentRegistration.jsx'
+import StudentSignupDirectPage from './StudentPages/StudentSignupDirectPage.jsx'
+import LandingPageMain from './LandingPageMain.jsx'
+import BookingPage from './BookDiscoveryCall.jsx'
+import BookOneOnOneSession from './BookOneOnOneSessions.jsx'
+import FormSquad from './FormSquad.jsx'
 
 
 
@@ -42,12 +51,22 @@ function App() {
   return (
     <Routes>
       {/* Route for the Landing Page */}
-      <Route path="/" element={<Landing_Page />} />
+      <Route path="/" element={< LandingPageMain />} />
+      <Route path="/book-discovery-call" element={< BookingPage />} />
+      <Route path="/book-one-on-one-session" element={< BookOneOnOneSession />} />
+      <Route path="/form-a-squad" element={< FormSquad />} />
+
+      <Route path="/spark" element={<Landing_Page />} />
       <Route path="/buycourse" element={<BuyCourse />} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/payment-failed" element={< PaymentFailure />} />
 
       <Route path="/register-student" element={<StudentRegistration />} />
+      <Route path="/teacher-signup" element={<TeacherSignupPage />} />
+
+      <Route path="/parent-signup" element={<ParentSignupPage />} />
+
+      <Route path="/student-signup-direct" element={<StudentSignupDirectPage />} />
 
 
 
@@ -95,6 +114,8 @@ function App() {
               <Route path = "mybatches" element={ <StudentMyBatches/>     } />
               {/* <Route path = "allbatches" element={ <StudentAllBatchesPage/>     } /> */}
               <Route path = "doubts" element={ <StudentDoubtsPage/>     } />
+              <Route path = "remaingsessionpurchase" element={ <StudentRemainingSessionPurchase/>     } />
+              <Route path = "payment-result" element={ < StudentPaymentStatusHandler/>     } />
     </Route>
 
 

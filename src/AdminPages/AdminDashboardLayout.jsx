@@ -76,7 +76,8 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
               to={link.to}
               icon={link.icon}
               label={link.label}
-              isActive={currentPath === link.to}
+            isActive={currentPath.startsWith(link.to)}
+
               isDark={isDark}
             />
           ))}

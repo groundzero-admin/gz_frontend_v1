@@ -38,7 +38,7 @@ const FaChevronUpIcon = ({ className }) => (
 );
 // --- End SVG Icons ---
 
-import { getMyDoubts, raiseDoubt, getMyEnrolledBatches } from '../api.js';
+import { getMyDoubts, raiseDoubt, getMyLiveBatches } from '../api.js';
 
 // --- Modal to Raise Doubt ---
 const RaiseDoubtModal = ({ isOpen, onClose, isDark, onDoubtRaised }) => {
@@ -48,21 +48,29 @@ const RaiseDoubtModal = ({ isOpen, onClose, isDark, onDoubtRaised }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch batches for dropdown when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      const fetchBatches = async () => {
-        const response = await getMyEnrolledBatches();
-        if (response.success) {
-          setBatches(response.data);
-          // Select first batch by default
-          if (response.data.length > 0) {
-            setSelectedBatchId(response.data[0].batchId);
-          }
+useEffect(() => {
+  if (isOpen) {
+    const fetchBatches = async () => {
+      const response = await getMyLiveBatches();
+
+      if (response?.success && Array.isArray(response.data)) {
+        const normalized = response.data.map(b => ({
+          batch_obj_id: b.batch_obj_id, // ✅ backend ID
+          batchName: b.batchName        // ✅ display name
+        }));
+
+        setBatches(normalized);
+
+        if (normalized.length > 0) {
+          setSelectedBatchId(normalized[0].batch_obj_id);
         }
-      };
-      fetchBatches();
-    }
-  }, [isOpen]);
+      }
+    };
+
+    fetchBatches();
+  }
+}, [isOpen]);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -117,7 +125,10 @@ const RaiseDoubtModal = ({ isOpen, onClose, isDark, onDoubtRaised }) => {
             >
               <option value="" disabled>Select a batch</option>
               {batches.map(b => (
-                <option key={b.batchId} value={b.batchId}>{b.batchId}</option>
+               <option key={b.batch_obj_id} value={b.batch_obj_id}>
+  {b.batchName}
+</option>
+
               ))}
             </select>
           </div>

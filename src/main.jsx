@@ -5,10 +5,12 @@ import './index.css'
 import './color.css'
 // import Landing_Page from './Landing_page.jsx'
 import App from './App'
+import ScrollToTop from './ScrollToTop'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter> {/* 2. Wrap your App component */}
+     <ScrollToTop />
       <App />
     </BrowserRouter>
   </StrictMode>,

@@ -320,35 +320,48 @@ const StudentMyBatches = () => {
   const [isSessionsLoading, setIsSessionsLoading] = useState(false);
 
   // 1. Fetch user's batches (Live & Upcoming)
-  useEffect(() => {
-    const fetchBatches = async () => {
-      setIsLoading(true);
-      try {
-        const response = await getMyLiveBatches();
+useEffect(() => {
+  const fetchBatches = async () => {
+    setIsLoading(true);
+    try {
+      const response = await getMyLiveBatches();
 
-        if (response && response.success && Array.isArray(response.data)) {
-          const today = new Date();
-          const normalized = response.data.map(b => {
-            const start = new Date(b.startDate);
-            return {
-              ...b,
-              isLive: start <= today,
-              isUpcoming: start > today
-            };
-          });
-          setBatches(normalized);
-        } else {
-            console.error("Invalid response format", response);
-        }
-      } catch (error) {
-          console.error("Error fetching batches:", error);
-      } finally {
-        setIsLoading(false);
+      if (response?.success && Array.isArray(response.data)) {
+        const today = new Date();
+
+        const normalized = response.data.map(b => {
+          const start = new Date(b.startDate);
+
+          return {
+            _id: b.batch_obj_id,          // ✅ required for keys & API calls
+            batchId: b.batchName,         // ✅ used in UI
+            level: b.level,
+            cohort: b.level,              // optional: reuse if cohort not provided
+            startDate: b.startDate,
+            batchType: b.batchType,
+            description: b.description,
+            classLocation: b.classLocation || null,
+            cityCode: b.cityCode || null,
+
+            isLive: start <= today,
+            isUpcoming: start > today
+          };
+        });
+
+        setBatches(normalized);
+      } else {
+        console.error("Invalid response format", response);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching batches:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchBatches();
-  }, []);
+  fetchBatches();
+}, []);
+
 
 
   // 2. Handle click: Fetch Sessions

@@ -13,7 +13,6 @@ import {
 } from 'react-icons/fa';
 
 import { 
-  getLiveBatchInfoTeacherMinor, 
   getTodaysLiveBatchesForTeacher 
 } from '../api.js';
 
@@ -61,7 +60,7 @@ const MotivationBanner = ({ isDark }) => {
 
 
 // ------------------- LIVE BATCH BUTTON -------------------
-// Matches Backend Response: { _id: "...", batchId: "..." }
+// Now uses data from the same API source
 const LiveBatchButton = ({ batch, isDark, onClick }) => (
   <button
     onClick={onClick}
@@ -72,8 +71,8 @@ const LiveBatchButton = ({ batch, isDark, onClick }) => (
       color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`
     }}
   >
-    <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-    <span className="font-semibold text-sm">{batch.batchId}</span>
+    <span className={`w-2 h-2 rounded-full ${batch.hasClassToday ? 'bg-green-400 animate-pulse' : 'bg-gray-400'}`}></span>
+    <span className="font-semibold text-sm">{batch.batchName}</span>
     <FaChevronRight className="text-[10px] opacity-50 group-hover:translate-x-1 transition" />
   </button>
 );
@@ -82,11 +81,11 @@ const LiveBatchButton = ({ batch, isDark, onClick }) => (
 // ------------------- SCHEDULE CARD -------------------
 const ScheduleCard = ({ info, isDark }) => {
   const hasClass = info.hasClassToday;
+  
   const statusColor = hasClass ? "text-green-400" : "text-yellow-400";
   const statusBorder = hasClass ? "border-green-400" : "border-yellow-400";
   const dotBg = hasClass ? "bg-green-400" : "bg-yellow-400";
 
-  // Determine mode based on API response
   const isOnline = info.mode === 'ONLINE';
 
   return (
@@ -105,10 +104,10 @@ const ScheduleCard = ({ info, isDark }) => {
               className="text-xl font-bold"
               style={{ color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}
             >
-              {info.batchId}
+              {info.batchName}
             </h3>
             
-            {/* Mode Badge (Replaces Session/Week Number) */}
+            {/* Mode Badge */}
             <div className={`mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase ${isOnline ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
               {isOnline ? <FaGlobeAmericas /> : <FaMapMarkerAlt />}
               <span>{info.mode}</span>
@@ -150,7 +149,7 @@ const ScheduleCard = ({ info, isDark }) => {
                  {isOnline ? "Join Link" : "Location"}
                </span>
                
-               {isOnline && hasClass ? (
+               {isOnline && hasClass && info.connectionInfo ? (
                  <a 
                    href={info.connectionInfo} 
                    target="_blank" 
@@ -160,8 +159,8 @@ const ScheduleCard = ({ info, isDark }) => {
                    Launch Meeting <FaExternalLinkAlt className="text-[10px]" />
                  </a>
                ) : (
-                 <span className="font-medium truncate block" title={info.connectionInfo} style={{ color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
-                   {info.connectionInfo}
+                 <span className="font-medium truncate block" title={info.connectionInfo || "N/A"} style={{ color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
+                   {info.connectionInfo || "N/A"}
                  </span>
                )}
             </div>
@@ -191,26 +190,20 @@ const TeacherDashboardPage = () => {
   const { isDark } = useOutletContext();
   const navigate = useNavigate();
 
-  const [liveBatches, setLiveBatches] = useState([]);
-  const [todaysSchedule, setTodaysSchedule] = useState([]);
+  const [batchData, setBatchData] = useState([]); // This holds ALL data for buttons AND cards
   const [isLoading, setIsLoading] = useState(true);
-
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
 
-      const [batchesRes, scheduleRes] = await Promise.all([
-        getLiveBatchInfoTeacherMinor(),
-        getTodaysLiveBatchesForTeacher()
-      ]);
+      // Single API Call
+      const response = await getTodaysLiveBatchesForTeacher();
 
-      if (batchesRes && batchesRes.success) {
-        setLiveBatches(batchesRes.data);
-      }
-      
-      if (scheduleRes && scheduleRes.success) {
-        setTodaysSchedule(scheduleRes.data);
+      if (response && response.success) {
+        setBatchData(response.data);
+      } else {
+        console.error("Failed to load batch data");
       }
 
       setIsLoading(false);
@@ -219,20 +212,18 @@ const TeacherDashboardPage = () => {
     fetchData();
   }, []);
 
-
   const handleBatchClick = (id) => {
+    // Navigate using the batch_obj_id found in the data
     navigate(`/teacher/dashboard/batches/${id}`);
   };
-
 
   return (
     <div className="flex flex-col gap-12 pb-20">
       
-      {/* 🔥 Motivation Banner */}
+      {/* Motivation Banner */}
       <MotivationBanner isDark={isDark} />
 
-
-      {/* ⚡ Live Batches Section */}
+      {/* ⚡ Live Batches Section (Buttons) */}
       <section>
         <h2 
           className="text-xl font-bold mb-3 flex items-center gap-2"
@@ -246,26 +237,26 @@ const TeacherDashboardPage = () => {
              <div className="h-12 w-32 bg-gray-300 dark:bg-gray-700 rounded-xl"></div>
              <div className="h-12 w-32 bg-gray-300 dark:bg-gray-700 rounded-xl"></div>
           </div>
-        ) : liveBatches.length > 0 ? (
+        ) : batchData.length > 0 ? (
           <div className="flex flex-wrap gap-4">
-            {liveBatches.map(batch => (
+            {batchData.map((batch, index) => (
               <LiveBatchButton 
-                key={batch._id} 
+                // Use index as fallback key if _id missing, though data has batch_obj_id
+                key={batch.batch_obj_id || index} 
                 batch={batch}
                 isDark={isDark}
-                onClick={() => handleBatchClick(batch._id)}
+                onClick={() => handleBatchClick(batch.batch_obj_id)}
               />
             ))}
           </div>
         ) : (
           <p className="opacity-50 italic" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` }}>
-            No active live batches at the moment.
+            No active batches found.
           </p>
         )}
       </section>
 
-
-      {/* 📅 Today's Schedule */}
+      {/* 📅 Today's Schedule Section (Cards) */}
       <section>
         <h2 
           className="text-xl font-bold mb-4 flex items-center gap-2"
@@ -280,10 +271,14 @@ const TeacherDashboardPage = () => {
                 <div key={i} className="h-48 rounded-2xl bg-gray-200 dark:bg-gray-800 animate-pulse"></div>
               ))}
            </div>
-        ) : todaysSchedule.length > 0 ? (
+        ) : batchData.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {todaysSchedule.map((info, idx) => (
-              <ScheduleCard key={idx} info={info} isDark={isDark} />
+            {batchData.map((info, idx) => (
+              <ScheduleCard 
+                key={info.batch_obj_id || idx} 
+                info={info} 
+                isDark={isDark} 
+              />
             ))}
           </div>
         ) : (
