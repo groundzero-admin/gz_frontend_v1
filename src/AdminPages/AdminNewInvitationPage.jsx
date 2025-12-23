@@ -236,7 +236,7 @@ const AdminInvitationsPage = () => {
             isActive={activeTab === 'linkParent'} 
             onClick={() => handleTabSwitch('linkParent')}
             icon={<FaUserFriends />}
-            label="Link Parent Only"
+            label="Invite Parent Only"
             isDark={isDark}
           />
         </div>
