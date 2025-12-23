@@ -285,6 +285,7 @@ const AdminInvitationsPage = () => {
                 onChange={(e) => setParentEmail(e.target.value)}
                 type="email"
                 isDark={isDark}
+                 required={false}
               />
             </div>
 

@@ -315,7 +315,7 @@ const StudentSignupDirectPage = () => {
                 />
                 <SignupInput
                   id="class"
-                  label="Class / Grade"
+                  label="Class / Grade / Semester"
                   icon={<FaLayerGroup />}
                   isDark={isDark}
                   value={formData.class}
