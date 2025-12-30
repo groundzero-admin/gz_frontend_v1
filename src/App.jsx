@@ -41,6 +41,7 @@ import LandingPageMain from './LandingPageMain.jsx'
 import BookingPage from './BookDiscoveryCall.jsx'
 import BookOneOnOneSession from './BookOneOnOneSessions.jsx'
 import FormSquad from './FormSquad.jsx'
+import TestPage from './TestPage.jsx'
 
 
 
@@ -75,6 +76,7 @@ function App() {
       {/* Route for the Login/Auth Page */}
       <Route path="/login" element={<AuthPage />} />
       <Route path="/invite/onboard" element={<InviteOnboardPage />} />
+      <Route path="/test" element={<TestPage />} />
 
 
 
