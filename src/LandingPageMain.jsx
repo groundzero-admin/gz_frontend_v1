@@ -278,7 +278,7 @@ const LandingPageMain = () => {
               </button>
 
               <button 
-                onClick={() => navigate('/book-discovery-call')}
+                onClick={() => navigate('/book-discovery-call-builderos')}
                 className={`border text-xs md:text-sm font-semibold px-5 py-2 rounded-[5px] transition-all duration-300 shadow-lg ${isDark ? 'bg-slate-800/80 hover:bg-cyan-500 hover:text-black border-cyan-500/30 text-cyan-400 hover:shadow-cyan-500/30' : 'bg-slate-900 text-white hover:bg-cyan-600 border-transparent hover:shadow-cyan-500/20'}`}
               >
                 Book a Call
@@ -299,7 +299,7 @@ const LandingPageMain = () => {
 
           <div className="mt-10 flex flex-col sm:flex-row gap-5 z-10">
             <button 
-              onClick={() => navigate('/book-discovery-call')}
+              onClick={() => navigate('/book-discovery-call-builderos')}
               className={`font-bold px-8 py-3.5 rounded-lg transition-all transform hover:scale-105 ${isDark ? 'bg-gradient-to-r from-[#8EE6F6] to-[#6DD5E8] hover:to-[#5AC0D3] text-black hover:shadow-[0_0_25px_rgba(34,211,238,0.4)]' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-xl shadow-slate-300'}`}
             >
               Book a Discovery Call
@@ -370,7 +370,7 @@ const LandingPageMain = () => {
                 ))}
               </ul>
               <button 
-                onClick={() => navigate('/book-one-on-one-session')}
+                onClick={() => navigate('/book-one-on-one-session-builderos')}
                 className={`w-full font-bold py-3 rounded-lg transition-all shadow-lg hover:scale-[1.02] ${isDark ? 'bg-gradient-to-r from-[#8EE6F6] to-[#6DD5E8] hover:to-[#5AC0D3] text-black hover:shadow-cyan-400/30' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
               >
                 Book your session
@@ -398,7 +398,7 @@ const LandingPageMain = () => {
                  <p className={`text-xs text-center mb-3 font-medium ${styles.subtext}`}>
                    Flying solo? <button onClick={openWaitlist} className={`underline ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'}`}>Join the waitlist</button>
                  </p>
-                 <button className={`w-full border font-bold py-3 rounded-lg transition-all shadow-lg ${isDark ? 'bg-slate-700/80 hover:bg-blue-500/20 hover:text-blue-300 hover:border-blue-400/50 border-white/10 text-white hover:shadow-blue-400/20' : 'bg-white text-slate-700 hover:text-blue-600 border-slate-200 hover:border-blue-300'}`}  onClick={() => navigate('/form-a-squad')}  >Form a Squad</button>
+                 <button className={`w-full border font-bold py-3 rounded-lg transition-all shadow-lg ${isDark ? 'bg-slate-700/80 hover:bg-blue-500/20 hover:text-blue-300 hover:border-blue-400/50 border-white/10 text-white hover:shadow-blue-400/20' : 'bg-white text-slate-700 hover:text-blue-600 border-slate-200 hover:border-blue-300'}`}  onClick={() => navigate('/form-a-squad-builderos')}  >Form a Squad</button>
               </div>
             </div>
 
@@ -411,7 +411,7 @@ const LandingPageMain = () => {
                 Start with a conversation. We'll explore your goals and determine if this approach is right for you.
               </p>
               <button 
-                onClick={() => navigate('/book-discovery-call')}
+                onClick={() => navigate('/book-discovery-call-builderos')}
                 className={`w-full border font-bold py-3 rounded-lg transition-all shadow-lg mb-8 z-10 ${isDark ? 'bg-slate-700/50 hover:bg-cyan-500/10 hover:text-cyan-300 border-cyan-500/30 text-white hover:shadow-cyan-400/20' : 'bg-slate-100 hover:bg-cyan-50 text-slate-900 border-transparent hover:text-cyan-700'}`}
               >
                 Book a Discovery Call
@@ -490,7 +490,7 @@ const LandingPageMain = () => {
 
           <div className="flex flex-col sm:flex-row justify-center gap-5 mb-16">
             <button 
-              onClick={() => navigate('/book-discovery-call')}
+              onClick={() => navigate('/book-discovery-call-builderos')}
               className={`font-bold px-8 py-3.5 rounded-lg transition-all transform hover:scale-105 shadow-lg ${isDark ? 'bg-gradient-to-r from-[#8EE6F6] to-[#6DD5E8] hover:to-[#5AC0D3] text-black hover:shadow-cyan-400/30' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
             >
               Book a discovery session

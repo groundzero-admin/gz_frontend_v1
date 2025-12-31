@@ -1,6 +1,6 @@
 // App.jsx
 import { Routes, Route } from 'react-router-dom'
-import Landing_Page from './Landing_page.jsx' // Make sure this path is correct
+import Landing_Page_spark from './Landing_page_Spark.jsx' // Make sure this path is correct
 import AuthPage from './Login_Page'         // The component you just made
 import InviteOnboardPage from './registration_onboarding.jsx'
 import AdminDashBoardLayout from './AdminPages/AdminDashboardLayout.jsx'
@@ -38,9 +38,12 @@ import TeacherSignupPage from './TeacherPages/TeacherSignupPage.jsx'
 import ParentSignupPage from './ParentPages/ParentRegistration.jsx'
 import StudentSignupDirectPage from './StudentPages/StudentSignupDirectPage.jsx'
 import LandingPageMain from './LandingPageMain.jsx'
-import BookingPage from './BookDiscoveryCall.jsx'
-import BookOneOnOneSession from './BookOneOnOneSessions.jsx'
-import FormSquad from './FormSquad.jsx'
+import BookingPage_BuilderOs from './BookDiscoveryCall_BuilderOS.jsx'
+import BookOneOnOneSession_BuilderOS from './BookOneOnOneSession_BuilderOSs.jsx'
+import FormSquad_BuilderOS from './FormSquad_BuilderOS.jsx'
+import TestPage from './TestPage.jsx'
+import BookingPage_Spark from './BookDiscoveryCall_Spark.jsx'
+import BookOneOnOneSession_Spark from './BookOneOnOne_Spark.jsx'
 
 
 
@@ -52,11 +55,13 @@ function App() {
     <Routes>
       {/* Route for the Landing Page */}
       <Route path="/" element={< LandingPageMain />} />
-      <Route path="/book-discovery-call" element={< BookingPage />} />
-      <Route path="/book-one-on-one-session" element={< BookOneOnOneSession />} />
-      <Route path="/form-a-squad" element={< FormSquad />} />
+      <Route path="/book-discovery-call-builderos" element={< BookingPage_BuilderOs />} />
+      <Route path="/book-discovery-call-spark" element={< BookingPage_Spark />} />
+      <Route path="/book-one-on-one-session-builderos" element={< BookOneOnOneSession_BuilderOS />} />
+      <Route path="/book-one-on-one-session-spark" element={< BookOneOnOneSession_Spark />} />
+      <Route path="/form-a-squad-builderos" element={< FormSquad_BuilderOS />} />
 
-      <Route path="/spark" element={<Landing_Page />} />
+      <Route path="/spark" element={<Landing_Page_spark />} />
       <Route path="/buycourse" element={<BuyCourse />} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/payment-failed" element={< PaymentFailure />} />
@@ -75,6 +80,7 @@ function App() {
       {/* Route for the Login/Auth Page */}
       <Route path="/login" element={<AuthPage />} />
       <Route path="/invite/onboard" element={<InviteOnboardPage />} />
+      <Route path="/test" element={<TestPage />} />
 
 
 
