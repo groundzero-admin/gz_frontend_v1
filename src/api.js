@@ -1740,3 +1740,68 @@ export const completeDirectStudentOnboarding = async (payload) => {
     return { success: false, message: "Network error during registration." };
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const createCheckoutPath = `${BASE_URL}/create-checkout-session`;
+
+/**
+ * Creates a checkout session for course purchase.
+ * * @param {Object} parentDetails - { parentName, parentPhone, parentEmail }
+ * @param {Object} studentDetails - { studentName, studentEmail, board, classGrade, schoolName }
+ * @param {string} batchType - 'ONLINE' or 'OFFLINE'
+ * @param {string} purchaseType - 'FULL_BUNDLE' or 'SINGLE_SESSION'
+ */
+export const createCheckoutSession = async (parentDetails, studentDetails, batchType, purchaseType) => {
+  try {
+    const response = await fetch(createCheckoutPath, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json" 
+      },
+      // credentials: 'include', // Uncomment if you need cookies/session passed
+      body: JSON.stringify({
+        ...parentDetails,
+        ...studentDetails,
+        batchType,
+        purchaseType,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success || !data.order) {
+      return { 
+        success: false, 
+        message: data.message || "Failed to generate payment order." 
+      };
+    }
+
+    // Returns { success: true, key: "...", order: { id: "...", amount: ... } }
+    return { success: true, ...data };
+
+  } catch (error) {
+    console.error("Create Checkout Session error:", error);
+    return { 
+      success: false, 
+      message: "Network error: Could not connect to payment gateway." 
+    };
+  }
+};

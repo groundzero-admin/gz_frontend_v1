@@ -83,52 +83,55 @@ const StudentSessionPurchase = () => {
   const { count, pricePerSession, total } = getCostDetails();
 
   // --- Payment Handler (Updated for Backend Calculation) ---
-  const handlePayment = async () => {
-    if (!selectedBatch) return;
-    
-    // 1. Show processing state
-    setIsProcessing(true);
+const handlePayment = async () => {
+  if (!selectedBatch) return;
 
-    try {
-      // 2. Create description
-      let description = "";
-      if (purchaseType === 'SINGLE') {
-        description = `Single Session for ${selectedBatch.batchName}`;
-      } else if (purchaseType === 'REMAINING') {
-        description = `Remaining Sessions (${count}) for ${selectedBatch.batchName}`;
-      } else {
-        description = `Entire Batch (${FULL_BATCH_SIZE}) for ${selectedBatch.batchName}`;
-      }
+  setIsProcessing(true);
 
-      console.log("Initiating payment for:", { 
-        batchId: selectedBatch.batch_obj_id,
-        classes: count, 
-        type: selectedBatch.batchType 
-      });
+  try {
+    const response = await createCreditTopUpSession(
+      selectedBatch.batch_obj_id,
+      selectedBatch.batchType,
+      count,
+      purchaseType
+    );
 
-      // 3. Call the API 
-      // We send 'count' (no_of_classes), NOT the total amount. Backend calculates price.
-      const response = await createCreditTopUpSession(
-        selectedBatch.batch_obj_id,
-        selectedBatch.batchType, // 'ONLINE' or 'OFFLINE'
-        count,                   // Number of classes
-        description
-      );
-
-      // 4. Handle Response
-      if (response.success && response.data && response.data.url) {
-        // Redirect to Stripe
-        window.location.href = response.data.url;
-      } else {
-        alert("Payment Initiation Failed: " + (response.message || "Unknown error"));
-        setIsProcessing(false);
-      }
-    } catch (err) {
-      console.error("Payment Handle Error:", err);
-      alert("An unexpected error occurred.");
+    if (!response.success || !response.data?.order) {
+      alert("Unable to initiate payment");
       setIsProcessing(false);
+      return;
     }
-  };
+
+    const { key, order } = response.data;
+
+    const options = {
+      key,
+      amount: order.amount,
+      currency: "INR",
+      order_id: order.id,
+
+      name: "GroundZero",
+      description: "Session Top-Up",
+
+      handler: function () {
+        alert("Payment successful!");
+        window.location.reload();
+      },
+
+      theme: {
+        color: "#2563eb",
+      },
+    };
+
+    const razorpay = new window.Razorpay(options);
+    razorpay.open();
+  } catch (err) {
+    console.error("Payment failed", err);
+    alert("Payment failed. Try again.");
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
   // --- Styles ---
   const cardBg = isDark ? "var(--card-dark)" : "var(--bg-light)";
