@@ -24,7 +24,7 @@ const BookOneOnOneSession_BuilderOSs = () => {
   const lastScrollY = useRef(0);
 
   const ZOHO_SRC =
-    "https://groundzero2.zohobookings.in/portal-embed#/406562000000048026";
+    "https://groundzero2.zohobookings.in/portal-embed#/406562000000048052";
 
   const toggleTheme = () => setIsDark(!isDark);
 

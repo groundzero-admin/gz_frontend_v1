@@ -26,7 +26,7 @@ const FormSquad_BuilderOS = () => {
   const lastScrollY = useRef(0);
 
   const ZOHO_SRC =
-    "https://groundzero1.zohobookings.in/portal-embed#/406542000000040340";
+    "https://groundzero2.zohobookings.in/portal-embed#/406562000000048052";
 
   const toggleTheme = () => setIsDark(!isDark);
 
