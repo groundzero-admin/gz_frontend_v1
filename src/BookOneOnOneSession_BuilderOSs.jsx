@@ -146,7 +146,7 @@ const BookOneOnOneSession_BuilderOSs = () => {
               isDark ? "text-gray-400" : "text-slate-600"
             }`}
           >
-            Rapid, specific acceleration and private guidance.
+           For individuals who want rapid, specific acceleration.
           </p>
         </div>
 

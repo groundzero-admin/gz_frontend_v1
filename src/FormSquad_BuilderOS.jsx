@@ -5,7 +5,7 @@ import {
   CreditCard,
   Sun,
   Moon,
-  Users,
+  Target, // Added this back for the card
   Info,
   ChevronLeft
 } from "lucide-react";
@@ -25,15 +25,14 @@ const FormSquad_BuilderOS = () => {
   const hasAutoScrolled = useRef(false);
   const lastScrollY = useRef(0);
 
+  // --- ZOHO LINK (Kept from your Squad snippet) ---
   const ZOHO_SRC =
     "https://groundzero2.zohobookings.in/portal-embed#/406562000000048052";
 
   const toggleTheme = () => setIsDark(!isDark);
 
   /* -------------------------------------------------
-     GSAP AUTO SCROLL
-     - Trigger on scroll DOWN from top
-     - Reset when user comes back near top
+     GSAP AUTO SCROLL (Kept exactly as provided)
   ------------------------------------------------- */
   useEffect(() => {
     const handleScroll = () => {
@@ -171,44 +170,53 @@ const FormSquad_BuilderOS = () => {
               isDark ? "text-gray-400" : "text-slate-600"
             }`}
           >
-            Bring your people together and begin your journey as a team.
+           Bring your people and begin your journey together.
           </p>
         </motion.div>
 
-        {/* INFO CARDS */}
+        {/* --- INFO CARDS (UPDATED WITH PREVIOUS CONTENT) --- */}
         <motion.div variants={itemVariants} className="mb-4 flex flex-col md:flex-row gap-4">
+          
+          {/* Card 1: What You Get (Restored Content) */}
           <div className={`flex-1 ${styles.cardBase}`}>
             <div className={styles.sectionHeader}>
-              <Users size={16} className={styles.iconColor} />
-              What This Squad Session Will Do
+              <Target size={16} className={styles.iconColor} />
+              What this session will do
             </div>
-            {[
-              "Help your group come together with clarity",
-              "Guide you on forming a proper squad",
-              "Align the squad on how you move together",
-            ].map((t, i) => (
-              <div key={i} className="flex gap-2">
-                <Check size={12} className="text-green-500 mt-1" />
-                <span className={styles.bodyText}>{t}</span>
-              </div>
-            ))}
+            <div className="flex flex-col gap-1.5">
+              {[
+                "Help you gain clarity on where you currently stand",
+                "Identify potential areas of work & what's blocking progress",
+                "Explore how we can support you, if we're the right fit",
+              ].map((item, i) => (
+                <div key={i} className="flex items-start gap-3 px-1">
+                  <div className={`mt-1 p-0.5 rounded-full shrink-0 ${isDark ? "bg-green-500/20 text-green-400" : "bg-green-100 text-green-600"}`}>
+                    <Check size={10} strokeWidth={3} />
+                  </div>
+                  <span className={styles.bodyText}>{item}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
+          {/* Card 2: Fee & Disclaimer (Restored Content) */}
           <div className={`md:w-[40%] ${styles.cardBase}`}>
             <div className={styles.sectionHeader}>
               <CreditCard size={16} className={styles.iconColor} />
               Session Fee: ₹200
             </div>
-            <div className="flex gap-2">
-              <Info size={14} className="text-blue-500 mt-1" />
-              <p className={styles.bodyText}>
-                Fully adjusted or refundable on request.
-              </p>
+            
+            <div className="flex gap-3 items-start px-1">
+                <Info size={16} className={`mt-0.5 shrink-0 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
+                <p className={styles.bodyText}>
+                    This small fee ensures sincerity and attendance. It's <strong className={isDark ? "text-green-400" : "text-green-600"}>fully adjusted</strong> if you continue, or <strong className={isDark ? "text-green-400" : "text-green-600"}>refundable</strong> on request.
+                </p>
             </div>
           </div>
+
         </motion.div>
 
-        {/* ZOHO WIDGET */}
+        {/* ZOHO WIDGET (Kept exactly as provided) */}
         <motion.div
           ref={widgetRef}
           variants={itemVariants}
@@ -225,7 +233,7 @@ const FormSquad_BuilderOS = () => {
             <ChevronLeft size={18} />
           </button>
 
-          {/* ⭐ 90% VIEWPORT HEIGHT */}
+          {/* 90% VIEWPORT HEIGHT */}
           <div
             className={`w-full h-[90vh] min-h-[600px] rounded-xl border overflow-hidden shadow-xl
               ${isDark

@@ -26,15 +26,14 @@ const BookingPage_Builder_OS = () => {
   const hasAutoScrolled = useRef(false);
   const lastScrollY = useRef(0);
 
+  // --- ZOHO LINK (Kept exactly as provided) ---
   const ZOHO_SRC =
     "https://groundzero2.zohobookings.in/portal-embed#/406562000000048002";
 
   const toggleTheme = () => setIsDark(!isDark);
 
   /* -------------------------------------------------
-     GSAP AUTO SCROLL
-     - Triggers on scroll down
-     - Resets when user goes back to top
+     GSAP AUTO SCROLL (Kept exactly as provided)
   ------------------------------------------------- */
   useEffect(() => {
     const handleScroll = () => {
@@ -156,38 +155,45 @@ const BookingPage_Builder_OS = () => {
           </p>
         </motion.div>
 
-        {/* INFO CARDS */}
+        {/* --- INFO CARDS (UPDATED WITH DETAILED FACTS) --- */}
         <motion.div variants={itemVariants} className="mb-4 flex flex-col md:flex-row gap-4">
+          
+          {/* Card 1: Detailed Benefits */}
           <div className={`flex-1 ${styles.cardBase}`}>
             <div className={styles.sectionHeader}>
               <Target size={16} className={styles.iconColor} />
               What this session will do
             </div>
             {[
-              "Gain clarity on where you stand",
-              "Identify blockers & opportunities",
-              "See if we're the right fit",
+              "Help you gain clarity on where you currently stand",
+              "Identify potential areas of work & what's blocking progress",
+              "Explore how we can support you, if we're the right fit",
             ].map((t, i) => (
-              <div key={i} className="flex gap-2">
-                <Check size={14} className="text-green-500 mt-1" />
+              <div key={i} className="flex items-start gap-2">
+                <div className={`mt-1 shrink-0 ${isDark ? "text-green-400" : "text-green-500"}`}>
+                   <Check size={14} strokeWidth={3} />
+                </div>
                 <span className={styles.bodyText}>{t}</span>
               </div>
             ))}
           </div>
 
+          {/* Card 2: Fee & Refund Policy */}
           <div className={`md:w-[40%] ${styles.cardBase}`}>
             <div className={styles.sectionHeader}>
               <CreditCard size={16} className={styles.iconColor} />
               Session Fee: ₹200
             </div>
-            <div className="flex gap-2">
-              <Info size={14} className="text-blue-500 mt-1" />
-              <p className={styles.bodyText}>Fully adjusted or refundable.</p>
+            <div className="flex gap-2 items-start">
+              <Info size={16} className={`mt-0.5 shrink-0 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
+              <p className={styles.bodyText}>
+                This small fee ensures sincerity and attendance. It's <strong className={isDark ? "text-green-400" : "text-green-600"}>fully adjusted</strong> if you continue, or <strong className={isDark ? "text-green-400" : "text-green-600"}>refundable</strong> on request.
+              </p>
             </div>
           </div>
         </motion.div>
 
-        {/* ZOHO WIDGET */}
+        {/* ZOHO WIDGET (Kept exactly as provided) */}
         <motion.div ref={widgetRef} variants={itemVariants} className="relative">
           <button
             onClick={() => navigate(-1)}
@@ -203,7 +209,7 @@ const BookingPage_Builder_OS = () => {
           >
             {iframeLoading && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" />
+                <div className={`w-8 h-8 border-2 border-t-transparent rounded-full animate-spin ${isDark ? "border-cyan-400" : "border-blue-600"}`} />
               </div>
             )}
 
