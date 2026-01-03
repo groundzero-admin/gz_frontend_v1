@@ -180,7 +180,7 @@ const BookOneOnOneSession_Spark = () => {
 
         {/* --- Footer --- */}
         <div className={`mt-8 text-center text-xs font-medium opacity-40 ${isDark ? "text-gray-500" : "text-slate-400"}`}>
-          © 2025 Ground Zero · Secure booking powered by Zoho
+          © 2025 Ground Zero · Secure booking
         </div>
 
       </div>
