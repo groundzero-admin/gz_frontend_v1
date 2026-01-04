@@ -59,11 +59,14 @@ export const getMyChildHistoryPath = `${BASE_URL}/parent/mychildhistory`;
 
 
 // export const getStudentsInBatchPath = `${BASE_URL}/admin/getstudentsinbatch`;
-
+// /api/student/getbatchprogress
 
 
 export const getMyLiveBatchesPath = `${BASE_URL}/student/mylivebatches`;
 export const getTodaysLiveBatchInfoPath = `${BASE_URL}/student/gettodaylivebatchinfo`;
+
+export const getstudentsbatchprogressPath = `${BASE_URL}/student/getbatchprogress`;
+
 
 
 // export const getMyEnrolledBatchesPath = `${BASE_URL}/student/myenrolledbatches`;
@@ -781,6 +784,31 @@ export const getTodaysLiveBatchInfo = async (batch_obj_id) => {
 
 
 
+
+// getstudentsbatchprogressPath
+/**
+ * (STUDENT) Fetches today's class info for a specific batch.
+ */
+export const getstudentsbatchprogress = async (input) => {
+  try {
+    // FIX: specific check to handle if input is passed as { batch_obj_id: "..." } or just "..."
+    const batch_obj_id = typeof input === 'object' && input.batch_obj_id 
+      ? input.batch_obj_id 
+      : input;
+
+    const response = await fetch(getstudentsbatchprogressPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ batch_obj_id }), // Now batch_obj_id is guaranteed to be a string
+    });
+    
+    return await response.json(); 
+  } catch (error) {
+    console.error("Get Today's Batch Info error:", error);
+    return { success: false, message: "Network error fetching batch info." };
+  }
+};
 
 
 

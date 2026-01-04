@@ -1,350 +1,502 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext, useNavigate } from 'react-router-dom'; 
+import { useOutletContext } from 'react-router-dom'; 
+import { motion, AnimatePresence } from 'framer-motion'; 
 import { 
-  FaCalendarAlt, 
-  FaClock, 
-  FaMapMarkerAlt, 
-  FaChalkboardTeacher, 
-  FaRocket, 
-  FaLightbulb, 
-  FaBolt,
-  FaVideo,
-  FaGoogle 
-} from 'react-icons/fa';
+  Rocket, 
+  CheckCircle2, 
+  Sparkles, 
+  ChevronDown, 
+  ChevronUp, 
+  ExternalLink, 
+  MapPin, 
+  Clock, 
+  Video, 
+  CalendarPlus, 
+  Star,
+  BookOpen
+} from 'lucide-react';
+import { BsStars } from "react-icons/bs"; 
 
-import { getMyLiveBatches, getTodaysLiveBatchInfo } from '../api.js';
+import { getMyLiveBatches, getstudentsbatchprogress } from '../api.js'; 
 
-// --- Helper: Batch Selection Chip ---
-const BatchChip = ({ label, isSelected, onClick, isDark }) => (
-  <button
-    onClick={onClick}
-    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300 border
-      ${isSelected 
-        ? 'bg-[var(--accent-purple)] text-white border-[var(--accent-purple)] shadow-md scale-105' 
-        : 'bg-transparent hover:bg-opacity-10 hover:bg-gray-500'
-      }
-    `}
-    style={{
-      borderColor: isSelected ? 'var(--accent-purple)' : `var(${isDark ? "--border-dark" : "--border-light"})`,
-      color: isSelected ? 'white' : `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`,
-    }}
-  >
-    {label}
-  </button>
-);
+// --- Animation Variants ---
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1,
+    transition: { 
+      staggerChildren: 0.1,
+      delayChildren: 0.2
+    }
+  },
+  exit: { opacity: 0, transition: { duration: 0.2 } }
+};
 
-// --- Helper: Info Pill ---
-const InfoPill = ({ icon, label, value, isDark, isLink }) => (
-  <div 
-    className="flex flex-col p-3 rounded-xl border"
-    style={{
-      backgroundColor: `var(${isDark ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.5)"})`,
-      borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
-    }}
-  >
-    <div className="flex items-center gap-2 mb-1 text-[10px] font-bold uppercase tracking-wider opacity-70" 
-      style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { type: "spring", stiffness: 50, damping: 20 }
+  }
+};
+
+const bannerVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { 
+    opacity: 1, 
+    scale: 1, 
+    transition: { duration: 0.6, ease: "easeOut" }
+  }
+};
+
+// --- Component: Welcome Banner ---
+const WelcomeBanner = ({ username }) => {
+  const [greetingData, setGreetingData] = useState({ text: "Greetings, explorer!", icon: "✨" });
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    let newGreeting = "";
+    let icon = "";
+
+    if (hour >= 5 && hour < 12) {
+      newGreeting = "Rise and shine, space explorer!";
+      icon = "☀️";
+    } else if (hour >= 12 && hour < 17) {
+      newGreeting = "Afternoon mission check!";
+      icon = "🚀";
+    } else if (hour >= 17 && hour < 21) {
+      newGreeting = "Good evening, stargazer!";
+      icon = "🌌";
+    } else {
+      newGreeting = "Hello night owl!";
+      icon = "🦉";
+    }
+
+    setGreetingData({ text: newGreeting, icon: icon });
+  }, []);
+
+  return (
+    <motion.div 
+      variants={bannerVariants}
+      initial="hidden"
+      animate="visible"
+      className="relative w-full rounded-3xl overflow-hidden p-8 md:p-10 mb-8 shadow-2xl"
     >
-      {icon} {label}
-    </div>
-    <div className={`text-base font-bold ${isLink ? 'text-blue-500 truncate underline' : ''}`}>
-      {isLink ? (
-        <a href={value} target="_blank" rel="noopener noreferrer">Join Link</a>
-      ) : (
-        value
-      )}
-    </div>
-  </div>
-);
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81] z-0"></div>
+      <motion.div 
+        animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-[-50%] left-[-20%] w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-[100px] pointer-events-none"
+      />
+      <motion.div 
+        animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        className="absolute bottom-[-50%] right-[-20%] w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[100px] pointer-events-none"
+      />
+      
+      <div className="relative z-10 flex flex-col gap-4">
+        <div className="self-start px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-950/30 backdrop-blur-md flex items-center gap-2">
+           <BsStars className="text-cyan-400 text-xs" />
+           <span className="text-cyan-300 text-xs font-bold uppercase tracking-wider">Welcome to your universe</span>
+        </div>
+        <div>
+           <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-purple-200 mb-2 drop-shadow-[0_0_10px_rgba(34,211,238,0.3)]">
+             Spark Ground Zero
+           </h1>
+           <p className="text-xl md:text-2xl font-medium text-gray-300 flex items-center gap-2">
+              <span className="text-2xl">{greetingData.icon}</span> {greetingData.text}, <span className="text-cyan-400 font-bold">{username}</span>!
+           </p>
+        </div>
+        <p className="text-gray-400 max-w-xl text-sm md:text-base leading-relaxed">
+          Ready to explore, create, and discover? Your learning adventure continues here ✨
+        </p>
+      </div>
+    </motion.div>
+  );
+};
 
+// --- Component: Session Card ---
+const SessionCard = ({ session, status, isDark }) => {
+  const statusStyles = {
+    upcoming: 'border-cyan-500/40 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]',
+    completed: 'border-emerald-500/40 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]',
+    missed: 'border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]',
+  };
+
+  const calendlyLink = 'https://calendly.com/spark-ground-zero/follow-up-session';
+
+  const getActionButton = () => {
+    if (status === 'upcoming') {
+      return (
+        <div className="flex gap-2 w-full">
+          <a
+            href={session.meetingLinkOrLocation || "#"}
+            target={session.meetingLinkOrLocation ? "_blank" : "_self"}
+            rel="noopener noreferrer"
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold shadow-lg
+              ${session.sessionType === 'ONLINE' 
+                 ? "bg-cyan-500 hover:bg-cyan-400 text-black shadow-cyan-500/20" 
+                 : "bg-purple-600 hover:bg-purple-500 text-white shadow-purple-500/20"
+              }
+              ${!session.meetingLinkOrLocation ? 'opacity-50 cursor-not-allowed pointer-events-none grayscale' : ''}
+            `}
+          >
+            {session.sessionType === 'ONLINE' ? <Video className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
+            {session.sessionType === 'ONLINE' ? "Open GMeet" : "View Location"}
+          </a>
+
+          <a
+            href={session.googleClassroomLink || "#"}
+            target={session.googleClassroomLink ? "_blank" : "_self"}
+            rel="noopener noreferrer"
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold border
+              ${isDark 
+                ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white" 
+                : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black"
+              }
+              ${!session.googleClassroomLink ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
+            `}
+          >
+            <BookOpen className="w-4 h-4" />
+            Classroom
+          </a>
+        </div>
+      );
+    }
+
+    if (status === 'completed') {
+      return (
+        <a
+          href={session.googleClassroomLink || "#"}
+          target={session.googleClassroomLink ? "_blank" : "_self"}
+          rel="noopener noreferrer"
+          className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20 rounded-xl transition-all duration-300 text-sm font-bold
+             ${!session.googleClassroomLink ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
+          `}
+        >
+          <ExternalLink className="w-4 h-4" />
+          Open Classroom
+        </a>
+      );
+    }
+
+    if (status === 'missed') {
+      return (
+        <div className="flex gap-2 w-full">
+          <a
+            href={calendlyLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl transition-all duration-300 text-sm font-bold shadow-amber-500/20 shadow-lg"
+          >
+            <CalendarPlus className="w-4 h-4" />
+            Catch Up
+          </a>
+
+          <a
+            href={session.googleClassroomLink || "#"}
+            target={session.googleClassroomLink ? "_blank" : "_self"}
+            rel="noopener noreferrer"
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold border
+                ${isDark 
+                  ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white" 
+                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black"
+                }
+                ${!session.googleClassroomLink ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
+            `}
+          >
+            <BookOpen className="w-4 h-4" />
+            Classroom
+          </a>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
+  const dateObj = new Date(session.date);
+  const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+  return (
+    <motion.div
+      variants={itemVariants} 
+      className={`backdrop-blur-sm border-2 rounded-3xl p-5 transition-all duration-300 hover:-translate-y-1 flex flex-col h-full
+        ${statusStyles[status]}
+        ${isDark ? "bg-gray-900/40" : "bg-white/60"}
+      `}
+    >
+      <div className="flex items-start justify-between mb-4">
+        <h4 className={`font-display text-lg font-bold leading-tight ${isDark ? "text-white" : "text-gray-800"}`}>
+          {session.title}
+        </h4>
+        {status === 'completed' && <div className="flex items-center gap-1 text-emerald-500 shrink-0 ml-2"><Star className="w-5 h-5 fill-current" /></div>}
+        {status === 'upcoming' && <Sparkles className="w-5 h-5 text-cyan-400 animate-pulse shrink-0 ml-2" />}
+      </div>
+
+      <div className="space-y-3 mb-6 flex-1">
+        <div className={`flex items-center gap-2 ${isDark ? "text-gray-400" : "text-gray-500"}`}>
+          <Clock className="w-4 h-4" />
+          <span className="text-sm">{dateStr} at {session.startTime}</span>
+        </div>
+
+        {session.sessionType === 'ONLINE' ? (
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse" />
+            <span className="text-sm font-medium text-cyan-500">Online</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-purple-500">
+            <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+            <MapPin className="w-4 h-4" />
+            <span className="text-sm">{session.meetingLinkOrLocation || "Location TBD"}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-auto pt-2">
+        {getActionButton()}
+      </div>
+    </motion.div>
+  );
+};
+
+// --- Component: Session Section ---
+const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark }) => {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+  const sectionConfig = {
+    upcoming: {
+      icon: Rocket,
+      color: 'text-cyan-400',
+      bgColor: isDark ? 'bg-cyan-950/20' : 'bg-cyan-50/50',
+      borderColor: 'border-cyan-500/20',
+      emptyText: 'No missions scheduled yet! Check back soon 🚀',
+    },
+    completed: {
+      icon: CheckCircle2,
+      color: 'text-emerald-400',
+      bgColor: isDark ? 'bg-emerald-950/20' : 'bg-emerald-50/50',
+      borderColor: 'border-emerald-500/20',
+      emptyText: 'Your first adventure awaits! ⭐',
+    },
+    missed: {
+      icon: Sparkles,
+      color: 'text-amber-400',
+      bgColor: isDark ? 'bg-amber-950/20' : 'bg-amber-50/50',
+      borderColor: 'border-amber-500/20',
+      emptyText: "All caught up! You're doing great!",
+    },
+  };
+
+  const config = sectionConfig[type];
+  const Icon = config.icon;
+
+  return (
+    <motion.div variants={itemVariants} className="mb-6">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className={`w-full flex items-center justify-between p-5 rounded-2xl border-2 transition-all duration-300 hover:bg-white/5
+          ${config.bgColor}
+          ${config.borderColor}
+          ${isExpanded ? 'rounded-b-none border-b-0' : ''}
+        `}
+      >
+        <div className="flex items-center gap-3">
+          <Icon className={`w-6 h-6 ${config.color}`} />
+          <span className={`text-lg font-bold ${config.color}`}>{title}</span>
+          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${isDark ? "bg-black/20 text-gray-300" : "bg-white/50 text-gray-600"}`}>
+            {sessions.length}
+          </span>
+        </div>
+        {isExpanded ? <ChevronUp className={`w-5 h-5 ${config.color}`} /> : <ChevronDown className={`w-5 h-5 ${config.color}`} />}
+      </button>
+
+      <motion.div
+        initial={false}
+        animate={{ height: isExpanded ? "auto" : 0, opacity: isExpanded ? 1 : 0 }}
+        transition={{ duration: 0.4, ease: "easeInOut" }}
+        className="overflow-hidden"
+      >
+        <div className={`p-5 border-2 border-t-0 rounded-b-2xl ${config.borderColor} ${config.bgColor}`}>
+          {sessions.length > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {sessions.map((session) => (
+                <SessionCard key={session._id} session={session} status={type} isDark={isDark} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-gray-500 py-8 font-medium">{config.emptyText}</p>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// --- Main Page Component ---
 const StudentDashboardPage = () => {
-  const { isDark } = useOutletContext();
-  const navigate = useNavigate();
-
-  // State
+  const { isDark, userData } = useOutletContext();
+  const username = userData?.username || "Explorer";
+  
   const [liveBatches, setLiveBatches] = useState([]);
   const [selectedBatchId, setSelectedBatchId] = useState(null); 
-  const [batchInfo, setBatchInfo] = useState(null);
+  const [batchData, setBatchData] = useState(null); 
+  
   const [isLoadingBatches, setIsLoadingBatches] = useState(true);
-  const [isLoadingInfo, setIsLoadingInfo] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
 
-  // --- Logic to extract Classroom Link ---
-  const getClassroomLink = () => {
-    // Return the value directly (even if it is "No Credit")
-    return batchInfo?.sessionDetails?.googleClassroomLink || null;
-  };
-
-  const shouldShowClassroom = () => {
-    const link = getClassroomLink();
-    // Show card if batch is ONLINE and link exists (even if "No Credit")
-    return (
-      batchInfo?.batchType === "ONLINE" && 
-      link !== null && link !== ""
-    );
-  };
-
-  // 1. Fetch Live Batches
   useEffect(() => {
     const fetchBatches = async () => {
       setIsLoadingBatches(true);
-      const response = await getMyLiveBatches();
-      if (response.success) {
-        setLiveBatches(response.data);
-        if (response.data.length > 0) {
+      try {
+        const response = await getMyLiveBatches();
+        if (response.success && response.data.length > 0) {
+          setLiveBatches(response.data);
           setSelectedBatchId(response.data[0].batch_obj_id);
+        } else {
+          setLiveBatches([]);
         }
+      } catch (err) {
+        console.error("Failed to fetch batches", err);
+      } finally {
+        setIsLoadingBatches(false);
       }
-      setIsLoadingBatches(false);
     };
     fetchBatches();
   }, []);
 
-  // 2. Fetch Batch Info when selectedBatchId changes
   useEffect(() => {
     if (!selectedBatchId) return;
-
-    const fetchInfo = async () => {
-      setIsLoadingInfo(true);
-      const response = await getTodaysLiveBatchInfo(selectedBatchId);
-      
-      if (response.success) {
-        setBatchInfo(response.data);
-      } else {
-        setBatchInfo(null);
+    const fetchBatchStatus = async () => {
+      setIsLoadingData(true);
+      // Removed setBatchData(null) here to avoid white flashing, just rely on isLoading
+      try {
+        const response = await getstudentsbatchprogress({ batch_obj_id: selectedBatchId });
+        if (response.success) setBatchData(response.data);
+        else setBatchData(null);
+      } catch (err) {
+        console.error("Failed to fetch batch status", err);
+      } finally {
+        setIsLoadingData(false);
       }
-      setIsLoadingInfo(false);
     };
-    fetchInfo();
+    fetchBatchStatus();
   }, [selectedBatchId]);
 
-  // Helper: Get name of currently selected batch
-  const getSelectedBatchName = () => {
-    const batch = liveBatches.find(b => b.batch_obj_id === selectedBatchId);
-    return batch ? batch.batchName : "Unknown Batch";
-  };
-
-  // --- Helpers for Display Data ---
-  const todayStr = new Date().toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    weekday: 'short'
-  });
-
-  const nextClassValue = batchInfo?.nextClassDate || "Update Soon";
-
-  const getLocationDisplay = () => {
-    if (!batchInfo) return "--";
-    if (batchInfo.sessionDetails?.meetingLinkOrLocation) {
-      return batchInfo.sessionDetails.meetingLinkOrLocation;
-    }
-    return batchInfo.defaultLocation || "N/A";
-  };
-
-  const isLocationUrl = () => {
-    const loc = getLocationDisplay();
-    // Basic check if it's a URL (http, https, www) and NOT "No Credit"
-    return loc && (loc.startsWith('http') || loc.startsWith('www')) && loc !== "No Credit";
-  };
-
-  const getTimings = () => {
-    if (batchInfo?.sessionDetails?.startTime && batchInfo?.sessionDetails?.endTime) {
-      return `${batchInfo.sessionDetails.startTime} - ${batchInfo.sessionDetails.endTime}`;
-    }
-    return "N/A";
-  };
-
-  const getSessionNumber = () => {
-    return batchInfo?.sessionDetails?.session_number 
-      ? `Session ${batchInfo.sessionDetails.session_number}`
-      : "No Class Today";
-  };
-
   return (
-    <div className="flex flex-col gap-5 pb-10">
+    <div className="relative flex flex-col pb-20 max-w-7xl mx-auto min-h-screen">
       
-      {/* --- Welcome Banner --- */}
-      <div 
-        className="relative rounded-3xl overflow-hidden p-6 md:p-8 text-white shadow-xl"
-        style={{
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          minHeight: '180px'
-        }}
-      >
-        <h1 className="text-3xl font-extrabold mb-1">Welcome to Ground Zero</h1>
-        <p className="text-sm opacity-90 italic mb-4">
-          "The future belongs to those who believe in the beauty of their dreams."
-        </p>
-
-        <div className="flex flex-wrap gap-2">
-          <span className="px-3 py-1 rounded-full bg-white/20 text-[10px] font-bold flex items-center gap-2">
-            <FaRocket /> Building Future Leaders
-          </span>
-          <span className="px-3 py-1 rounded-full bg-white/20 text-[10px] font-bold flex items-center gap-2">
-            <FaLightbulb /> Innovation First
-          </span>
-          <span className="px-3 py-1 rounded-full bg-white/20 text-[10px] font-bold flex items-center gap-2">
-            <FaBolt /> Your Journey Starts Here
-          </span>
-        </div>
+      {/* Global Background Nebula Effect */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: -1 }}>
+          <motion.div 
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            className="absolute top-[-20%] left-[-20%] w-[800px] h-[800px] bg-cyan-500/10 rounded-full blur-[150px]"
+          />
+          <motion.div 
+            animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
+            transition={{ duration: 12, repeat: Infinity, ease: "linear", delay: 2 }}
+            className="absolute bottom-[-20%] right-[-20%] w-[800px] h-[800px] bg-purple-600/10 rounded-full blur-[150px]"
+          />
+          <motion.div 
+            animate={{ opacity: [0.1, 0.3, 0.1] }}
+            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute top-[30%] left-[20%] w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[120px]"
+          />
       </div>
 
-      {/* --- Batch Selection --- */}
-      <div>
-        <h2 className="text-sm font-bold uppercase tracking-wide opacity-70 mb-2">My Live Batches</h2>
+      <WelcomeBanner username={username} />
+
+      <div className="mb-8 relative z-10">
+        <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-lg bg-purple-500/20 text-purple-400">
+                <Star className="w-5 h-5" />
+            </div>
+            <div>
+                <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>My Sessions</h2>
+                <p className="text-xs text-gray-500 font-medium">What's next for you?</p>
+            </div>
+        </div>
 
         {isLoadingBatches ? (
-          <p className="opacity-50 text-sm">Loading batches...</p>
-        ) : liveBatches.length === 0 ? (
-          <p className="opacity-50 italic text-sm">You are not enrolled in any live batches.</p>
+          <div className="animate-pulse h-10 w-48 bg-gray-700/20 rounded-full"></div>
         ) : (
           <div className="flex flex-wrap gap-2">
-            {liveBatches.map(batch => (
-              <BatchChip
+            {liveBatches.map((batch) => (
+              <button
                 key={batch.batch_obj_id}
-                label={batch.batchName} 
-                isDark={isDark}
-                isSelected={selectedBatchId === batch.batch_obj_id}
                 onClick={() => setSelectedBatchId(batch.batch_obj_id)}
-              />
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 border backdrop-blur-sm
+                  ${selectedBatchId === batch.batch_obj_id 
+                    ? 'bg-purple-600 border-purple-500 text-white shadow-[0_0_15px_rgba(147,51,234,0.3)]' 
+                    : isDark 
+                      ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white hover:border-white/20' 
+                      : 'bg-white/50 border-gray-200 text-gray-600 hover:bg-white hover:text-black hover:border-black'
+                  }
+                `}
+              >
+                {batch.batchName}
+              </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* --- Active Batch Card --- */}
-      {selectedBatchId && (
-        <div 
-          className="rounded-3xl border p-1 overflow-hidden transition-all flex-grow"
-          style={{
-            backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
-            borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
-          }}
-        >
-          <div className="p-6 relative h-full flex flex-col">
-
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <FaBolt className="text-[var(--accent-teal)] text-lg" />
-                  <h2 className="text-2xl font-extrabold">{getSelectedBatchName()}</h2>
-                </div>
-              </div>
-
-              <div className={`px-3 py-1 rounded-lg border text-[10px] font-bold uppercase ${batchInfo?.hasClassToday ? 'bg-green-100 text-green-800 border-green-200' : ''}`}
-                style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`}}
-              >
-                {batchInfo?.hasClassToday ? "Class Today" : "No Class Today"}
-              </div>
-            </div>
-
-            {isLoadingInfo ? (
-              <div className="py-10 text-center opacity-50 text-sm">
-                Loading schedule details...
-              </div>
-            ) : batchInfo ? (
-              <>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-
-                  {/* 1. SESSION NUMBER / WEEK */}
-                  <InfoPill 
-                    isDark={isDark}
-                    icon={<FaCalendarAlt />}
-                    label="Current Session"
-                    value={getSessionNumber()}
-                  />
-
-                  {/* 2. TODAY DATE */}
-                  <InfoPill 
-                    isDark={isDark}
-                    icon={<FaChalkboardTeacher />}
-                    label="Today"
-                    value={todayStr}
-                  />
-
-                  {/* 3. TIMINGS */}
-                   <InfoPill 
-                    isDark={isDark}
-                    icon={<FaClock />}
-                    label="Timings"
-                    value={getTimings()}
-                  />
-
-                  {/* 4. LOCATION */}
-                  <InfoPill 
-                    isDark={isDark}
-                    icon={isLocationUrl() ? <FaVideo /> : <FaMapMarkerAlt />}
-                    label={batchInfo.batchType === "ONLINE" ? "Meeting Link" : "Location"}
-                    value={getLocationDisplay()}
-                    isLink={isLocationUrl()}
-                  />
-
-                  {/* 5. GOOGLE CLASSROOM (Conditional) */}
-                  {shouldShowClassroom() && (
-                    <InfoPill 
-                      isDark={isDark}
-                      icon={<FaGoogle />} 
-                      label="Classroom"
-                      value={getClassroomLink()}
-                      // Only make it a link if it is NOT "No Credit"
-                      isLink={getClassroomLink() !== "No Credit"}
-                    />
-                  )}
-
-                </div>
-
-                {/* --- Topic Section --- */}
-                <div 
-                  className="p-4 rounded-2xl border mb-6 flex-grow"
-                  style={{
-                    backgroundColor: `var(${isDark ? "--bg-dark" : "rgba(0,0,0,0.02)"})`,
-                    borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
-                  }}
-                >
-                  <div className="flex justify-between items-start">
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest mb-1 text-[var(--accent-purple)]">
-                      Topic of the Day
-                    </h4>
-                    
-                    <span className="text-[15px] font-mono opacity-100 white bold">
-                      Next: {nextClassValue}
-                    </span>
-                  </div>
-
-                  <h3 className="text-xl font-bold mb-1">
-                    {batchInfo.sessionDetails?.title || batchInfo.weekTitle || "No active session topic"}
-                  </h3>
-                  <p className="opacity-70 text-sm max-w-3xl line-clamp-2">
-                    {batchInfo.sessionDetails?.description || batchInfo.weekDescription || "Check back closer to class time for details."}
-                  </p>
-                </div>
-
-                {/* --- Action Buttons --- */}
-                <div className="flex flex-col sm:flex-row gap-3 mt-auto">
-                  <button 
-                    className="flex-1 py-3 rounded-xl font-bold text-sm text-white shadow-lg transition hover:shadow-xl active:scale-95"
-                    style={{ background: "linear-gradient(90deg,#8B5CF6,#6D28D9)" }}
-                    onClick={() => navigate("asktoai")}
-                  >
-                    ✨ Open AI Chat
-                  </button>
-                  <button 
-                    className="flex-1 py-3 rounded-xl font-bold text-sm border transition hover:bg-[var(--bg-hover)]"
-                    style={{ 
-                      borderColor: 'var(--accent-teal)', 
-                      color: 'var(--accent-teal)',
-                    }}
-                    onClick={() => alert("Opening Replit...")}
-                  >
-                    Build with Replit →
-                  </button>
-                </div>
-              </>
-            ) : (
-              <p className="text-center opacity-50 text-sm">Select a batch to view details.</p>
-            )}
-          </div>
-        </div>
-      )}
+      <AnimatePresence mode='wait'>
+        {isLoadingData ? (
+          <motion.div 
+            key="loader"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center justify-center py-20 relative z-10"
+          >
+               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+          </motion.div>
+        ) : batchData ? (
+          <motion.div
+            key={selectedBatchId} // Key ensures re-animation when batch changes
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="relative z-10"
+          >
+            <SessionSection 
+              title="Upcoming Missions" 
+              sessions={batchData.upcoming}
+              type="upcoming"
+              defaultExpanded={true}
+              isDark={isDark}
+            />
+             <SessionSection 
+              title="Completed Adventures" 
+              sessions={batchData.attended}
+              type="completed"
+              defaultExpanded={false}
+              isDark={isDark}
+            />
+            <SessionSection 
+              title="Catch Up" 
+              sessions={batchData.missed}
+              type="missed"
+              defaultExpanded={batchData.missed.length > 0}
+              isDark={isDark}
+            />
+          </motion.div>
+        ) : (
+          <motion.div 
+             key="empty"
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             className="text-center py-20 opacity-50 text-gray-400 relative z-10"
+          >
+             Select a mission batch above to view your progress.
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
