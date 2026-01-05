@@ -1833,3 +1833,41 @@ export const createCheckoutSession = async (parentDetails, studentDetails, batch
     };
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// --- Student Profile API ---
+export const updateStudentProfilePath = `${BASE_URL}/student/update-profile`;
+
+export const updateStudentProfile = async (updates) => {
+  try {
+    const response = await fetch(updateStudentProfilePath, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(updates), // { name: "...", class: "..." }
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Update Student Profile error:", error);
+    return { success: false, message: "Network error updating profile." };
+  }
+};

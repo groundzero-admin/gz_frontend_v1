@@ -335,6 +335,9 @@ const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark
   );
 };
 
+
+
+
 // --- Main Page Component ---
 const StudentDashboardPage = () => {
   const { isDark, userData } = useOutletContext();
@@ -347,6 +350,7 @@ const StudentDashboardPage = () => {
   const [isLoadingBatches, setIsLoadingBatches] = useState(true);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
+  // Fetch Batches (Run once)
   useEffect(() => {
     const fetchBatches = async () => {
       setIsLoadingBatches(true);
@@ -367,22 +371,41 @@ const StudentDashboardPage = () => {
     fetchBatches();
   }, []);
 
+  // Fetch Batch Data (The Fix is Here)
   useEffect(() => {
     if (!selectedBatchId) return;
+
+    // 1. Create a flag to track if this specific effect is still active
+    let active = true;
+
     const fetchBatchStatus = async () => {
       setIsLoadingData(true);
-      // Removed setBatchData(null) here to avoid white flashing, just rely on isLoading
+      setBatchData(null); // Clear previous data immediately to prevent visual mismatch
+
       try {
         const response = await getstudentsbatchprogress({ batch_obj_id: selectedBatchId });
-        if (response.success) setBatchData(response.data);
-        else setBatchData(null);
+        
+        // 2. Only update state if this effect is still active (User hasn't clicked away)
+        if (active) {
+            if (response.success) setBatchData(response.data);
+            else setBatchData(null);
+        }
       } catch (err) {
         console.error("Failed to fetch batch status", err);
       } finally {
-        setIsLoadingData(false);
+        // 3. Only turn off loader if we are still on this batch
+        if (active) {
+            setIsLoadingData(false);
+        }
       }
     };
+
     fetchBatchStatus();
+
+    // 4. Cleanup function: Runs if component unmounts OR if selectedBatchId changes
+    return () => {
+      active = false; // This effectively "cancels" the state update of the previous request
+    };
   }, [selectedBatchId]);
 
   return (
@@ -399,11 +422,6 @@ const StudentDashboardPage = () => {
             animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
             transition={{ duration: 12, repeat: Infinity, ease: "linear", delay: 2 }}
             className="absolute bottom-[-20%] right-[-20%] w-[800px] h-[800px] bg-purple-600/10 rounded-full blur-[150px]"
-          />
-          <motion.div 
-            animate={{ opacity: [0.1, 0.3, 0.1] }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[30%] left-[20%] w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[120px]"
           />
       </div>
 
@@ -428,6 +446,8 @@ const StudentDashboardPage = () => {
               <button
                 key={batch.batch_obj_id}
                 onClick={() => setSelectedBatchId(batch.batch_obj_id)}
+                // Add disabled state during loading to prevent spam-clicking if desired
+                // disabled={isLoadingData && selectedBatchId === batch.batch_obj_id} 
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 border backdrop-blur-sm
                   ${selectedBatchId === batch.batch_obj_id 
                     ? 'bg-purple-600 border-purple-500 text-white shadow-[0_0_15px_rgba(147,51,234,0.3)]' 
@@ -444,20 +464,24 @@ const StudentDashboardPage = () => {
         )}
       </div>
 
+      {/* FIX FOR ANIMATION BUG:
+         1. Use mode="wait" to ensure exit finishes.
+         2. Ensure Keys are distinct (loader vs content).
+      */}
       <AnimatePresence mode='wait'>
         {isLoadingData ? (
           <motion.div 
             key="loader"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 0, transition: { duration: 0.1 } }} // Fast exit for loader
             className="flex items-center justify-center py-20 relative z-10"
           >
                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
           </motion.div>
         ) : batchData ? (
           <motion.div
-            key={selectedBatchId} // Key ensures re-animation when batch changes
+            key={`content-${selectedBatchId}`} // Unique key forces re-render of this block
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -491,6 +515,7 @@ const StudentDashboardPage = () => {
              key="empty"
              initial={{ opacity: 0 }}
              animate={{ opacity: 1 }}
+             exit={{ opacity: 0 }}
              className="text-center py-20 opacity-50 text-gray-400 relative z-10"
           >
              Select a mission batch above to view your progress.
@@ -500,5 +525,6 @@ const StudentDashboardPage = () => {
     </div>
   );
 };
+
 
 export default StudentDashboardPage;

@@ -6,8 +6,10 @@ import {
   X, Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { whoami } from './api.js'; 
 
-// --- CSS for Animations ---
+// --- CSS for Background Animations ---
 const animationStyles = `
   @keyframes float-slow {
     0% { transform: translate(0px, 0px) scale(1); }
@@ -21,7 +23,6 @@ const animationStyles = `
     100% { transform: translateX(-50%); }
   }
 
-  /* Ultra slow, minimal movement for ships */
   @keyframes hover-space {
     0% { transform: translate(0, 0) rotate(var(--r)); }
     50% { transform: translate(20px, -20px) rotate(calc(var(--r) + 5deg)); }
@@ -46,7 +47,28 @@ const animationStyles = `
   html { scroll-behavior: smooth; }
 `;
 
-// --- Updated: Space Background ---
+// --- Framer Motion Variants ---
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const hoverScale = {
+  whileHover: { scale: 1.05 },
+  whileTap: { scale: 0.95 }
+};
+
+// --- Space Background ---
 const SpaceBackground = ({ isDark }) => {
   if (!isDark) return null;
 
@@ -83,15 +105,24 @@ const SpaceBackground = ({ isDark }) => {
       ))}
       
       {/* Ships */}
-      <div className="absolute top-[15%] left-[10%] animate-hover-space text-white/5" style={{ '--r': '15deg' }}>
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2 }}
+        className="absolute top-[15%] left-[10%] animate-hover-space text-white/5" style={{ '--r': '15deg' }}
+      >
         <Rocket size={56} className="text-cyan-500/10" />
-      </div>
-      <div className="absolute top-[50%] right-[8%] animate-hover-space text-white/5" style={{ animationDelay: '-5s', '--r': '-12deg' }}>
+      </motion.div>
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2, delay: 0.5 }}
+        className="absolute top-[50%] right-[8%] animate-hover-space text-white/5" style={{ animationDelay: '-5s', '--r': '-12deg' }}
+      >
         <Rocket size={48} className="text-blue-500/10" />
-      </div>
-      <div className="absolute bottom-[20%] left-[20%] animate-hover-space text-white/5" style={{ animationDelay: '-12s', '--r': '45deg' }}>
+      </motion.div>
+      <motion.div 
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2, delay: 1 }}
+        className="absolute bottom-[20%] left-[20%] animate-hover-space text-white/5" style={{ animationDelay: '-12s', '--r': '45deg' }}
+      >
         <Rocket size={64} className="text-purple-500/10" />
-      </div>
+      </motion.div>
     </div>
   );
 };
@@ -106,44 +137,58 @@ const BackgroundOrbs = ({ isDark }) => (
 
 // --- Modal Component ---
 const FormModal = ({ isOpen, onClose, url, title, isDark }) => {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div onClick={onClose} className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer animate-in fade-in duration-200" />
-      <div className={`relative w-full max-w-3xl h-[85vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-200 ${isDark ? 'bg-[#13141F] border border-white/10' : 'bg-white border border-slate-200'}`}>
-        <div className={`flex justify-between items-center p-4 border-b ${isDark ? 'border-white/10 bg-[#13141F]' : 'border-slate-100 bg-white'}`}>
-          <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
-          <button onClick={onClose} className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'}`}>
-            <X size={20} />
-          </button>
-        </div>
-        <div className={`flex-1 relative ${isDark ? 'bg-black' : 'bg-white'}`}>
-           <div className="absolute inset-0 flex items-center justify-center -z-10">
-              <Loader2 className="animate-spin text-slate-400" />
-           </div>
-           <iframe 
-            src={url} 
-            className="w-full h-full border-0 transition-all duration-300" 
-            title="Form"
-            marginHeight="0" 
-            marginWidth="0"
-            style={{ 
-              filter: isDark ? 'invert(1) hue-rotate(180deg) contrast(0.9)' : 'none',
-              backgroundColor: isDark ? 'black' : 'white' 
-            }}
+    <AnimatePresence>
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose} 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer" 
+          />
+          <motion.div 
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+            transition={{ type: "spring", duration: 0.5 }}
+            className={`relative w-full max-w-3xl h-[85vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col ${isDark ? 'bg-[#13141F] border border-white/10' : 'bg-white border border-slate-200'}`}
           >
-            Loading...
-          </iframe>
+            <div className={`flex justify-between items-center p-4 border-b ${isDark ? 'border-white/10 bg-[#13141F]' : 'border-slate-100 bg-white'}`}>
+              <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
+              <button onClick={onClose} className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'}`}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className={`flex-1 relative ${isDark ? 'bg-black' : 'bg-white'}`}>
+               <div className="absolute inset-0 flex items-center justify-center -z-10">
+                  <Loader2 className="animate-spin text-slate-400" />
+               </div>
+               <iframe 
+                src={url} 
+                className="w-full h-full border-0 transition-all duration-300" 
+                title="Form"
+                marginHeight="0" 
+                marginWidth="0"
+                style={{ 
+                  filter: isDark ? 'invert(1) hue-rotate(180deg) contrast(0.9)' : 'none',
+                  backgroundColor: isDark ? 'black' : 'white' 
+                }}
+              >
+                Loading...
+              </iframe>
+            </div>
+          </motion.div>
         </div>
-      </div>
-    </div>
+      )}
+    </AnimatePresence>
   );
 };
 
 const GroundZeroSpark = () => {
   const [isDark, setIsDark] = useState(true);
-  const [isWebinarOpen, setIsWebinarOpen] = useState(false); // Modal State
+  const [isWebinarOpen, setIsWebinarOpen] = useState(false); 
   const navigate = useNavigate();
   const toggleTheme = () => setIsDark(!isDark);
 
@@ -157,6 +202,23 @@ const GroundZeroSpark = () => {
 
   const openWebinar = () => setIsWebinarOpen(true);
   const closeWebinar = () => setIsWebinarOpen(false);
+
+  // --- Handle Login Click ---
+  const handleLoginClick = async () => {
+    try {
+      const response = await whoami();
+      
+      if (response.success && response.data) {
+        const { role } = response.data;
+        navigate(`/${role}/dashboard`);
+      } else {
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error("Auth check failed", error);
+      navigate('/login');
+    }
+  };
 
   // --- Styles ---
   const styles = {
@@ -180,7 +242,7 @@ const GroundZeroSpark = () => {
     { name: "Sanya M.", role: "Parent of 12-year-old", text: "My daughter now questions AI responses instead of blindly accepting them. That's the critical thinking we needed!" },
     { name: "Arjun P.", role: "Parent of 9-year-old", text: "Finally a program that isn't just coding syntax. It's about logic, empathy, and building useful things." },
   ];
-  // Triple reviews for smooth scroll
+  
   const allReviews = [...reviews, ...reviews, ...reviews]; 
 
   return (
@@ -195,7 +257,12 @@ const GroundZeroSpark = () => {
       <div className="relative z-10">
         
         {/* ================= NAVBAR ================= */}
-        <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center pt-6 px-4">
+        <motion.nav 
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center pt-6 px-4"
+        >
           <div className={`backdrop-blur-xl border rounded-[5px] px-6 py-3 flex items-center justify-between w-full max-w-5xl shadow-2xl transition-all duration-300 ${styles.navbar}`}>
             <div className="flex items-center gap-3">
               <div className={`w-8 h-8 rounded-[5px] flex items-center justify-center text-xs font-extrabold border shadow-[0_0_15px_rgba(34,211,238,0.2)] ${isDark ? 'bg-gradient-to-br from-slate-700 to-slate-800 text-cyan-400 border-cyan-500/20' : 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white border-transparent'}`}>
@@ -218,51 +285,107 @@ const GroundZeroSpark = () => {
             </div>
             
             <div className="flex items-center gap-4">
-              <button onClick={toggleTheme} className={`p-2 rounded-full transition-all ${isDark ? 'bg-white/10 text-yellow-300' : 'bg-slate-200 text-slate-600'}`}>
+              <motion.button 
+                whileHover={{ scale: 1.1, rotate: 15 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={toggleTheme} 
+                className={`p-2 rounded-full transition-all ${isDark ? 'bg-white/10 text-yellow-300' : 'bg-slate-200 text-slate-600'}`}
+              >
                 {isDark ? <Sun size={18} /> : <Moon size={18} />}
-              </button>
-              <button 
+              </motion.button>
+
+              {/* --- LOGIN BUTTON --- */}
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleLoginClick}
+                className={`border text-xs md:text-sm font-semibold px-5 py-2 rounded-[5px] transition-all shadow-lg 
+                  ${isDark 
+                    ? 'bg-slate-800/80 text-purple-400 border-purple-500/30 hover:bg-purple-500 hover:text-white' 
+                    : 'bg-purple-600 text-white border-transparent hover:bg-purple-700'
+                  }`}
+              >
+                Login
+              </motion.button>
+
+              {/* --- BOOK A CALL BUTTON (Hidden on Mobile) --- */}
+              <motion.button 
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => navigate('/book-discovery-call-spark')}
-                className={`border text-xs md:text-sm font-semibold px-5 py-2 rounded-[5px] transition-all shadow-lg ${isDark ? 'bg-slate-800/80 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500 hover:text-black' : 'bg-slate-900 text-white border-transparent hover:bg-slate-700'}`}
+                className={`hidden md:block border text-xs md:text-sm font-semibold px-5 py-2 rounded-[5px] transition-all shadow-lg ${isDark ? 'bg-slate-800/80 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500 hover:text-black' : 'bg-slate-900 text-white border-transparent hover:bg-slate-700'}`}
               >
                 Book a Call
-              </button>
+              </motion.button>
             </div>
           </div>
-        </nav>
+        </motion.nav>
 
         {/* ================= HERO SECTION ================= */}
         <section className="relative pt-80 pb-32 px-4 text-center">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/20 blur-[120px] rounded-full pointer-events-none" />
           
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1]">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1]"
+          >
             Make your kids <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500">future ready</span>
-          </h1>
-          <p className={`text-xl md:text-2xl max-w-2xl mx-auto mb-12 font-medium ${styles.subtext}`}>
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className={`text-xl md:text-2xl max-w-2xl mx-auto mb-12 font-medium ${styles.subtext}`}
+          >
             Thinking skills and responsible AI, taught through real problem-solving.
-          </p>
+          </motion.p>
           
-          <div className="flex flex-col sm:flex-row justify-center gap-5">
-            {/* UPDATED LINK: /book-discovery-call-spark */}
-            <button onClick={() => navigate('/book-discovery-call-spark')} className="bg-cyan-400 hover:bg-cyan-300 text-black font-bold px-10 py-4 rounded-full transition-all hover:scale-105 shadow-[0_0_30px_rgba(34,211,238,0.4)] flex items-center gap-2">
-              Book a Discovery Call <ArrowRight size={20} />
-            </button>
-            <button onClick={(e) => handleScroll(e, 'programs')} className={`border px-10 py-4 rounded-full font-semibold transition-all ${isDark ? 'border-white/20 hover:bg-white/10 text-white' : 'border-slate-300 hover:bg-slate-100 text-slate-800'}`}>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="flex flex-col sm:flex-row justify-center gap-5"
+          >
+            <motion.button 
+                {...hoverScale}
+                onClick={() => navigate('/book-discovery-call-spark')} 
+                className="bg-cyan-400 hover:bg-cyan-300 text-black font-bold px-10 py-4 rounded-full transition-transform shadow-[0_0_30px_rgba(34,211,238,0.4)]"
+              >
+                Book a discovery call &rarr;
+              </motion.button>
+            <motion.button 
+              {...hoverScale}
+              onClick={(e) => handleScroll(e, 'programs')} 
+              className={`border px-10 py-4 rounded-full font-semibold transition-all ${isDark ? 'border-white/20 hover:bg-white/10 text-white' : 'border-slate-300 hover:bg-slate-100 text-slate-800'}`}
+            >
               Explore Programs
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         </section>
 
         {/* ================= USP / CURRICULUM ================= */}
         <section id="curriculum" className="py-24 px-4 max-w-7xl mx-auto">
-          <div className="text-center mb-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-20"
+          >
             <h2 className="text-3xl md:text-5xl font-bold mb-4">
               Our USP is a <span className="text-blue-500">deeply researched curriculum</span><br />
               that helps children develop:
             </h2>
-          </div>
+          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div 
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
             {[
               { icon: Lightbulb, title: "Creative Thinking", q: "How do I create new ideas?", sub: "Building new things • Expressing imagination" },
               { icon: BrainCircuit, title: "Critical Thinking", q: "How do I evaluate claims?", sub: "Question Peer pressure • AI misinformation" },
@@ -271,20 +394,31 @@ const GroundZeroSpark = () => {
               { icon: Heart, title: "Life Skills", q: "How do I become my best version?", sub: "Entrepreneurship • Finance • Well-being" },
               { icon: Cpu, title: "AI Nativeness", q: "How do I use AI as a tool?", sub: "Build with AI • Prototyping • Outsourcing thinking?" },
             ].map((item, i) => (
-              <div key={i} className={`p-8 rounded-2xl border backdrop-blur-md transition-all group ${styles.card}`}>
+              <motion.div 
+                key={i} 
+                variants={fadeInUp}
+                className={`p-8 rounded-2xl border backdrop-blur-md transition-all group ${styles.card}`}
+              >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 ${styles.uspIcon}`}>
                   <item.icon size={24} />
                 </div>
                 <h3 className="text-xl font-bold mb-2">{item.title}</h3>
                 <p className="text-sm italic mb-3 opacity-80">"{item.q}"</p>
                 <p className={`text-xs ${styles.subtext}`}>{item.sub}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </section>
 
         {/* ================= TESTIMONIALS (Infinite Scroll) ================= */}
-        <section id="stories" className="py-20 overflow-hidden relative">
+        <motion.section 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8 }}
+          id="stories" 
+          className="py-20 overflow-hidden relative"
+        >
           <div className="max-w-7xl mx-auto px-4 mb-16 text-center">
             <h2 className="text-3xl md:text-5xl font-bold mb-4">
               Trusted by parents. <span className="text-blue-500">Loved by students.</span>
@@ -313,20 +447,31 @@ const GroundZeroSpark = () => {
               ))}
             </div>
           </div>
-        </section>
+        </motion.section>
 
         {/* ================= PROGRAMS ================= */}
         <section id="programs" className="py-24 px-4 max-w-7xl mx-auto">
-          <div className="text-center mb-20">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-20"
+          >
             <h2 className="text-3xl md:text-5xl font-bold mb-4">Our Programs</h2>
             <p className={styles.subtext}>Choose the program which fits your requirement.</p>
-          </div>
+          </motion.div>
 
           <div className="flex flex-col gap-10">
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+            <motion.div 
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch"
+            >
               {/* Card 1: Personalised Mentorship */}
-              <div className={`p-8 rounded-3xl border flex flex-col h-full transition-all hover:-translate-y-2 ${styles.card}`}>
+              <motion.div variants={fadeInUp} whileHover={{ y: -8 }} className={`p-8 rounded-3xl border flex flex-col h-full transition-all ${styles.card}`}>
                 <h3 className="text-2xl font-bold mb-2">Personalised Mentorship</h3>
                 <p className={`text-sm mb-6 ${styles.subtext}`}>For the kids who want personalised approach</p>
                 <div className="mb-6">
@@ -339,17 +484,17 @@ const GroundZeroSpark = () => {
                     </li>
                   ))}
                 </ul>
-                {/* UPDATED LINK: /book-one-on-one-session-spark */}
-                <button 
+                <motion.button 
+                  {...hoverScale}
                   onClick={() => navigate('/book-one-on-one-session-spark')}
                   className={`w-full py-4 rounded-xl font-bold border transition-all ${isDark ? 'border-white/20 hover:bg-white/10 text-white' : 'border-slate-300 hover:bg-slate-100 text-slate-800'}`}
                 >
                   Book your session
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
 
               {/* Card 2: Spark Online */}
-              <div className={`relative p-8 rounded-3xl border flex flex-col h-full transform lg:-translate-y-4 ${isDark ? 'bg-[#13141F] border-cyan-500/50 shadow-[0_0_60px_-12px_rgba(34,211,238,0.25)]' : 'bg-white border-blue-500 shadow-xl'}`}>
+              <motion.div variants={fadeInUp} whileHover={{ y: -16 }} className={`relative p-8 rounded-3xl border flex flex-col h-full transform lg:-translate-y-4 ${isDark ? 'bg-[#13141F] border-cyan-500/50 shadow-[0_0_60px_-12px_rgba(34,211,238,0.25)]' : 'bg-white border-blue-500 shadow-xl'}`}>
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-cyan-400 to-blue-500 text-black text-xs font-bold px-4 py-1 rounded-full shadow-lg flex items-center gap-1">
                   <Star size={12} fill="black" /> Popular
                 </div>
@@ -365,18 +510,18 @@ const GroundZeroSpark = () => {
                     </li>
                   ))}
                 </ul>
-                {/* UPDATED LINK: /buycourse?coursetype=ONLINE */}
-                <button 
+                <motion.button 
+                  {...hoverScale}
                   onClick={() => navigate('/buycourse?coursetype=ONLINE')}
                   className="w-full py-4 rounded-xl font-bold bg-cyan-400 hover:bg-cyan-300 text-black transition-all shadow-lg hover:shadow-cyan-400/20"
                 >
                   Book your spot
-                </button>
+                </motion.button>
                 <p className="text-center text-[10px] mt-3 opacity-50">Limited seats available</p>
-              </div>
+              </motion.div>
 
               {/* Card 3: Spark Offline */}
-              <div className={`p-8 rounded-3xl border flex flex-col h-full transition-all hover:-translate-y-2 ${styles.card}`}>
+              <motion.div variants={fadeInUp} whileHover={{ y: -8 }} className={`p-8 rounded-3xl border flex flex-col h-full transition-all ${styles.card}`}>
                 <h3 className="text-2xl font-bold mb-2">Spark Offline Batch</h3>
                 <p className={`text-sm mb-6 ${styles.subtext}`}>In-person learning experience for hands-on collaboration.</p>
                 <div className="mb-6">
@@ -389,21 +534,23 @@ const GroundZeroSpark = () => {
                     </li>
                   ))}
                 </ul>
-                {/* UPDATED LINK: /buycourse?coursetype=OFFLINE */}
-                <button 
+                <motion.button 
+                  {...hoverScale}
                   onClick={() => navigate('/buycourse?coursetype=OFFLINE')}
                   className={`w-full py-4 rounded-xl font-bold border transition-all ${isDark ? 'border-white/20 hover:bg-white/10 text-white' : 'border-slate-300 hover:bg-slate-100 text-slate-800'}`}
                 >
                   Join Offline Batch
-                </button>
-              </div>
-            </div>
+                </motion.button>
+              </motion.div>
+            </motion.div>
 
             {/* Row 2: Beautiful CTA Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto w-full">
               
               {/* Free Consultation Card */}
-              <div 
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 className={`group p-8 rounded-3xl border flex items-center justify-between transition-all duration-300 cursor-pointer ${styles.fancyCard}`}
                 onClick={() => navigate('/book-discovery-call-spark')}
               >
@@ -419,10 +566,12 @@ const GroundZeroSpark = () => {
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all duration-300 group-hover:bg-cyan-500 group-hover:border-cyan-500 ${isDark ? 'border-white/20' : 'border-slate-300'}`}>
                   <ArrowRight size={20} className="transition-transform group-hover:translate-x-1 group-hover:text-black" />
                 </div>
-              </div>
+              </motion.div>
 
               {/* Webinar Card */}
-              <div 
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 className={`group p-8 rounded-3xl border flex items-center justify-between transition-all duration-300 cursor-pointer ${styles.fancyCard}`}
                 onClick={openWebinar}
               >
@@ -438,7 +587,7 @@ const GroundZeroSpark = () => {
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all duration-300 group-hover:bg-purple-500 group-hover:border-purple-500 ${isDark ? 'border-white/20' : 'border-slate-300'}`}>
                   <ArrowRight size={20} className="transition-transform group-hover:translate-x-1 group-hover:text-white" />
                 </div>
-              </div>
+              </motion.div>
 
             </div>
           </div>
@@ -446,7 +595,13 @@ const GroundZeroSpark = () => {
 
         {/* ================= FOUNDER ================= */}
         <section id="about" className="py-24 px-4 max-w-6xl mx-auto">
-          <div className={`rounded-3xl p-10 md:p-16 border flex flex-col lg:flex-row gap-12 items-center ${styles.card}`}>
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className={`rounded-3xl p-10 md:p-16 border flex flex-col lg:flex-row gap-12 items-center ${styles.card}`}
+          >
             <div className="flex-1 space-y-6">
               <div className="text-5xl text-cyan-400 font-serif">“</div>
               <h3 className="text-2xl md:text-3xl font-bold leading-relaxed">
@@ -468,28 +623,39 @@ const GroundZeroSpark = () => {
                 <a href="#" className="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"><Linkedin size={18} /></a>
               </div>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         {/* ================= CTA ================= */}
         <section className="py-32 text-center">
-          <div className="max-w-4xl mx-auto px-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+            className="max-w-4xl mx-auto px-4"
+          >
             <h2 className="text-4xl md:text-6xl font-bold mb-10 leading-tight">
               Find out how a <span className="text-cyan-400">small shift in learning</span><br />
               can unlock big possibilities
             </h2>
             <div className="flex flex-col sm:flex-row justify-center gap-5">
-              <button onClick={() => navigate('/book-discovery-call-spark')} className="bg-cyan-400 hover:bg-cyan-300 text-black font-bold px-10 py-4 rounded-full transition-transform hover:scale-105 shadow-[0_0_30px_rgba(34,211,238,0.4)]">
+              <motion.button 
+                {...hoverScale}
+                onClick={() => navigate('/book-discovery-call-spark')} 
+                className="bg-cyan-400 hover:bg-cyan-300 text-black font-bold px-10 py-4 rounded-full transition-transform shadow-[0_0_30px_rgba(34,211,238,0.4)]"
+              >
                 Book a discovery call &rarr;
-              </button>
-              <button 
+              </motion.button>
+              <motion.button 
+                {...hoverScale}
                 onClick={openWebinar}
                 className={`border px-10 py-4 rounded-full font-semibold transition-all ${isDark ? 'border-white/20 hover:bg-white/10' : 'border-slate-300 hover:bg-slate-100'}`}
               >
                 Join our next webinar
-              </button>
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         {/* ================= FOOTER ================= */}

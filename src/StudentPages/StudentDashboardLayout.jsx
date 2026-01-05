@@ -130,8 +130,8 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
         <SidebarItem to="/student/dashboard" icon={<FaHome />} label="Home" subLabel="Command Deck" isActive={isActive("/student/dashboard")} isDark={isDark} />
         <SidebarItem to="/student/dashboard/asktoai" icon={<FaCommentDots />} label="Ask Spark" subLabel="Your Companion" isActive={isActive("/student/dashboard/asktoai")} isDark={isDark} />
         <SidebarItem to="/student/dashboard/workspace" icon={<FaCompass />} label="My Space" subLabel="Your Universe" isActive={isActive("/student/dashboard/workspace")} isDark={isDark} />
-        <SidebarItem to="/student/dashboard/credits" icon={<FaCoins />} label="Credits" subLabel="Your Wallet" isActive={isActive("/student/dashboard/credits")} isDark={isDark} />
-        <SidebarItem to="/student/dashboard/remaingsessionpurchase" icon={<FaPlus />} label="Top Up" subLabel="Add Funds" isActive={isActive("/student/dashboard/remaingsessionpurchase")} isDark={isDark} />
+        {/* <SidebarItem to="/student/dashboard/credits" icon={<FaCoins />} label="Credits" subLabel="Your Wallet" isActive={isActive("/student/dashboard/credits")} isDark={isDark} /> */}
+        {/* <SidebarItem to="/student/dashboard/remaingsessionpurchase" icon={<FaPlus />} label="Top Up" subLabel="Add Funds" isActive={isActive("/student/dashboard/remaingsessionpurchase")} isDark={isDark} /> */}
       </nav>
 
       <div className="p-4 border-t border-gray-500/10 flex flex-col gap-3 relative z-10 bg-gradient-to-t from-black/5 to-transparent">
