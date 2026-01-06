@@ -155,7 +155,7 @@ const FullPageMessage = ({ isDark, children }) => (
 
 // --- The Main Layout Component (Handles Auth & State) ---
 const AdminLayout = () => {
-  const [isDark, setIsDark] = useState(true) // Default to dark
+  const [isDark, setIsDark] = useState(false) // Default to light
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [authStatus, setAuthStatus] = useState({
     isLoading: true,
