@@ -1868,3 +1868,34 @@ export const updateStudentProfile = async (updates) => {
     return { success: false, message: "Network error updating profile." };
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Add this path definition if not already present
+const unlinkStudentFromBatchPath = `${BASE_URL}/admin/unlinkstudentfrombatch`; 
+
+export const unlinkStudentFromBatch = async (batch_obj_id, student_number) => {
+  try { 
+    return await (await fetch(unlinkStudentFromBatchPath, { 
+      method: 'POST', 
+      headers: {'Content-Type': 'application/json'}, 
+      credentials: 'include', 
+      body: JSON.stringify({ batch_obj_id, student_number }) 
+    })).json(); 
+  } catch (e) { 
+    return { success: false, message: "Network error" }; 
+  }
+};
