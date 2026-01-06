@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { 
-  Moon, Sun, CreditCard, User, Sparkles, 
-  Wifi, MapPin, AlertTriangle, CheckCircle, Loader2 
+  CreditCard, User, Sparkles, Wifi, MapPin, 
+  AlertTriangle, CheckCircle2, Loader2, ArrowLeft,
+  Mail, Phone, GraduationCap, School, Layers, Sun, Moon, Rocket
 } from "lucide-react";
+import { motion } from "framer-motion";
 
-// Import the API function (or define it above if in the same file)
-// import { createCheckoutSession } from './api'; 
+// --- CONFIGURATION VARIABLES ---
+const PRICE_ONLINE_SESSION = 1500;
+const PRICE_OFFLINE_SESSION = 1500;
+const FULL_BATCH_SESSIONS = 12;
 
-// --- Paste the API function here if keeping in one file ---
+// --- API LOGIC ---
 const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 const createCheckoutPath = `${BASE_URL}/create-checkout-session`;
 
@@ -29,22 +33,22 @@ export const createCheckoutSession = async (parentDetails, studentDetails, batch
     return { success: false, message: "Network connection failed." };
   }
 };
-// ---------------------------------------------------------
 
 const BuyCourse = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   
+  // --- TYPE VALIDATION ---
   const rawCourseType = params.get("coursetype");
   const normalizedType = rawCourseType?.toUpperCase();
   const isValidType = normalizedType === "ONLINE" || normalizedType === "OFFLINE";
   const BATCH_TYPE = normalizedType === "OFFLINE" ? "OFFLINE" : "ONLINE";
 
-  // --- State ---
-  const [isDarkMode, setIsDarkMode] = useState(true); 
+  // --- STATE ---
+  const [isDarkMode, setIsDarkMode] = useState(false); // DEFAULT: LIGHT MODE
   const [purchaseType, setPurchaseType] = useState("FULL_BUNDLE"); 
+  const [isProcessing, setIsProcessing] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false); // NEW: Loading state
 
   const [parentDetails, setParentDetails] = useState({
     parentName: "",
@@ -59,7 +63,15 @@ const BuyCourse = () => {
     schoolName: "",
   });
 
-  // Redirect logic
+  const toggleTheme = () => setIsDarkMode(!isDarkMode);
+
+  // --- PRICING CALCULATION ---
+  const pricePerSession = BATCH_TYPE === "OFFLINE" ? PRICE_OFFLINE_SESSION : PRICE_ONLINE_SESSION;
+  const totalPrice = purchaseType === "FULL_BUNDLE" 
+    ? pricePerSession * FULL_BATCH_SESSIONS 
+    : pricePerSession;
+
+  // --- REDIRECT INVALID URL ---
   useEffect(() => {
     if (!isValidType) {
       setRedirecting(true);
@@ -68,18 +80,12 @@ const BuyCourse = () => {
     }
   }, [isValidType, navigate]);
 
-  // Pricing
-  const pricePerSession = BATCH_TYPE === "OFFLINE" ? 1500 : 1000;
-  const totalPrice = purchaseType === "FULL_BUNDLE" ? pricePerSession * 12 : pricePerSession;
-
-  // --- Payment Handler ---
+  // --- PAYMENT HANDLER ---
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
-    
-    if (isProcessing) return; // Prevent double clicks
-    setIsProcessing(true);    // Start loading animation
+    if (isProcessing) return; 
+    setIsProcessing(true);   
 
-    // 1. Call the separated API function
     const result = await createCheckoutSession(
       parentDetails, 
       studentDetails, 
@@ -89,20 +95,18 @@ const BuyCourse = () => {
 
     if (!result.success) {
       alert(result.message);
-      setIsProcessing(false); // Stop loading on error
+      setIsProcessing(false);
       return;
     }
 
-    // 2. Initialize Razorpay
     const options = {
       key: result.key,
       amount: result.order.amount,
       currency: "INR",
       name: "GroundZero",
-      description: `Course Enrollment - ${BATCH_TYPE}`,
+      description: `Spark ${BATCH_TYPE} Enrollment`,
       order_id: result.order.id,
       handler: function (response) {
-        // success logic
         window.location.href = "/payment-success";
       },
       prefill: {
@@ -110,189 +114,425 @@ const BuyCourse = () => {
         email: parentDetails.parentEmail,
         contact: parentDetails.parentPhone,
       },
-      theme: { color: "#6366f1" },
-      // Handle modal close by user
+      theme: { color: "#06b6d4" }, // Cyan-500
       modal: {
         ondismiss: function() {
-          setIsProcessing(false); // Stop loading if user closes modal
+          setIsProcessing(false);
         }
       }
     };
 
     const razorpay = new window.Razorpay(options);
     razorpay.open();
-    
-    // Note: We keep isProcessing(true) until the modal opens. 
-    // The ondismiss handler above handles reset if they cancel.
   };
 
-  const toggleTheme = () => setIsDarkMode(!isDarkMode);
+  // --- DYNAMIC STYLES ---
+  const theme = {
+    bg: isDarkMode ? "bg-[#0B0C15]" : "bg-slate-50",
+    text: isDarkMode ? "text-gray-100" : "text-slate-900",
+    textMuted: isDarkMode ? "text-gray-400" : "text-slate-500",
+    cardBg: isDarkMode ? "bg-[#13141F]/60 backdrop-blur-md" : "bg-white",
+    cardBorder: isDarkMode ? "border-white/10" : "border-slate-200 shadow-xl shadow-slate-200/50",
+    inputBg: isDarkMode ? "bg-[#13141F]" : "bg-slate-50",
+    inputBorder: isDarkMode ? "border-white/10" : "border-slate-300",
+    inputText: isDarkMode ? "text-gray-200" : "text-slate-900",
+    inputPlaceholder: isDarkMode ? "placeholder-gray-500" : "placeholder-slate-400",
+    sectionHeaderBorder: isDarkMode ? "border-white/5" : "border-slate-100",
+    highlightBg: isDarkMode ? "bg-[#13141F]" : "bg-white",
+    highlightShadow: isDarkMode ? "shadow-[0_0_30px_-10px_rgba(6,182,212,0.15)]" : "shadow-xl shadow-cyan-100",
+  };
 
-  // --- Render: Invalid URL Error ---
+  const inputStyle = `w-full ${theme.inputBg} border ${theme.inputBorder} rounded-xl px-4 py-3 pl-11 text-sm ${theme.inputText} ${theme.inputPlaceholder} focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all duration-300`;
+  const labelStyle = `block text-xs font-bold uppercase tracking-wider ${theme.textMuted} mb-2 ml-1`;
+
+  // --- BACKGROUND EFFECTS SETUP ---
+  // Generate stars only once
+  const stars = useMemo(() => {
+    return Array.from({ length: 30 }).map((_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      size: Math.random() * 3 + 1 + 'px', // 1px to 4px
+      delay: `${Math.random() * 5}s`,
+      duration: `${Math.random() * 3 + 2}s`,
+    }));
+  }, []);
+
+  const rocketVariants = {
+    animate: {
+      x: ["-10vw", "110vw"],
+      y: ["110vh", "-10vh"],
+      rotate: 0 ,
+      transition: {
+        duration: 35,
+        ease: "linear",
+        repeat: Infinity,
+      }
+    }
+  };
+
+  // Animation Variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+  };
+
+  // --- ERROR STATE RENDER ---
   if (redirecting || !isValidType) {
     return (
-      <div className={`app-container ${isDarkMode ? "theme-dark" : "theme-light"} min-h-screen flex items-center justify-center p-6`}>
-         <div className="max-w-md w-full p-8 rounded-3xl border backdrop-blur-xl shadow-2xl text-center space-y-6"
-               style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
-            <div className="mx-auto w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center text-red-500">
+      <div className={`min-h-screen ${theme.bg} flex items-center justify-center p-6 transition-colors duration-500`}>
+         <div className={`max-w-md w-full p-8 rounded-2xl border border-red-500/20 ${theme.cardBg} text-center space-y-4`}>
+            <div className="mx-auto w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
               <AlertTriangle size={32} />
             </div>
-            <h2 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Invalid Course Type</h2>
-            <div className="p-3 rounded-lg bg-black/5 text-sm font-mono opacity-60">Redirecting...</div>
+            <h2 className={`text-xl font-bold ${theme.text}`}>Invalid Course Type</h2>
+            <p className={`${theme.textMuted} text-sm`}>Redirecting you to the home page...</p>
          </div>
       </div>
     );
   }
 
-  // --- Render: Main UI ---
   return (
-    <div className={`app-container ${isDarkMode ? "theme-dark" : "theme-light"} min-h-screen transition-colors duration-500`}>
+    <div className={`min-h-screen font-sans ${theme.bg} ${theme.text} selection:bg-cyan-500/30 overflow-hidden relative transition-colors duration-500`}>
       
-      {/* Navbar */}
-      <nav className="w-full backdrop-blur-md sticky top-0 z-50 border-b transition-colors duration-300" 
-           style={{ backgroundColor: 'var(--bg-glass)', borderColor: 'var(--border-color)' }}>
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      {/* --- CSS Styles for Animations --- */}
+      <style>{`
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.2; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.5); }
+        }
+        @keyframes drift {
+          0% { transform: translate(0, 0); }
+          50% { transform: translate(15px, -15px); }
+          100% { transform: translate(0, 0); }
+        }
+        .bg-drift { animation: drift 20s linear infinite; }
+      `}</style>
+
+      {/* --- Background Ambience & Effects --- */}
+      <div className="fixed inset-0 pointer-events-none transition-opacity duration-500 overflow-hidden">
+        
+        {/* Stars */}
+        <div className="absolute inset-0 bg-drift">
+            {stars.map(star => (
+              <div
+                key={star.id}
+                className={`absolute rounded-full ${isDarkMode ? 'bg-white' : 'bg-slate-400'}`}
+                style={{
+                  left: star.left,
+                  top: star.top,
+                  width: star.size,
+                  height: star.size,
+                  animation: `twinkle ${star.duration} ease-in-out infinite ${star.delay}`,
+                  opacity: isDarkMode ? 0.8 : 0.5
+                }}
+              />
+            ))}
+        </div>
+
+        {/* Rocket */}
+        <motion.div
+          variants={rocketVariants}
+          animate="animate"
+          initial={{ x: "-10vw", y: "110vh", rotate: 45 }}
+          className={`absolute z-0 opacity-40 ${isDarkMode ? 'text-cyan-500' : 'text-slate-400'}`}
+        >
+          <Rocket size={48} />
+        </motion.div>
+
+        {/* Glowing Orbs */}
+        <div className={`absolute top-0 left-1/4 w-[500px] h-[500px] blur-[120px] rounded-full opacity-20 mix-blend-screen ${isDarkMode ? "bg-cyan-600/30" : "bg-cyan-300/50"}`} />
+        <div className={`absolute bottom-0 right-1/4 w-[500px] h-[500px] blur-[100px] rounded-full opacity-20 mix-blend-screen ${isDarkMode ? "bg-purple-600/30" : "bg-blue-300/50"}`} />
+      </div>
+
+      <motion.div 
+        className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        
+        {/* --- Header --- */}
+        <motion.div variants={itemVariants} className="flex items-center justify-between mb-8">
+          <button 
+            onClick={() => navigate(-1)}
+            className={`flex items-center gap-2 transition-colors ${theme.textMuted} hover:${theme.text}`}
+          >
+            <ArrowLeft size={20} /> <span className="text-sm font-medium">Back</span>
+          </button>
+
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-tr from-purple-500 to-teal-400 text-white"><Sparkles size={24} /></div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>GroundZero</h1>
+            <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-bold tracking-wider uppercase transition-colors
+              ${BATCH_TYPE === 'ONLINE' 
+                ? (isDarkMode ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400' : 'bg-cyan-50 border-cyan-200 text-cyan-700')
+                : (isDarkMode ? 'bg-purple-500/10 border-purple-500/20 text-purple-400' : 'bg-purple-50 border-purple-200 text-purple-700')}`}
+            >
+              {BATCH_TYPE === 'ONLINE' ? <Wifi size={12} /> : <MapPin size={12} />} 
+              {BATCH_TYPE} SPARK BATCH
             </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full border text-sm font-bold tracking-wider
-              ${BATCH_TYPE === 'ONLINE' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : 'bg-orange-500/10 border-orange-500/30 text-orange-400'}`}>
-              {BATCH_TYPE === 'ONLINE' ? <Wifi size={14} /> : <MapPin size={14} />} {BATCH_TYPE} BATCH
-            </div>
-            <button onClick={toggleTheme} className="p-2 rounded-full shadow-lg" style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' }}>
-              {isDarkMode ? <Sun size={20} className="text-yellow-400" /> : <Moon size={20} className="text-indigo-600" />}
+
+            {/* THEME TOGGLE BUTTON */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-full border transition-all duration-300
+                ${isDarkMode
+                  ? "bg-white/5 border-white/10 text-yellow-400 hover:bg-white/10"
+                  : "bg-white border-slate-200 text-slate-600 hover:text-cyan-600 shadow-sm"
+                }`}
+            >
+              {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
             </button>
           </div>
-        </div>
-      </nav>
+        </motion.div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto p-6 lg:p-10">
-        <header className="mb-12 text-center space-y-4">
-          <h2 className="text-4xl md:text-5xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-teal-400 via-purple-500 to-teal-400 animate-gradient-x">Secure Your Spot</h2>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-            Booking for <span className="font-bold mx-1" style={{ color: 'var(--accent-color)' }}>{BATCH_TYPE}</span> experience.
+        <motion.div variants={itemVariants} className="mb-10 text-center">
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-3">
+            Secure Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-purple-600">Spot</span>
+          </h1>
+          <p className={`${theme.textMuted} text-sm md:text-base max-w-lg mx-auto`}>
+            Complete your enrollment for the GroundZero Spark {BATCH_TYPE.toLowerCase()} experience.
           </p>
-        </header>
+        </motion.div>
 
         <form onSubmit={handlePaymentSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* Left: Form */}
-            <div className="lg:col-span-4 p-8 rounded-3xl backdrop-blur-xl border shadow-xl transition-all duration-300"
-                style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
-              <div className="flex items-center gap-2 mb-6">
-                <User className="text-purple-500" />
-                <h3 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Details</h3>
-              </div>
-              <div className="space-y-5">
-                <div className="space-y-3">
-                  <label className="text-xs font-bold uppercase tracking-wider opacity-70" style={{ color: 'var(--text-secondary)' }}>Parent</label>
-                  <input required type="text" placeholder="Parent Name" className="custom-input" value={parentDetails.parentName} onChange={(e) => setParentDetails({ ...parentDetails, parentName: e.target.value })} />
-                  <input required type="text" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} placeholder="Phone (10 digits)" className="custom-input" value={parentDetails.parentPhone} onChange={(e) => setParentDetails({ ...parentDetails, parentPhone: e.target.value.replace(/\D/g, '') })} />
-                  <input required type="email" placeholder="Parent Email" className="custom-input" value={parentDetails.parentEmail} onChange={(e) => setParentDetails({ ...parentDetails, parentEmail: e.target.value })} />
+            {/* --- LEFT COLUMN: DETAILS FORM --- */}
+            <motion.div variants={itemVariants} className="lg:col-span-7 space-y-8">
+              
+              {/* Parent Section */}
+              <div className={`${theme.cardBg} border ${theme.cardBorder} rounded-2xl p-6 md:p-8 transition-colors duration-300`}>
+                <div className={`flex items-center gap-3 mb-6 pb-4 border-b ${theme.sectionHeaderBorder}`}>
+                  <div className={`p-2 rounded-lg ${isDarkMode ? "bg-cyan-500/10 text-cyan-400" : "bg-cyan-50 text-cyan-600"}`}><User size={20} /></div>
+                  <h3 className={`text-lg font-bold ${theme.text}`}>Parent Details</h3>
                 </div>
-                <div className="space-y-3 mt-6">
-                  <label className="text-xs font-bold uppercase tracking-wider opacity-70" style={{ color: 'var(--text-secondary)' }}>Student</label>
-                  <input required type="text" placeholder="Student Name" className="custom-input" value={studentDetails.studentName} onChange={(e) => setStudentDetails({ ...studentDetails, studentName: e.target.value })} />
-                  <input required type="email" placeholder="Student Email" className="custom-input" value={studentDetails.studentEmail} onChange={(e) => setStudentDetails({ ...studentDetails, studentEmail: e.target.value })} />
-                  <div className="grid grid-cols-2 gap-3">
-                    <input required type="text" placeholder="Board" className="custom-input" value={studentDetails.board} onChange={(e) => setStudentDetails({ ...studentDetails, board: e.target.value })} />
-                    <input required type="text" inputMode="numeric" placeholder="Grade" className="custom-input" value={studentDetails.classGrade} onChange={(e) => setStudentDetails({ ...studentDetails, classGrade: e.target.value.replace(/\D/g, '') })} />
-                  </div>
-                  <input required type="text" placeholder="School Name" className="custom-input" value={studentDetails.schoolName} onChange={(e) => setStudentDetails({ ...studentDetails, schoolName: e.target.value })} />
-                </div>
-              </div>
-            </div>
-
-            {/* Middle: Selection */}
-            <div className="lg:col-span-5 space-y-6">
-              {/* Bundle Option */}
-              <div onClick={() => setPurchaseType("FULL_BUNDLE")} className={`relative p-1 rounded-3xl cursor-pointer hover:scale-[1.02] transition-transform ${purchaseType === "FULL_BUNDLE" ? "border-gradient shadow-2xl shadow-purple-500/20" : ""}`} style={{ backgroundColor: purchaseType === "FULL_BUNDLE" ? "transparent" : "var(--card-bg)" }}>
-                <div className="p-6 rounded-[20px] h-full" style={{ backgroundColor: 'var(--card-inner-bg)' }}>
-                  <div className="flex justify-between">
-                    <div><h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Mastery Bundle</h3><p className="text-sm opacity-70" style={{ color: 'var(--text-secondary)' }}>12 Sessions</p></div>
-                    {purchaseType === "FULL_BUNDLE" && <CheckCircle className="text-teal-400" />}
-                  </div>
-                  <div className="my-4"><span className="text-4xl font-bold" style={{ color: 'var(--accent-color)' }}>₹{pricePerSession * 12}</span></div>
-                  <ul className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    <li className="flex gap-2 items-center"><Sparkles size={14} className="text-yellow-500"/> Guaranteed slot reservation</li>
-                  </ul>
-                </div>
-              </div>
-              {/* Single Option */}
-              <div onClick={() => setPurchaseType("SINGLE_SESSION")} className={`relative p-1 rounded-3xl cursor-pointer hover:scale-[1.02] transition-transform ${purchaseType === "SINGLE_SESSION" ? "border-gradient shadow-2xl shadow-purple-500/20" : ""}`} style={{ backgroundColor: purchaseType === "SINGLE_SESSION" ? "transparent" : "var(--card-bg)" }}>
-                <div className="p-6 rounded-[20px] h-full" style={{ backgroundColor: 'var(--card-inner-bg)' }}>
-                  <div className="flex justify-between">
-                    <div><h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Pay As You Go</h3><p className="text-sm opacity-70" style={{ color: 'var(--text-secondary)' }}>Single Session</p></div>
-                    {purchaseType === "SINGLE_SESSION" && <CheckCircle className="text-teal-400" />}
-                  </div>
-                  <div className="my-4"><span className="text-4xl font-bold" style={{ color: 'var(--accent-color)' }}>₹{pricePerSession}</span></div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right: Summary & Action */}
-            <div className="lg:col-span-3">
-              <div className="sticky top-24 p-8 rounded-3xl border backdrop-blur-xl shadow-xl" style={{ backgroundColor: 'var(--card-bg)', borderColor: 'var(--border-color)' }}>
-                  <h3 className="font-bold text-lg mb-6 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}><CreditCard size={20}/> Summary</h3>
-                  <div className="space-y-4 text-sm pb-6 border-b" style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}>
-                    <div className="flex justify-between"><span>Mode</span><span className="font-bold">{BATCH_TYPE}</span></div>
-                    <div className="flex justify-between"><span>Plan</span><span className="font-bold">{purchaseType === 'FULL_BUNDLE' ? 'Full Bundle' : 'Single Session'}</span></div>
-                  </div>
-                  <div className="pt-6">
-                    <div className="flex justify-between items-end mb-6">
-                      <span className="text-sm opacity-70" style={{ color: 'var(--text-secondary)' }}>Total</span>
-                      <span className="text-3xl font-bold" style={{ color: 'var(--accent-color)' }}>₹{totalPrice}</span>
+                
+                <div className="space-y-5">
+                  <div>
+                    <label className={labelStyle}>Full Name</label>
+                    <div className="relative">
+                      <User size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
+                      <input required type="text" placeholder="Enter parent's name" className={inputStyle} 
+                        value={parentDetails.parentName} onChange={(e) => setParentDetails({ ...parentDetails, parentName: e.target.value })} 
+                      />
                     </div>
-
-                    {/* BUTTON WITH LOADING STATE */}
-                    <button
-                      type="submit"
-                      disabled={isProcessing}
-                      className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all flex items-center justify-center gap-2
-                        ${isProcessing ? 'opacity-70 cursor-not-allowed' : 'hover:shadow-xl hover:-translate-y-1'}`}
-                      style={{ 
-                        background: 'linear-gradient(90deg, var(--accent-teal), var(--accent-purple))',
-                        color: '#fff' 
-                      }}
-                    >
-                      {isProcessing ? (
-                        <>
-                          <Loader2 className="animate-spin" size={20} />
-                          <span>Processing...</span>
-                        </>
-                      ) : (
-                        "Proceed to Pay"
-                      )}
-                    </button>
-                    
-                    <p className="text-center text-xs mt-4 opacity-50" style={{ color: 'var(--text-secondary)' }}>Secure payment by Razorpay</p>
                   </div>
-              </div>
-            </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className={labelStyle}>Phone Number</label>
+                      <div className="relative">
+                        <Phone size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
+                        <input required type="text" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} placeholder="10-digit number" className={inputStyle} 
+                          value={parentDetails.parentPhone} onChange={(e) => setParentDetails({ ...parentDetails, parentPhone: e.target.value.replace(/\D/g, '') })} 
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className={labelStyle}>Email Address</label>
+                      <div className="relative">
+                        <Mail size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
+                        <input required type="email" placeholder="parent@example.com" className={inputStyle} 
+                          value={parentDetails.parentEmail} onChange={(e) => setParentDetails({ ...parentDetails, parentEmail: e.target.value })} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Student Section */}
+              <div className={`${theme.cardBg} border ${theme.cardBorder} rounded-2xl p-6 md:p-8 transition-colors duration-300`}>
+                <div className={`flex items-center gap-3 mb-6 pb-4 border-b ${theme.sectionHeaderBorder}`}>
+                  <div className={`p-2 rounded-lg ${isDarkMode ? "bg-purple-500/10 text-purple-400" : "bg-purple-50 text-purple-600"}`}><GraduationCap size={20} /></div>
+                  <h3 className={`text-lg font-bold ${theme.text}`}>Student Details</h3>
+                </div>
+
+                <div className="space-y-5">
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div>
+                        <label className={labelStyle}>Student Name</label>
+                        <div className="relative">
+                          <User size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
+                          <input required type="text" placeholder="Enter student's name" className={inputStyle} 
+                            value={studentDetails.studentName} onChange={(e) => setStudentDetails({ ...studentDetails, studentName: e.target.value })} 
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className={labelStyle}>Student Email</label>
+                        <div className="relative">
+                          <Mail size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
+                          <input required type="email" placeholder="student@example.com" className={inputStyle} 
+                            value={studentDetails.studentEmail} onChange={(e) => setStudentDetails({ ...studentDetails, studentEmail: e.target.value })} 
+                          />
+                        </div>
+                      </div>
+                   </div>
+
+                   <div className="grid grid-cols-2 gap-5">
+                      <div>
+                        <label className={labelStyle}>Board</label>
+                        <div className="relative">
+                          <Layers size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
+                          <input required type="text" placeholder="CBSE/ICSE" className={inputStyle} 
+                            value={studentDetails.board} onChange={(e) => setStudentDetails({ ...studentDetails, board: e.target.value })} 
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className={labelStyle}>Grade</label>
+                        <div className="relative">
+                          <Sparkles size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
+                          <input required type="text" inputMode="numeric" placeholder="Class (e.g. 8)" className={inputStyle} 
+                            value={studentDetails.classGrade} onChange={(e) => setStudentDetails({ ...studentDetails, classGrade: e.target.value.replace(/\D/g, '') })} 
+                          />
+                        </div>
+                      </div>
+                   </div>
+
+                   <div>
+                      <label className={labelStyle}>School Name</label>
+                      <div className="relative">
+                        <School size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
+                        <input required type="text" placeholder="Enter school name" className={inputStyle} 
+                          value={studentDetails.schoolName} onChange={(e) => setStudentDetails({ ...studentDetails, schoolName: e.target.value })} 
+                        />
+                      </div>
+                   </div>
+                </div>
+              </div>
+
+            </motion.div>
+
+            {/* --- RIGHT COLUMN: PRICING & SUMMARY --- */}
+            <motion.div variants={itemVariants} className="lg:col-span-5 space-y-6 lg:sticky lg:top-8">
+              
+              {/* Plan Selection */}
+              <div className="grid gap-4">
+                {/* Full Bundle Option */}
+                <div 
+                  onClick={() => setPurchaseType("FULL_BUNDLE")}
+                  className={`relative group cursor-pointer p-6 rounded-2xl border transition-all duration-300
+                    ${purchaseType === "FULL_BUNDLE" 
+                      ? `${theme.highlightBg} border-cyan-500 ${theme.highlightShadow}` 
+                      : `${theme.cardBg} ${theme.cardBorder} hover:border-slate-300`}`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-3">
+                       <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${purchaseType === "FULL_BUNDLE" ? "border-cyan-500 bg-cyan-500" : "border-gray-400"}`}>
+                          {purchaseType === "FULL_BUNDLE" && <CheckCircle2 size={14} className="text-white" />}
+                       </div>
+                       <span className={`font-bold text-lg ${purchaseType === "FULL_BUNDLE" ? theme.text : theme.textMuted}`}>Complete Batch</span>
+                    </div>
+                    {purchaseType === "FULL_BUNDLE" && (
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${isDarkMode ? "bg-cyan-500/10 text-cyan-400" : "bg-cyan-100 text-cyan-700"}`}>Best Value</span>
+                    )}
+                  </div>
+                  
+                  <div className="pl-8">
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <span className={`text-3xl font-bold ${theme.text}`}>₹{pricePerSession * FULL_BATCH_SESSIONS}</span>
+                      <span className={`text-sm ${theme.textMuted}`}>for {FULL_BATCH_SESSIONS} sessions</span>
+                    </div>
+                    <p className={`text-xs ${theme.textMuted}`}>Guaranteed slot reservation for the entire batch.</p>
+                  </div>
+                </div>
+
+                {/* Single Session Option */}
+                <div 
+                  onClick={() => setPurchaseType("SINGLE_SESSION")}
+                  className={`relative group cursor-pointer p-6 rounded-2xl border transition-all duration-300
+                    ${purchaseType === "SINGLE_SESSION" 
+                      ? `${theme.highlightBg} border-cyan-500 ${theme.highlightShadow}` 
+                      : `${theme.cardBg} ${theme.cardBorder} hover:border-slate-300`}`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex items-center gap-3">
+                       <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${purchaseType === "SINGLE_SESSION" ? "border-cyan-500 bg-cyan-500" : "border-gray-400"}`}>
+                          {purchaseType === "SINGLE_SESSION" && <CheckCircle2 size={14} className="text-white" />}
+                       </div>
+                       <span className={`font-bold text-lg ${purchaseType === "SINGLE_SESSION" ? theme.text : theme.textMuted}`}>Pay As You Go</span>
+                    </div>
+                  </div>
+                  
+                  <div className="pl-8">
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <span className={`text-3xl font-bold ${theme.text}`}>₹{pricePerSession}</span>
+                      <span className={`text-sm ${theme.textMuted}`}>/ session</span>
+                    </div>
+                    <p className={`text-xs ${theme.textMuted}`}>Book a single session to try it out.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary Card */}
+              <div className={`${theme.highlightBg} border ${theme.cardBorder} rounded-2xl p-6 ${isDarkMode ? "shadow-xl" : "shadow-2xl shadow-slate-200"}`}>
+                <div className={`flex items-center gap-2 mb-6 ${isDarkMode ? "text-gray-300" : "text-slate-600"}`}>
+                  <CreditCard size={18} />
+                  <h3 className="font-bold text-sm uppercase tracking-wider">Payment Summary</h3>
+                </div>
+
+                <div className={`space-y-3 pb-6 border-b ${theme.sectionHeaderBorder} text-sm`}>
+                  <div className={`flex justify-between ${theme.textMuted}`}>
+                    <span>Batch Type</span>
+                    <span className={`font-medium ${theme.text}`}>{BATCH_TYPE}</span>
+                  </div>
+                  <div className={`flex justify-between ${theme.textMuted}`}>
+                    <span>Selected Plan</span>
+                    <span className={`font-medium ${theme.text}`}>{purchaseType === 'FULL_BUNDLE' ? 'Full Bundle' : 'Single Session'}</span>
+                  </div>
+                  {purchaseType === 'FULL_BUNDLE' && (
+                    <div className={`flex justify-between text-xs ${isDarkMode ? "text-cyan-400/80" : "text-cyan-600"}`}>
+                      <span>Sessions included</span>
+                      <span>{FULL_BATCH_SESSIONS}x Sessions</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-6">
+                  <div className="flex justify-between items-end mb-6">
+                    <span className={`text-sm ${theme.textMuted}`}>Total Payable</span>
+                    <span className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600">
+                      ₹{totalPrice.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isProcessing}
+                    className={`w-full py-4 rounded-xl font-bold text-base shadow-lg transition-all duration-300 flex items-center justify-center gap-2
+                      ${isProcessing 
+                        ? 'bg-gray-400 cursor-not-allowed text-white' 
+                        : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-cyan-500/30 hover:-translate-y-0.5'}`}
+                  >
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="animate-spin" size={18} />
+                        <span>Processing Payment...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Proceed to Pay</span>
+                        <ArrowLeft size={18} className="rotate-180" />
+                      </>
+                    )}
+                  </button>
+                  
+                  <div className={`mt-4 flex justify-center gap-4 opacity-40 grayscale hover:grayscale-0 transition-all duration-500 ${theme.textMuted}`}>
+                     <p className="text-[10px]">Secured by Razorpay · UPI / Cards / NetBanking</p>
+                  </div>
+                </div>
+              </div>
+
+            </motion.div>
           </div>
         </form>
-      </main>
-
-      {/* Global CSS */}
-      <style>{`
-        .theme-light { --bg-main: #F8F9FA; --bg-glass: rgba(255, 255, 255, 0.85); --text-primary: #2B2A4C; --text-secondary: #555; --border-color: rgba(0, 0, 0, 0.08); --card-bg: rgba(255, 255, 255, 0.6); --card-inner-bg: rgba(255, 255, 255, 0.9); --input-bg: rgba(255, 255, 255, 0.8); --accent-purple: #8A2BE2; --accent-teal: #00C4CC; --accent-color: #2B2A4C; }
-        .theme-dark { --bg-main: #0B0C1B; --bg-glass: rgba(11, 12, 27, 0.85); --text-primary: #ffffff; --text-secondary: #B0B0B0; --border-color: rgba(255, 255, 255, 0.1); --card-bg: rgba(255, 255, 255, 0.03); --card-inner-bg: #15162e; --input-bg: rgba(0, 0, 0, 0.3); --accent-purple: #8A2BE2; --accent-teal: #00C4CC; --accent-color: #ffffff; }
-        .app-container { background-color: var(--bg-main); background-image: radial-gradient(circle at 10% 20%, rgba(138, 43, 226, 0.05) 0%, transparent 20%), radial-gradient(circle at 90% 80%, rgba(0, 196, 204, 0.05) 0%, transparent 20%); font-family: 'Inter', sans-serif; }
-        .border-gradient { position: relative; background-image: linear-gradient(var(--card-inner-bg), var(--card-inner-bg)), linear-gradient(90deg, var(--accent-teal), var(--accent-purple), var(--accent-teal)); background-origin: border-box; background-clip: content-box, border-box; animation: borderFlow 3s linear infinite; }
-        @keyframes borderFlow { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-        .animate-gradient-x { background-size: 200% auto; animation: textShine 3s linear infinite; }
-        @keyframes textShine { to { background-position: 200% center; } }
-        .custom-input { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border-color); background-color: var(--input-bg); color: var(--text-primary); transition: all 0.2s ease; outline: none; }
-        .custom-input:focus { border-color: var(--accent-teal); box-shadow: 0 0 0 2px rgba(0, 196, 204, 0.2); }
-        .custom-input:invalid:not(:placeholder-shown) { border-color: #ef4444; }
-      `}</style>
+      </motion.div>
     </div>
   );
 };

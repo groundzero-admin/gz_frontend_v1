@@ -192,7 +192,7 @@ const StudentPromptHistory = () => {
   }, [studentId]);
 
   const handleCreditAdjust = (type, direction) => {
-    const step = type === 'online' ? 1000 : 1500;
+    const step = type === 'online' ? 1500 : 1500;
     const change = step * direction;
 
     setCredits(prev => {

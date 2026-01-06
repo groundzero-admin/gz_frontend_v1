@@ -1280,7 +1280,7 @@ export const getBatches = async () => {
 
 
 
-// Updated sendCredentials to include batch info
+
 export const sendCredentials = async (orderId, selectedBatches = []) => {
   try {
     const response = await fetch(`${BASE_URL}/admin/send-credentials`, {
@@ -1289,11 +1289,8 @@ export const sendCredentials = async (orderId, selectedBatches = []) => {
       credentials: "include",
       body: JSON.stringify({ 
         course_order_id: orderId,
-        // Send as an array. Backend should handle this loop or single assignment.
-        assigned_batches: selectedBatches.map(b => ({
-            batch_obj_id: b.batch_obj_id,
-            batchName: b.batchName
-        }))
+        // ✅ only send IDs
+        assigned_batches: selectedBatches.map(b => b.batch_obj_id)
       }),
     });
     return await handleResponse(response);

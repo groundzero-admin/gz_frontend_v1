@@ -19,7 +19,7 @@ import { remainingSessionInfoBatchForStudent, createCreditTopUpSession } from ".
 
 // --- Pricing Constants (For Display Only) ---
 // These match your backend logic so the user sees the correct estimated price
-const PRICE_ONLINE = 1000;
+const PRICE_ONLINE = 1500;
 const PRICE_OFFLINE = 1500;
 const FULL_BATCH_SIZE = 12; 
 

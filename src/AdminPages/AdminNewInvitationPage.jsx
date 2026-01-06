@@ -303,7 +303,7 @@ const AdminInvitationsPage = () => {
                       label="Online Credits"
                       value={onlineCredit}
                       onChange={setOnlineCredit}
-                      step={1000}
+                      step={1500}
                       isDark={isDark}
                       icon={FaWifi}
                       colorClass="text-blue-500"

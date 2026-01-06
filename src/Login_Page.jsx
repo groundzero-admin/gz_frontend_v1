@@ -10,6 +10,7 @@ import {
   FaEye,
   FaEyeSlash,
   FaRocket,
+  FaSpinner, // Import the spinner icon
 } from "react-icons/fa"
 import { useNavigate } from "react-router-dom"
 import "./color.css"
@@ -26,6 +27,7 @@ const InputField = ({
   isDark,
   endIcon,
   onEndIconClick,
+  disabled // Add disabled prop to inputs to prevent editing while loading
 }) => (
   <div className="relative mb-4">
     <span className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
@@ -37,7 +39,8 @@ const InputField = ({
       id={id}
       value={value}
       onChange={onChange}
-      className="w-full pl-12 pr-12 py-3 rounded-lg border bg-transparent transition relative z-0 focus:outline-none focus:ring-2 focus:ring-[var(--accent-teal)]"
+      disabled={disabled} // Disable input
+      className="w-full pl-12 pr-12 py-3 rounded-lg border bg-transparent transition relative z-0 focus:outline-none focus:ring-2 focus:ring-[var(--accent-teal)] disabled:opacity-50 disabled:cursor-not-allowed"
       style={{
         borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
         color: `var(${
@@ -48,8 +51,8 @@ const InputField = ({
     />
     {endIcon && (
       <span
-        onClick={onEndIconClick}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 cursor-pointer hover:opacity-80 transition"
+        onClick={!disabled ? onEndIconClick : undefined} // Disable click if loading
+        className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 transition ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-80'}`}
         style={{
           color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` 
         }}
@@ -66,6 +69,9 @@ const AuthPage = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  
+  // New state for loading status
+  const [isLoading, setIsLoading] = useState(false)
 
   const navigate = useNavigate()
 
@@ -94,7 +100,25 @@ const AuthPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    await login(email, password, navigate)
+    
+    // Prevent double submission
+    if (isLoading) return;
+
+    setIsLoading(true);
+
+    try {
+      // We await the login. If successful, navigate happens inside login() 
+      // or subsequent code. If it fails, it throws, and we catch it.
+      await login(email, password, navigate);
+    } catch (error) {
+      console.error("Login failed", error);
+      // Optional: Add a toast notification here for error
+    } finally {
+      // Re-enable the button after the request finishes (whether success or fail)
+      // Note: If navigate unmounts this component, this might trigger a warning,
+      // but usually safe in modern React.
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -154,8 +178,9 @@ const AuthPage = () => {
 
       {/* Back Button */}
       <button
-        onClick={() => navigate("/spark")}
-        className="absolute top-6 left-6 z-30 p-3 rounded-full hover:opacity-80 transition shadow-sm"
+        onClick={() => !isLoading && navigate("/spark")}
+        disabled={isLoading}
+        className={`absolute top-6 left-6 z-30 p-3 rounded-full transition shadow-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'}`}
         style={{
           backgroundColor: `var(${isDark ? "--card-dark" : "--card-light"})`,
           color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`,
@@ -210,6 +235,7 @@ const AuthPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             isDark={isDark}
+            disabled={isLoading} // Disable input when loading
           />
 
           <InputField
@@ -220,18 +246,27 @@ const AuthPage = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             isDark={isDark}
+            disabled={isLoading} // Disable input when loading
             endIcon={showPassword ? <FaEyeSlash /> : <FaEye />}
             onEndIconClick={() => setShowPassword(!showPassword)}
           />
 
         <button
               type="submit"
-              className="w-full px-8 py-3 rounded-xl font-bold text-lg transition transform hover:scale-[1.02] active:scale-[0.98]
+              disabled={isLoading}
+              className={`w-full px-8 py-3 rounded-xl font-bold text-lg transition transform 
                         bg-gradient-to-r from-blue-500 to-indigo-600
-                        hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-xl"
+                        ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98] hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-xl'}`}
               style={{ color: "white" }}
             >
-              Log In
+              {isLoading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <FaSpinner className="animate-spin text-xl" />
+                  <span>Logging in...</span>
+                </div>
+              ) : (
+                "Log In"
+              )}
           </button>
         </form>
       </div>
