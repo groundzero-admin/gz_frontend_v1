@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
-  Rocket, Compass, BookOpen, Linkedin, Twitter, Check, 
-  Sun, Moon, Lightbulb, BrainCircuit, Network, MessageCircle, 
-  Heart, Cpu, Star, Users, MapPin, Calendar, Video, ArrowRight,
-  X, Loader2
+  Rocket, Check, Sun, Moon, Lightbulb, BrainCircuit, Network, MessageCircle, 
+  Heart, Cpu, Star, ArrowRight, X, Loader2, Calendar, Video, Twitter, Linkedin
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { whoami } from './api.js'; 
+
+
+import logoFullBlack from './Logo/gz_logo_with_name_black.png';
+import logoFullWhite from './Logo/gz_logo_with_name_white.png';
+
+
+
 
 // --- CSS for Background Animations ---
 const animationStyles = `
@@ -169,8 +174,6 @@ const FormModal = ({ isOpen, onClose, url, title, isDark }) => {
                 src={url} 
                 className="w-full h-full border-0 transition-all duration-300" 
                 title="Form"
-                marginHeight="0" 
-                marginWidth="0"
                 style={{ 
                   filter: isDark ? 'invert(1) hue-rotate(180deg) contrast(0.9)' : 'none',
                   backgroundColor: isDark ? 'black' : 'white' 
@@ -187,7 +190,7 @@ const FormModal = ({ isOpen, onClose, url, title, isDark }) => {
 };
 
 const GroundZeroSpark = () => {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
   const [isWebinarOpen, setIsWebinarOpen] = useState(false); 
   const navigate = useNavigate();
   const toggleTheme = () => setIsDark(!isDark);
@@ -230,7 +233,7 @@ const GroundZeroSpark = () => {
     uspIcon: isDark ? "bg-slate-800/50 text-cyan-400" : "bg-cyan-50 text-cyan-600",
     footer: isDark ? "bg-[#0B0C15] border-white/10" : "bg-slate-100 border-slate-200",
     fancyCard: isDark 
-      ? "bg-[#13141F]/40 border-white/10 hover:bg-[#13141F]/80 hover:border-cyan-500/50" 
+      ? "bg-[#13141F]/60 border-white/10 hover:border-cyan-500/50" 
       : "bg-white border-slate-200 hover:border-cyan-500/50 hover:shadow-2xl"
   };
 
@@ -264,12 +267,20 @@ const GroundZeroSpark = () => {
           className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center pt-6 px-4"
         >
           <div className={`backdrop-blur-xl border rounded-[5px] px-6 py-3 flex items-center justify-between w-full max-w-5xl shadow-2xl transition-all duration-300 ${styles.navbar}`}>
-            <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-[5px] flex items-center justify-center text-xs font-extrabold border shadow-[0_0_15px_rgba(34,211,238,0.2)] ${isDark ? 'bg-gradient-to-br from-slate-700 to-slate-800 text-cyan-400 border-cyan-500/20' : 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white border-transparent'}`}>
-                GO
+              <div className="flex items-center">
+                  <img
+                    src={isDark ? logoFullWhite : logoFullBlack}
+                    alt="Ground Zero Spark"
+                    className="
+                      h-[22px]
+                      md:h-[24px]
+                      w-auto
+                      object-contain
+                      select-none
+                    "
+                  />
               </div>
-              <span className="font-bold text-lg tracking-tight">Ground Zero <span className="text-cyan-400">Spark</span></span>
-            </div>
+
             
             <div className="hidden md:flex items-center gap-8 text-sm font-medium">
               {['Curriculum', 'Programs', 'Stories', 'About'].map((item) => (
@@ -294,7 +305,6 @@ const GroundZeroSpark = () => {
                 {isDark ? <Sun size={18} /> : <Moon size={18} />}
               </motion.button>
 
-              {/* --- LOGIN BUTTON --- */}
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -308,7 +318,6 @@ const GroundZeroSpark = () => {
                 Login
               </motion.button>
 
-              {/* --- BOOK A CALL BUTTON (Hidden on Mobile) --- */}
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -461,167 +470,186 @@ const GroundZeroSpark = () => {
             <p className={styles.subtext}>Choose the program which fits your requirement.</p>
           </motion.div>
 
-          <div className="flex flex-col gap-10">
-            
-            <motion.div 
-              variants={staggerContainer}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch"
-            >
-              {/* Card 1: Personalised Mentorship */}
-              <motion.div variants={fadeInUp} whileHover={{ y: -8 }} className={`p-8 rounded-3xl border flex flex-col h-full transition-all ${styles.card}`}>
-                <h3 className="text-2xl font-bold mb-2">Personalised Mentorship</h3>
-                <p className={`text-sm mb-6 ${styles.subtext}`}>For the kids who want personalised approach</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">₹2,500</span><span className="text-xs opacity-60 ml-2">/ Session</span>
-                </div>
-                <ul className="space-y-4 mb-8 flex-1">
-                  {["1:1 Live Sessions", "Fully Self-paced", "Unblocking specific hurdles", "Lock in sessions as you need them", "K-12 academic support provided"].map((item, i) => (
-                    <li key={i} className={`flex items-start gap-3 text-sm ${styles.subtext}`}>
-                      <Check size={18} className="text-cyan-400 mt-0.5" /> {item}
-                    </li>
-                  ))}
-                </ul>
+          {/* UPDATED GRID */}
+          <motion.div 
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch"
+          >
+            {/* Card 1: Personalised Mentorship */}
+            <motion.div variants={fadeInUp} whileHover={{ y: -8 }} className={`p-8 rounded-3xl border flex flex-col h-full transition-all ${styles.card}`}>
+              <h3 className="text-2xl font-bold mb-2">Personalised Mentorship</h3>
+              <p className={`text-sm mb-6 ${styles.subtext}`}>For the kids who want personalised approach</p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold">₹2,500</span><span className="text-xs opacity-60 ml-2">/ Session</span>
+              </div>
+              <ul className="space-y-4 mb-8 flex-1">
+                {["1:1 Live Sessions", "Fully Self-paced", "Unblocking specific hurdles", "Lock in sessions as you need them", "K-12 academic support provided"].map((item, i) => (
+                  <li key={i} className={`flex items-start gap-3 text-sm ${styles.subtext}`}>
+                    <Check size={18} className="text-cyan-400 mt-0.5" /> {item}
+                  </li>
+                ))}
+              </ul>
                 <motion.button 
-                  {...hoverScale}
-                  onClick={() => navigate('/book-one-on-one-session-spark')}
-                  className={`w-full py-4 rounded-xl font-bold border transition-all ${isDark ? 'border-white/20 hover:bg-white/10 text-white' : 'border-slate-300 hover:bg-slate-100 text-slate-800'}`}
-                >
-                  Book your session
-                </motion.button>
-              </motion.div>
+                      {...hoverScale}
+                      onClick={() => navigate('/book-one-on-one-session-spark')}
+                      className={`w-full py-4 rounded-xl font-bold border transition-all
+                        ${
+                          isDark
+                            ? 'border-blue-400/60 text-blue-300 hover:bg-blue-400/10'
+                            : 'border-blue-500/50 text-blue-600 hover:bg-blue-50'
+                        }`}
+                    >
+                      Book your session
+                 </motion.button>
 
-              {/* Card 2: Spark Online */}
-              <motion.div variants={fadeInUp} whileHover={{ y: -16 }} className={`relative p-8 rounded-3xl border flex flex-col h-full transform lg:-translate-y-4 ${isDark ? 'bg-[#13141F] border-cyan-500/50 shadow-[0_0_60px_-12px_rgba(34,211,238,0.25)]' : 'bg-white border-blue-500 shadow-xl'}`}>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-cyan-400 to-blue-500 text-black text-xs font-bold px-4 py-1 rounded-full shadow-lg flex items-center gap-1">
-                  <Star size={12} fill="black" /> Popular
-                </div>
-                <h3 className="text-2xl font-bold mb-2">Spark Online Batch</h3>
-                <p className={`text-sm mb-6 ${styles.subtext}`}>For kids who want to learn thinking and building together.</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold text-cyan-400">₹1,000</span><span className="text-xs opacity-60 ml-2">/ Session</span>
-                </div>
-                <ul className="space-y-4 mb-8 flex-1">
-                  {["Small Group format", "2 sessions / week for 6 weeks", "Collaborative learning environment", "Demo Day: projects presentation", "Next batch starts 10th Jan"].map((item, i) => (
-                    <li key={i} className={`flex items-start gap-3 text-sm ${styles.subtext}`}>
-                      <Check size={18} className="text-blue-500 mt-0.5" /> {item}
-                    </li>
-                  ))}
-                </ul>
-                <motion.button 
-                  {...hoverScale}
-                  onClick={() => navigate('/buycourse?coursetype=ONLINE')}
-                  className="w-full py-4 rounded-xl font-bold bg-cyan-400 hover:bg-cyan-300 text-black transition-all shadow-lg hover:shadow-cyan-400/20"
-                >
-                  Book your spot
-                </motion.button>
-                <p className="text-center text-[10px] mt-3 opacity-50">Limited seats available</p>
-              </motion.div>
-
-              {/* Card 3: Spark Offline */}
-              <motion.div variants={fadeInUp} whileHover={{ y: -8 }} className={`p-8 rounded-3xl border flex flex-col h-full transition-all ${styles.card}`}>
-                <h3 className="text-2xl font-bold mb-2">Spark Offline Batch</h3>
-                <p className={`text-sm mb-6 ${styles.subtext}`}>In-person learning experience for hands-on collaboration.</p>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">₹1,500</span><span className="text-xs opacity-60 ml-2">/ Session</span>
-                </div>
-                <ul className="space-y-4 mb-8 flex-1">
-                  {["Physical Classroom Setting", "Hands-on hardware/AI projects", "Direct peer-to-peer interaction", "Personalized instructor attention", "Weekend batches available"].map((item, i) => (
-                    <li key={i} className={`flex items-start gap-3 text-sm ${styles.subtext}`}>
-                      <Check size={18} className="text-purple-400 mt-0.5" /> {item}
-                    </li>
-                  ))}
-                </ul>
-                <motion.button 
-                  {...hoverScale}
-                  onClick={() => navigate('/buycourse?coursetype=OFFLINE')}
-                  className={`w-full py-4 rounded-xl font-bold border transition-all ${isDark ? 'border-white/20 hover:bg-white/10 text-white' : 'border-slate-300 hover:bg-slate-100 text-slate-800'}`}
-                >
-                  Join Offline Batch
-                </motion.button>
-              </motion.div>
             </motion.div>
 
-            {/* Row 2: Beautiful CTA Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto w-full">
+            {/* Card 2: Spark Online */}
+            <motion.div variants={fadeInUp} whileHover={{ y: -16 }} className={`relative p-8 rounded-3xl border flex flex-col h-full transform lg:-translate-y-4 ${isDark ? 'bg-[#13141F] border-cyan-500/50 shadow-[0_0_60px_-12px_rgba(34,211,238,0.25)]' : 'bg-white border-blue-500 shadow-xl'}`}>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-cyan-400 to-blue-500 text-black text-xs font-bold px-4 py-1 rounded-full shadow-lg flex items-center gap-1">
+                <Star size={12} fill="black" /> Popular
+              </div>
+              <h3 className="text-2xl font-bold mb-2">Spark Online Batch</h3>
+              <p className={`text-sm mb-6 ${styles.subtext}`}>For kids who want to learn thinking and building together.</p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-cyan-400">₹1,500</span><span className="text-xs opacity-60 ml-2">/ Session</span>
+              </div>
+              <ul className="space-y-4 mb-8 flex-1">
+                {["Small Group format", "2 sessions / week for 6 weeks", "Collaborative learning environment", "Demo Day: projects presentation", "Next batch starts 10th Jan"].map((item, i) => (
+                  <li key={i} className={`flex items-start gap-3 text-sm ${styles.subtext}`}>
+                    <Check size={18} className="text-blue-500 mt-0.5" /> {item}
+                  </li>
+                ))}
+              </ul>
+              <motion.button 
+                {...hoverScale}
+                onClick={() => navigate('/buycourse?coursetype=ONLINE')}
+                className="w-full py-4 rounded-xl font-bold bg-cyan-400 hover:bg-cyan-300 text-black transition-all shadow-lg hover:shadow-cyan-400/20"
+              >
+                Book your spot
+              </motion.button>
+              <p className="text-center text-[10px] mt-3 opacity-50">Limited seats available</p>
+            </motion.div>
+
+            {/* Card 3 (Column 3): Stacked Consultation + Webinar */}
+            <div className="flex flex-col gap-6 h-full">
               
-              {/* Free Consultation Card */}
+              {/* Consultation Card (Compact Header) */}
               <motion.div 
+                variants={fadeInUp}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`group p-8 rounded-3xl border flex items-center justify-between transition-all duration-300 cursor-pointer ${styles.fancyCard}`}
                 onClick={() => navigate('/book-discovery-call-spark')}
+                className={`flex-1 p-8 rounded-3xl border flex flex-col justify-between transition-all cursor-pointer ${styles.fancyCard}`}
               >
-                <div className="flex items-start gap-5">
-                  <div className={`p-3 rounded-2xl ${isDark ? 'bg-cyan-500/10 shadow-[0_0_15px_rgba(34,211,238,0.2)]' : 'bg-cyan-100'}`}>
-                    <Calendar size={28} className="text-cyan-400" />
+                <div>
+                  {/* Icon and Title Inline */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className={`p-2 rounded-lg ${isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
+                      <Calendar size={20} />
+                    </div>
+                    <h3 className="text-lg font-bold leading-tight">Schedule Consultation</h3>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-xl mb-1">Free Consultation</h4>
-                    <p className={`text-sm ${styles.subtext}`}>Not sure where to start? Let's discuss your child's needs.</p>
-                  </div>
+                  
+                  <p className={`text-sm ${styles.subtext}`}>
+                    We'll discuss your child's learning needs, walk you through the program, and see if Ground Zero aligns with you.
+                  </p>
                 </div>
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all duration-300 group-hover:bg-cyan-500 group-hover:border-cyan-500 ${isDark ? 'border-white/20' : 'border-slate-300'}`}>
-                  <ArrowRight size={20} className="transition-transform group-hover:translate-x-1 group-hover:text-black" />
+                <div className={`mt-4 w-full py-3 rounded-xl font-bold text-center transition-all ${isDark ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'}`}>
+                  Book a discovery call
                 </div>
               </motion.div>
 
-              {/* Webinar Card */}
+              {/* Webinar Card (Compact Header) */}
               <motion.div 
+                variants={fadeInUp}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className={`group p-8 rounded-3xl border flex items-center justify-between transition-all duration-300 cursor-pointer ${styles.fancyCard}`}
                 onClick={openWebinar}
+                className={`flex-1 p-8 rounded-3xl border flex flex-col justify-between transition-all cursor-pointer ${styles.fancyCard}`}
               >
-                <div className="flex items-start gap-5">
-                  <div className={`p-3 rounded-2xl ${isDark ? 'bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.2)]' : 'bg-purple-100'}`}>
-                    <Video size={28} className="text-purple-400" />
+                <div>
+                   {/* Icon and Title Inline */}
+                   <div className="flex items-center gap-3 mb-4">
+                    <div className={`p-2 rounded-lg ${isDark ? 'bg-cyan-500/20 text-cyan-400' : 'bg-cyan-100 text-cyan-600'}`}>
+                      <Video size={20} />
+                    </div>
+                    <h3 className="text-lg font-bold leading-tight">Join Our Webinar</h3>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-xl mb-1">Join Upcoming Webinar</h4>
-                    <p className={`text-sm ${styles.subtext}`}>"How to think about learning in the age of AI" • Free</p>
-                  </div>
+
+                  <p className={`text-sm mb-3 font-medium ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>
+                    "How to think about learning in the age of AI"
+                  </p>
+                  <ul className="space-y-1.5 mb-2">
+                    {[
+                      "Interactive, discussion-led session",
+                      "Small-group, Limited seats"
+                    ].map((item, i) => (
+                      <li key={i} className={`flex items-start gap-2 text-xs ${styles.subtext}`}>
+                        <div className="mt-1.5 w-1 h-1 rounded-full bg-cyan-400 shrink-0" /> {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center border transition-all duration-300 group-hover:bg-purple-500 group-hover:border-purple-500 ${isDark ? 'border-white/20' : 'border-slate-300'}`}>
-                  <ArrowRight size={20} className="transition-transform group-hover:translate-x-1 group-hover:text-white" />
+                <div className={`mt-4 w-full py-3 rounded-xl font-bold text-center border transition-all ${isDark ? 'border-cyan-500/30 hover:bg-cyan-500/10 text-cyan-400' : 'border-slate-300 hover:bg-slate-100 text-slate-800'}`}>
+                  Reserve your spot
                 </div>
               </motion.div>
 
             </div>
-          </div>
+          </motion.div>
         </section>
 
-        {/* ================= FOUNDER ================= */}
-        <section id="about" className="py-24 px-4 max-w-6xl mx-auto">
+        {/* ================= FOUNDER (2-CARD LAYOUT) ================= */}
+        <section id="about" className="py-24 px-4 max-w-4xl mx-auto">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className={`rounded-3xl p-10 md:p-16 border flex flex-col lg:flex-row gap-12 items-center ${styles.card}`}
+            className="flex flex-col gap-6"
           >
-            <div className="flex-1 space-y-6">
-              <div className="text-5xl text-cyan-400 font-serif">“</div>
-              <h3 className="text-2xl md:text-3xl font-bold leading-relaxed">
+             {/* Quote Card */}
+            <div className={`p-10 md:p-12 rounded-3xl border relative overflow-hidden ${isDark ? 'bg-[#13141F] border-white/10' : 'bg-white border-slate-200 shadow-lg'}`}>
+              <div className="absolute top-6 left-8 text-6xl text-cyan-500/20 font-serif leading-none">“</div>
+              <h3 className="relative z-10 text-xl md:text-2xl font-medium leading-relaxed mt-4">
                 The world is changing exponentially. Most jobs your child aspires to today won't exist in 15 years. 
                 <br /><br />
-                We move beyond just teaching AI tools; <span className="text-blue-500">we build the thinkers, tinkerers, and future shapers</span> who will lead with empathy.
+                We move beyond just teaching AI tools; <span className="text-blue-500 font-bold">we build the thinkers, tinkerers, and future shapers</span> who will lead with empathy.
               </h3>
+              <div className="absolute bottom-6 right-8 text-6xl text-cyan-500/20 font-serif leading-none rotate-180">“</div>
             </div>
-            
-            <div className={`p-10 rounded-3xl border w-full max-w-sm text-center ${isDark ? 'bg-black/40 border-white/10' : 'bg-slate-50 border-slate-200'}`}>
-              <div className="w-28 h-28 mx-auto rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-black text-2xl font-bold mb-6 shadow-lg shadow-cyan-500/20">SS</div>
-              <h4 className="text-2xl font-bold mb-1">Shivangi Srivastava</h4>
-              <p className="text-cyan-500 text-sm font-medium mb-6 uppercase tracking-wider">Founder, Ground Zero</p>
-              <p className={`text-sm mb-8 leading-relaxed ${styles.subtext}`}>
-                Ex AVP New Initiatives, Swiggy | Ex CTO and Co-Founder at Tazzo | BTech (CSE) IIT Guwahati
-              </p>
-              <div className="flex justify-center gap-4">
-                <a href="#" className="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"><Twitter size={18} /></a>
-                <a href="#" className="p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"><Linkedin size={18} /></a>
+
+            {/* Profile Card */}
+            <div className={`p-8 md:p-10 rounded-3xl border flex flex-col md:flex-row items-center gap-8 ${isDark ? 'bg-[#13141F] border-white/10' : 'bg-white border-slate-200 shadow-lg'}`}>
+              
+              {/* Avatar */}
+              <div className="shrink-0 w-28 h-28 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 p-[2px]">
+                <div className={`w-full h-full rounded-full flex items-center justify-center text-3xl font-bold ${isDark ? 'bg-[#0B0C15] text-white' : 'bg-white text-slate-900'}`}>
+                  SS
+                </div>
               </div>
+
+              {/* Info */}
+              <div className="flex-1 text-center md:text-left">
+                <h4 className="text-2xl font-bold mb-1">Shivangi Srivastava</h4>
+                <p className="text-cyan-500 text-sm font-bold uppercase tracking-wider mb-4">Founder, Ground Zero</p>
+                <p className={`text-sm mb-6 leading-relaxed ${styles.subtext}`}>
+                  Ex AVP New Initiatives, Swiggy | Ex CTO and Co-Founder at Tazzo | BTech (CSE) IIT Guwahati
+                </p>
+                <div className="flex justify-center md:justify-start gap-4">
+                  <a href="https://x.com/shivangi_sriv" target='_blank' className={`p-2.5 rounded-lg transition-colors ${isDark ? 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}>
+                    <Twitter size={18} />
+                  </a>
+                  <a href="https://www.linkedin.com/in/shivangi-srivastava-36bb1323/" target='_blank' className={`p-2.5 rounded-lg transition-colors ${isDark ? 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}>
+                    <Linkedin size={18} />
+                  </a>
+                </div>
+              </div>
+
             </div>
           </motion.div>
         </section>
@@ -635,7 +663,7 @@ const GroundZeroSpark = () => {
             transition={{ duration: 0.8 }}
             className="max-w-4xl mx-auto px-4"
           >
-            <h2 className="text-4xl md:text-6xl font-bold mb-10 leading-tight">
+            <h2 className="text-4xl md:text-5xl font-bold mb-10 leading-tight">
               Find out how a <span className="text-cyan-400">small shift in learning</span><br />
               can unlock big possibilities
             </h2>
@@ -678,7 +706,8 @@ const GroundZeroSpark = () => {
       onClose={closeWebinar} 
       isDark={isDark}
       title="Register for Webinar"
-      url="https://docs.google.com/forms/d/1VeV7fbUFDnJkcwMNJOnDg0O1I8ibA3kMQtdSV7wy8J4/viewform?embedded=true"
+    url="https://docs.google.com/forms/d/1f7-IOT4bcMiKhZvUp3GKZ7HfCbEXbJQouw7XO2gTOao/viewform?embedded=true"
+
     />
     </>
   );
