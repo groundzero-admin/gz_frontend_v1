@@ -17,7 +17,7 @@ import {
   FaExternalLinkAlt,
   FaCopy,
   FaCheck,
-  FaTrash // <--- Added FaTrash
+  FaTrash
 } from "react-icons/fa";
 
 // Import API functions
@@ -27,7 +27,7 @@ import {
   linkStudentToBatch, 
   getStudentsInBatch, 
   updateSessionDetails,
-  unlinkStudentFromBatch // <--- Added new import
+  unlinkStudentFromBatch
 } from "../api.js";
 
 // --- Helper: Time Picker ---
@@ -89,11 +89,21 @@ const TimePicker = ({ label, value, onChange, isDark }) => {
   );
 };
 
-// --- Helper: Smart Calendar ---
+// --- Updated Helper: Smart Calendar ---
 const SmartCalendar = ({ label, value, onChange, isDark, minDate }) => {
   const today = new Date();
-  const initialDate = value ? new Date(value) : (minDate ? new Date(minDate) : today);
-  const [viewDate, setViewDate] = useState(initialDate);
+  
+  // LOGIC: If value exists (Edit), use that. 
+  // If not (Create), check if minDate (Batch Start) is in the future. If so, start there. 
+  // Otherwise start at Today.
+  const getInitialDate = () => {
+    if (value) return new Date(value);
+    const min = minDate ? new Date(minDate) : null;
+    if (min && min > today) return min;
+    return today;
+  };
+
+  const [viewDate, setViewDate] = useState(getInitialDate());
   
   useEffect(() => {
     if(value) setViewDate(new Date(value));
@@ -102,14 +112,23 @@ const SmartCalendar = ({ label, value, onChange, isDark, minDate }) => {
   const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']; 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+  // FIX: Dynamic Year Generation
+  // Ensure the year dropdown includes the Batch Start Year and the Current Session Year
   const currentYear = today.getFullYear();
-  const years = Array.from({ length: 6 }, (_, i) => currentYear + i);
+  const valueYear = value ? new Date(value).getFullYear() : currentYear;
+  const minDateYear = minDate ? new Date(minDate).getFullYear() : currentYear;
+  
+  // Start the list from the earliest relevant year
+  const startYear = Math.min(currentYear, valueYear, minDateYear);
+  // Show 10 years starting from the calculated start year
+  const years = Array.from({ length: 10 }, (_, i) => startYear + i);
 
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
   const handleDateClick = (day) => {
     const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+    // Adjust for timezone offset to ensure string is local date
     const offset = newDate.getTimezoneOffset(); 
     const adjustedDate = new Date(newDate.getTime() - (offset*60*1000)); 
     onChange(adjustedDate.toISOString().split('T')[0]);
@@ -120,7 +139,8 @@ const SmartCalendar = ({ label, value, onChange, isDark, minDate }) => {
     if (minDate) {
       const selectedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
       const min = new Date(minDate);
-      min.setHours(0, 0, 0, 0);
+      min.setHours(0, 0, 0, 0); // Reset time part for accurate comparison
+      // Users can only select dates AFTER or ON the batch start date
       return selectedDate >= min;
     }
     return true;
@@ -138,21 +158,44 @@ const SmartCalendar = ({ label, value, onChange, isDark, minDate }) => {
   const blanks = Array(firstDay).fill(null);
   const totalSlots = [...blanks, ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
 
+  // FIX: Dropdown Styles for Dark Mode Visibility
+ const dropdownStyle = {
+    borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
+    // FIX: Force White Background and Black Text for visibility
+    backgroundColor: "#ffffff", 
+    color: "#000000"
+  };
+
   return (
     <div className="mb-4">
       <label className="block text-sm font-medium mb-2">{label}</label>
       <div className="p-3 rounded-lg border max-w-[280px]" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`, backgroundColor: `var(${isDark ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.02)"})` }}>
         <div className="flex gap-2 mb-2">
-          <select value={viewDate.getMonth()} onChange={(e) => setViewDate(new Date(viewDate.getFullYear(), parseInt(e.target.value), 1))} className="flex-1 px-1 py-1 rounded border bg-transparent text-xs font-medium" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`, color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
+          {/* Month Select */}
+          <select 
+            value={viewDate.getMonth()} 
+            onChange={(e) => setViewDate(new Date(viewDate.getFullYear(), parseInt(e.target.value), 1))} 
+            className="flex-1 px-1 py-1 rounded border text-xs font-medium cursor-pointer" 
+            style={dropdownStyle}
+          >
             {months.map((m, i) => <option key={i} value={i}>{m}</option>)}
           </select>
-          <select value={viewDate.getFullYear()} onChange={(e) => setViewDate(new Date(parseInt(e.target.value), viewDate.getMonth(), 1))} className="w-20 px-1 py-1 rounded border bg-transparent text-xs font-medium" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`, color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
+          
+          {/* Year Select */}
+          <select 
+            value={viewDate.getFullYear()} 
+            onChange={(e) => setViewDate(new Date(parseInt(e.target.value), viewDate.getMonth(), 1))} 
+            className="w-20 px-1 py-1 rounded border text-xs font-medium cursor-pointer" 
+            style={dropdownStyle}
+          >
             {years.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
+
         <div className="grid grid-cols-7 mb-1 text-center">
           {days.map(d => <span key={d} className="text-[10px] font-bold opacity-60 uppercase">{d}</span>)}
         </div>
+        
         <div className="grid grid-cols-7 gap-1 place-items-center">
           {totalSlots.map((day, index) => {
             if (!day) return <div key={`blank-${index}`} className="h-7 w-7" />;
@@ -666,7 +709,6 @@ const AdminBatchSessionPage = () => {
     return false;
   };
 
-  // --- NEW: Handle Student Unlink ---
   const handleUnlinkStudent = async (student) => {
     const confirmMsg = `This will remove student ${student.name} ${student.student_number} from the batch ${batchDetails?.batchName}. Are you sure?`;
     
@@ -675,7 +717,7 @@ const AdminBatchSessionPage = () => {
       
       if (response.success) {
         alert("Student removed successfully.");
-        fetchData(); // Refresh list
+        fetchData(); 
       } else {
         alert(response.message || "Failed to remove student.");
       }
@@ -743,10 +785,11 @@ const AdminBatchSessionPage = () => {
         </div>
 
         <div className="flex gap-3">
+          {/* UPDATED ADD STUDENT BUTTON STYLE */}
           <button 
             onClick={() => setIsStudentModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-white shadow-lg transition hover:scale-105"
-            style={{ backgroundColor: `var(${isDark ? "--border-dark" : "gray"})`, border: "1px solid rgba(255,255,255,0.2)" }}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold shadow-lg transition hover:scale-105 ${isDark ? 'text-white' : 'text-black'}`}
+            style={{ backgroundColor: `var(${isDark ? "--border-dark" : "rgba(0,0,0,0.1)"})`, border: "1px solid rgba(100,100,100,0.2)" }}
           >
             <FaUserPlus /> Add Student
           </button>
@@ -819,7 +862,7 @@ const AdminBatchSessionPage = () => {
                     key={student._id} 
                     student={student} 
                     isDark={isDark} 
-                    onDelete={handleUnlinkStudent} // Pass the delete handler
+                    onDelete={handleUnlinkStudent}
                   />
                 ))}
               </div>

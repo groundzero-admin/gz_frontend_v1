@@ -29,18 +29,19 @@ const ModalInput = ({ label, type = "text", value, onChange, placeholder, requir
   </div>
 );
 
-// --- Helper: Modal Select ---
+// --- Helper: Modal Select (UPDATED) ---
 const ModalSelect = ({ label, value, onChange, options, isDark }) => (
   <div className="mb-4">
     <label className="block text-sm font-medium mb-2">{label}</label>
     <select
       value={value}
       onChange={onChange}
-      className="w-full px-3 py-2 rounded-lg border bg-transparent transition appearance-none text-sm"
+      className="w-full px-3 py-2 rounded-lg border transition appearance-none text-sm"
       style={{
         borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
-        color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`,
-        backgroundColor: `var(${isDark ? "--bg-dark" : "--bg-light"})`
+        // FIX: Force White Background and Black Text
+        backgroundColor: "#ffffff", 
+        color: "#000000"
       }}
     >
       {options.map(opt => (
@@ -50,7 +51,7 @@ const ModalSelect = ({ label, value, onChange, options, isDark }) => (
   </div>
 );
 
-// --- Smart Calendar Component (Any Day Allowed) ---
+// --- Smart Calendar Component (UPDATED) ---
 const SmartCalendar = ({ label, value, onChange, isDark }) => {
   const today = new Date();
   const initialDate = value ? new Date(value) : today;
@@ -90,6 +91,13 @@ const SmartCalendar = ({ label, value, onChange, isDark }) => {
   const blanks = Array(firstDay).fill(null);
   const totalSlots = [...blanks, ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
 
+  // FIX: Dropdown Styles for Dark Mode Visibility
+  const dropdownStyle = {
+    borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
+    backgroundColor: "#ffffff", // Explicitly White
+    color: "#000000"            // Explicitly Black
+  };
+
   return (
     <div className="mb-4">
       <label className="block text-sm font-medium mb-2">{label}</label>
@@ -105,7 +113,8 @@ const SmartCalendar = ({ label, value, onChange, isDark }) => {
             onChange={(e) =>
               setViewDate(new Date(viewDate.getFullYear(), parseInt(e.target.value), 1))
             }
-            className="flex-1 px-1 py-1 rounded border bg-transparent text-xs font-medium"
+            className="flex-1 px-1 py-1 rounded border text-xs font-medium cursor-pointer"
+            style={dropdownStyle}
           >
             {months.map((m, i) => <option key={i} value={i}>{m}</option>)}
           </select>
@@ -115,7 +124,8 @@ const SmartCalendar = ({ label, value, onChange, isDark }) => {
             onChange={(e) =>
               setViewDate(new Date(parseInt(e.target.value), viewDate.getMonth(), 1))
             }
-            className="w-20 px-1 py-1 rounded border bg-transparent text-xs font-medium"
+            className="w-20 px-1 py-1 rounded border text-xs font-medium cursor-pointer"
+            style={dropdownStyle}
           >
             {years.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
@@ -364,8 +374,6 @@ const CreateBatchModal = ({ isOpen, onClose, onSubmit, isDark }) => {
 };
 
 // --- Batch Card ---
-
-// --- Batch Card ---
 const BatchCard = ({ batch, isDark, onStatusUpdate }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const navigate = useNavigate();
@@ -379,7 +387,7 @@ const BatchCard = ({ batch, isDark, onStatusUpdate }) => {
   const start = new Date(batch.startDate);
   start.setHours(0, 0, 0, 0);
 
-  const canGoLive = start <= today;
+  const canGoLive = true;
 
   const handleCardClick = () => {
     navigate(`/admin/dashboard/batches/${batch.batch_obj_id}`, {
@@ -515,9 +523,6 @@ const BatchCard = ({ batch, isDark, onStatusUpdate }) => {
     </div>
   );
 };
-
-
-
 
 // --- Main Page Component ---
 const AdminBatchesPage = () => {
