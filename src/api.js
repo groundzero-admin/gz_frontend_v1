@@ -1899,3 +1899,36 @@ export const unlinkStudentFromBatch = async (batch_obj_id, student_number) => {
     return { success: false, message: "Network error" }; 
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const getAllLinksAndOtpPath = `${BASE_URL}/admin/getalllinksandotp`;
+
+export const getAllLinksAndOtp = async () => {
+  try {
+    const response = await fetch(getAllLinksAndOtpPath, {
+      method: 'GET', // Changed to GET as usually fetching lists is GET, but if your backend requires POST, change this back.
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (e) {
+    console.error("Error fetching invites:", e);
+    return { success: false, message: "Network error" };
+  }
+};

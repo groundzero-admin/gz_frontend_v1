@@ -30,6 +30,8 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
     { to: "/admin/dashboard/teacher", icon: <FaChalkboardTeacher />, label: "Teachers" },
     { to: "/admin/dashboard/student", icon: <FaUserGraduate />, label: "Students" },
     { to: "/admin/dashboard/invitation", icon: <FaEnvelopeOpenText />, label: "Invitations" },
+    { to: "/admin/dashboard/email-otp", icon: <FaEnvelopeOpenText />, label: "Email & OTP" },
+
 
     // ✅ NEW ATTENDANCE ROUTE ADDED
     { to: "/admin/dashboard/attendance", icon: <FaUserGraduate />, label: "Attendance" },

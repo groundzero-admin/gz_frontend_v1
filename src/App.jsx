@@ -45,6 +45,8 @@ import TestPage from './TestPage.jsx'
 import BookingPage_Spark from './BookDiscoveryCall_Spark.jsx'
 import BookOneOnOneSession_Spark from './BookOneOnOne_Spark.jsx'
 import StudentMySpacePage from './StudentPages/StudentWorkspace.jsx'
+import Admin_GetAllLinksOtp from './AdminPages/Admin_get_all_link_otp_for_mail.jsx'
+import SparkBookCatchUpSession from './StudentPages/StudentZohoCatchUpPage.jsx'
 
 
 
@@ -108,6 +110,8 @@ function App() {
 
               <Route path="attendance" element={< AttendancePage />} />
 
+              <Route path="email-otp"   element={   <Admin_GetAllLinksOtp/>   }  />
+
       </Route>
 
 
@@ -124,6 +128,11 @@ function App() {
               {/* <Route path = "remaingsessionpurchase" element={ <StudentRemainingSessionPurchase/>     } /> */}
               {/* <Route path = "payment-result" element={ < StudentPaymentStatusHandler/>     } /> */}
               <Route path="workspace" element={< StudentMySpacePage />} />
+
+              <Route path="catchup-session" element={< SparkBookCatchUpSession />} />
+
+
+
 
 
     </Route>

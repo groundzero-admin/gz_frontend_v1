@@ -19,6 +19,10 @@ import { BsStars } from "react-icons/bs";
 
 import { getMyLiveBatches, getstudentsbatchprogress } from '../api.js'; 
 
+// const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL  ; 
+
+
+
 // --- Animation Variants ---
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -185,7 +189,7 @@ const SessionCard = ({ session, status, isDark }) => {
       return (
         <div className="flex gap-2 w-full">
           <a
-            href={calendlyLink}
+            href={ `./dashboard/catchup-session` }
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl transition-all duration-300 text-sm font-bold shadow-amber-500/20 shadow-lg"
