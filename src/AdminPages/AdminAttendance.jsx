@@ -304,7 +304,7 @@ export default function AttendancePage() {
           </div>
           <div>
             <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.02em', marginBottom: 6, color: `var(${isDark ? '--text-dark-primary' : '--text-light-primary'})` }}>
-              Attendance Admin
+               Mark Atendance
             </h1>
             <p style={{ color: `var(${isDark ? '--text-dark-secondary' : '--text-light-secondary'})` }}>
               Manage live batches and track real-time participation.
@@ -317,7 +317,7 @@ export default function AttendancePage() {
           <div className="flex items-center justify-between mb-6">
             <h2 style={{ fontSize: 20, fontWeight: 700, color: `var(${isDark ? '--text-dark-primary' : '--text-light-primary'})` }}>
               <Users className="inline-block" style={{ verticalAlign: 'middle', marginRight: 8, color: 'var(--accent-purple)' }} />
-              Live Batches
+                Select a Batch 
             </h2>
           </div>
 
@@ -490,7 +490,7 @@ export default function AttendancePage() {
                   <div>
                     <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: `var(${isDark ? '--text-dark-primary' : '--text-light-primary'})` }}>{selectedBatch.batchName}</h3>
                     <div style={{ marginTop: 6, color: `var(${isDark ? '--text-dark-secondary' : '--text-light-secondary'})`, fontFamily: 'monospace' }}>
-                      Batch ID: {selectedBatch.batchId} {selectedBatch.batchType ? `• ${selectedBatch.batchType}` : ''}
+                      Batch type: {selectedBatch.batchId} {selectedBatch.batchType ? `• ${selectedBatch.batchType}` : ''}
                     </div>
                   </div>
                   <button onClick={() => setShowSessionsModal(false)} style={{
@@ -536,7 +536,7 @@ export default function AttendancePage() {
                             </div>
                           </div>
                           <div style={{ color: 'var(--accent-purple)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span style={{ fontWeight: 700 }}>Attendance</span>
+                            <span style={{ fontWeight: 700 }}>Mark Attendance</span>
                             <ChevronRight />
                           </div>
                         </div>

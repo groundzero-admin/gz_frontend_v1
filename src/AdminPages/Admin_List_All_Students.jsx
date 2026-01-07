@@ -7,7 +7,7 @@ import { getAllStudentDetails } from "../api.js"
 // Student Row
 // ================================
 const StudentRow = ({ student, isDark, navigate }) => {
-  const ONLINE_UNIT = 1000
+  const ONLINE_UNIT = 1500
   const OFFLINE_UNIT = 1500
 
   // API field names stay OLD

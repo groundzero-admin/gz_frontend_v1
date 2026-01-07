@@ -59,11 +59,14 @@ export const getMyChildHistoryPath = `${BASE_URL}/parent/mychildhistory`;
 
 
 // export const getStudentsInBatchPath = `${BASE_URL}/admin/getstudentsinbatch`;
-
+// /api/student/getbatchprogress
 
 
 export const getMyLiveBatchesPath = `${BASE_URL}/student/mylivebatches`;
 export const getTodaysLiveBatchInfoPath = `${BASE_URL}/student/gettodaylivebatchinfo`;
+
+export const getstudentsbatchprogressPath = `${BASE_URL}/student/getbatchprogress`;
+
 
 
 // export const getMyEnrolledBatchesPath = `${BASE_URL}/student/myenrolledbatches`;
@@ -782,6 +785,31 @@ export const getTodaysLiveBatchInfo = async (batch_obj_id) => {
 
 
 
+// getstudentsbatchprogressPath
+/**
+ * (STUDENT) Fetches today's class info for a specific batch.
+ */
+export const getstudentsbatchprogress = async (input) => {
+  try {
+    // FIX: specific check to handle if input is passed as { batch_obj_id: "..." } or just "..."
+    const batch_obj_id = typeof input === 'object' && input.batch_obj_id 
+      ? input.batch_obj_id 
+      : input;
+
+    const response = await fetch(getstudentsbatchprogressPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ batch_obj_id }), // Now batch_obj_id is guaranteed to be a string
+    });
+    
+    return await response.json(); 
+  } catch (error) {
+    console.error("Get Today's Batch Info error:", error);
+    return { success: false, message: "Network error fetching batch info." };
+  }
+};
+
 
 
 
@@ -1252,7 +1280,7 @@ export const getBatches = async () => {
 
 
 
-// Updated sendCredentials to include batch info
+
 export const sendCredentials = async (orderId, selectedBatches = []) => {
   try {
     const response = await fetch(`${BASE_URL}/admin/send-credentials`, {
@@ -1261,11 +1289,8 @@ export const sendCredentials = async (orderId, selectedBatches = []) => {
       credentials: "include",
       body: JSON.stringify({ 
         course_order_id: orderId,
-        // Send as an array. Backend should handle this loop or single assignment.
-        assigned_batches: selectedBatches.map(b => ({
-            batch_obj_id: b.batch_obj_id,
-            batchName: b.batchName
-        }))
+        // ✅ only send IDs
+        assigned_batches: selectedBatches.map(b => b.batch_obj_id)
       }),
     });
     return await handleResponse(response);
@@ -1803,5 +1828,107 @@ export const createCheckoutSession = async (parentDetails, studentDetails, batch
       success: false, 
       message: "Network error: Could not connect to payment gateway." 
     };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// --- Student Profile API ---
+export const updateStudentProfilePath = `${BASE_URL}/student/update-profile`;
+
+export const updateStudentProfile = async (updates) => {
+  try {
+    const response = await fetch(updateStudentProfilePath, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(updates), // { name: "...", class: "..." }
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Update Student Profile error:", error);
+    return { success: false, message: "Network error updating profile." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Add this path definition if not already present
+const unlinkStudentFromBatchPath = `${BASE_URL}/admin/unlinkstudentfrombatch`; 
+
+export const unlinkStudentFromBatch = async (batch_obj_id, student_number) => {
+  try { 
+    return await (await fetch(unlinkStudentFromBatchPath, { 
+      method: 'POST', 
+      headers: {'Content-Type': 'application/json'}, 
+      credentials: 'include', 
+      body: JSON.stringify({ batch_obj_id, student_number }) 
+    })).json(); 
+  } catch (e) { 
+    return { success: false, message: "Network error" }; 
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const getAllLinksAndOtpPath = `${BASE_URL}/admin/getalllinksandotp`;
+
+export const getAllLinksAndOtp = async () => {
+  try {
+    const response = await fetch(getAllLinksAndOtpPath, {
+      method: 'GET', // Changed to GET as usually fetching lists is GET, but if your backend requires POST, change this back.
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (e) {
+    console.error("Error fetching invites:", e);
+    return { success: false, message: "Network error" };
   }
 };

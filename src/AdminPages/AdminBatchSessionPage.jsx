@@ -16,15 +16,18 @@ import {
   FaChalkboardTeacher,
   FaExternalLinkAlt,
   FaCopy,
-  FaCheck
+  FaCheck,
+  FaTrash
 } from "react-icons/fa";
+
 // Import API functions
 import { 
   getSessionsForBatch, 
   createSession, 
   linkStudentToBatch, 
   getStudentsInBatch, 
-  updateSessionDetails 
+  updateSessionDetails,
+  unlinkStudentFromBatch
 } from "../api.js";
 
 // --- Helper: Time Picker ---
@@ -86,11 +89,21 @@ const TimePicker = ({ label, value, onChange, isDark }) => {
   );
 };
 
-// --- Helper: Smart Calendar ---
+// --- Updated Helper: Smart Calendar ---
 const SmartCalendar = ({ label, value, onChange, isDark, minDate }) => {
   const today = new Date();
-  const initialDate = value ? new Date(value) : (minDate ? new Date(minDate) : today);
-  const [viewDate, setViewDate] = useState(initialDate);
+  
+  // LOGIC: If value exists (Edit), use that. 
+  // If not (Create), check if minDate (Batch Start) is in the future. If so, start there. 
+  // Otherwise start at Today.
+  const getInitialDate = () => {
+    if (value) return new Date(value);
+    const min = minDate ? new Date(minDate) : null;
+    if (min && min > today) return min;
+    return today;
+  };
+
+  const [viewDate, setViewDate] = useState(getInitialDate());
   
   useEffect(() => {
     if(value) setViewDate(new Date(value));
@@ -99,14 +112,23 @@ const SmartCalendar = ({ label, value, onChange, isDark, minDate }) => {
   const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']; 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+  // FIX: Dynamic Year Generation
+  // Ensure the year dropdown includes the Batch Start Year and the Current Session Year
   const currentYear = today.getFullYear();
-  const years = Array.from({ length: 6 }, (_, i) => currentYear + i);
+  const valueYear = value ? new Date(value).getFullYear() : currentYear;
+  const minDateYear = minDate ? new Date(minDate).getFullYear() : currentYear;
+  
+  // Start the list from the earliest relevant year
+  const startYear = Math.min(currentYear, valueYear, minDateYear);
+  // Show 10 years starting from the calculated start year
+  const years = Array.from({ length: 10 }, (_, i) => startYear + i);
 
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
   const handleDateClick = (day) => {
     const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+    // Adjust for timezone offset to ensure string is local date
     const offset = newDate.getTimezoneOffset(); 
     const adjustedDate = new Date(newDate.getTime() - (offset*60*1000)); 
     onChange(adjustedDate.toISOString().split('T')[0]);
@@ -117,7 +139,8 @@ const SmartCalendar = ({ label, value, onChange, isDark, minDate }) => {
     if (minDate) {
       const selectedDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
       const min = new Date(minDate);
-      min.setHours(0, 0, 0, 0);
+      min.setHours(0, 0, 0, 0); // Reset time part for accurate comparison
+      // Users can only select dates AFTER or ON the batch start date
       return selectedDate >= min;
     }
     return true;
@@ -135,21 +158,44 @@ const SmartCalendar = ({ label, value, onChange, isDark, minDate }) => {
   const blanks = Array(firstDay).fill(null);
   const totalSlots = [...blanks, ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
 
+  // FIX: Dropdown Styles for Dark Mode Visibility
+ const dropdownStyle = {
+    borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
+    // FIX: Force White Background and Black Text for visibility
+    backgroundColor: "#ffffff", 
+    color: "#000000"
+  };
+
   return (
     <div className="mb-4">
       <label className="block text-sm font-medium mb-2">{label}</label>
       <div className="p-3 rounded-lg border max-w-[280px]" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`, backgroundColor: `var(${isDark ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.02)"})` }}>
         <div className="flex gap-2 mb-2">
-          <select value={viewDate.getMonth()} onChange={(e) => setViewDate(new Date(viewDate.getFullYear(), parseInt(e.target.value), 1))} className="flex-1 px-1 py-1 rounded border bg-transparent text-xs font-medium" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`, color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
+          {/* Month Select */}
+          <select 
+            value={viewDate.getMonth()} 
+            onChange={(e) => setViewDate(new Date(viewDate.getFullYear(), parseInt(e.target.value), 1))} 
+            className="flex-1 px-1 py-1 rounded border text-xs font-medium cursor-pointer" 
+            style={dropdownStyle}
+          >
             {months.map((m, i) => <option key={i} value={i}>{m}</option>)}
           </select>
-          <select value={viewDate.getFullYear()} onChange={(e) => setViewDate(new Date(parseInt(e.target.value), viewDate.getMonth(), 1))} className="w-20 px-1 py-1 rounded border bg-transparent text-xs font-medium" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`, color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
+          
+          {/* Year Select */}
+          <select 
+            value={viewDate.getFullYear()} 
+            onChange={(e) => setViewDate(new Date(parseInt(e.target.value), viewDate.getMonth(), 1))} 
+            className="w-20 px-1 py-1 rounded border text-xs font-medium cursor-pointer" 
+            style={dropdownStyle}
+          >
             {years.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
+
         <div className="grid grid-cols-7 mb-1 text-center">
           {days.map(d => <span key={d} className="text-[10px] font-bold opacity-60 uppercase">{d}</span>)}
         </div>
+        
         <div className="grid grid-cols-7 gap-1 place-items-center">
           {totalSlots.map((day, index) => {
             if (!day) return <div key={`blank-${index}`} className="h-7 w-7" />;
@@ -230,11 +276,10 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSession, batch
     startTime: '10:00 AM',
     endTime: '11:00 AM',
     meetingLinkOrLocation: '',
-    googleClassroomLink: '' // Added for Online sessions
+    googleClassroomLink: '' 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Determine if this is an online batch based on passed details
   const isOnline = (batchDetails?.batchType || '').toUpperCase() === 'ONLINE';
 
   useEffect(() => {
@@ -379,7 +424,6 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSession, batch
             />
           </div>
 
-          {/* Show Google Classroom Link field ONLY for Online Batches */}
           {isOnline && (
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-2">
@@ -469,12 +513,10 @@ const SessionCard = ({ session, isDark, onClick, batchType }) => {
         borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
       }}
     >
-      {/* Hover Edit Icon */}
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition text-xs font-bold px-2 py-1 rounded bg-black/10 dark:bg-white/10 flex items-center gap-1">
         <FaEdit /> Edit
       </div>
 
-      {/* SESSION NUMBER */}
       <div
         className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
         style={{
@@ -499,10 +541,8 @@ const SessionCard = ({ session, isDark, onClick, batchType }) => {
           </div>
         </div>
 
-        {/* ONLINE LINKS BLOCK */}
         {isOnline && (
           <div className="mt-2 space-y-1">
-            {/* Meeting Link */}
             {session.meetingLinkOrLocation && (
               <LinkActionButton 
                 url={session.meetingLinkOrLocation}
@@ -513,7 +553,6 @@ const SessionCard = ({ session, isDark, onClick, batchType }) => {
               />
             )}
             
-            {/* Classroom Link */}
             {session.googleClassroomLink && (
               <LinkActionButton 
                 url={session.googleClassroomLink}
@@ -526,7 +565,6 @@ const SessionCard = ({ session, isDark, onClick, batchType }) => {
           </div>
         )}
 
-        {/* OFFLINE Location Text */}
         {!isOnline && session.meetingLinkOrLocation && (
           <div className="flex items-center gap-2 text-[var(--accent-purple)] mt-2 text-xs font-medium">
             <FaMapMarkerAlt /> {session.meetingLinkOrLocation}
@@ -537,15 +575,27 @@ const SessionCard = ({ session, isDark, onClick, batchType }) => {
   );
 };
 
-// --- Student Card ---
-const BatchStudentCard = ({ student, isDark }) => (
+// --- Updated Student Card with Delete ---
+const BatchStudentCard = ({ student, isDark, onDelete }) => (
   <div 
-    className="p-4 rounded-xl border flex items-center gap-4 transition-all hover:shadow-sm"
+    className="p-4 rounded-xl border flex items-center gap-4 transition-all hover:shadow-sm relative group"
     style={{
       backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
       borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
     }}
   >
+    {/* Delete Button (Visible on Hover) */}
+    <button 
+      onClick={(e) => {
+        e.stopPropagation();
+        onDelete(student);
+      }}
+      className="absolute top-2 right-2 p-1.5 rounded-full text-red-500 transition hover:bg-red-50 dark:hover:bg-red-900/20"
+      title="Unlink Student"
+    >
+      <FaTrash size={12} />
+    </button>
+
     <div 
       className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
       style={{ background: "linear-gradient(135deg, var(--accent-purple), var(--accent-teal))" }}
@@ -553,7 +603,7 @@ const BatchStudentCard = ({ student, isDark }) => (
       {student.name.charAt(0).toUpperCase()}
     </div>
     <div className="min-w-0">
-      <h4 className="font-bold text-sm truncate">{student.name}</h4>
+      <h4 className="font-bold text-sm truncate pr-6">{student.name}</h4>
       <p className="text-xs opacity-60 truncate">{student.email}</p>
       <p className="text-xs opacity-60 flex items-center gap-1 mt-1">
         <FaPhone className="text-[10px]" /> {student.mobile || "N/A"}
@@ -566,16 +616,14 @@ const BatchStudentCard = ({ student, isDark }) => (
 // --- Main Page ---
 const AdminBatchSessionPage = () => {
   const { isDark } = useOutletContext();
-  const { batchId } = useParams(); // MongoDB _id from URL
+  const { batchId } = useParams(); 
   const navigate = useNavigate();
   
-  // State for Batch Info & Sessions
   const [batchDetails, setBatchDetails] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [students, setStudents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Modal State
   const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
   const [editingSession, setEditingSession] = useState(null); 
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
@@ -584,7 +632,6 @@ const AdminBatchSessionPage = () => {
     setIsLoading(true);
     
     try {
-      // 1. Fetch Batch Info & Sessions (New Structure)
       const sessionsRes = await getSessionsForBatch(batchId);
       
       if (sessionsRes.success && sessionsRes.data) {
@@ -594,7 +641,6 @@ const AdminBatchSessionPage = () => {
         alert(`Error fetching sessions: ${sessionsRes.message}`);
       }
 
-      // 2. Fetch Students
       const studentsRes = await getStudentsInBatch(batchId);
       if (studentsRes.success) {
         setStudents(studentsRes.data);
@@ -612,7 +658,6 @@ const AdminBatchSessionPage = () => {
     if (batchId) fetchData();
   }, [batchId]);
 
-  // Handle both Create and Update logic
   const handleSessionSubmit = async (formData, isUpdate) => {
     let response;
     
@@ -622,7 +667,6 @@ const AdminBatchSessionPage = () => {
         return false;
       }
       
-      // Update Payload: session_obj_id + fields
       const updatePayload = {
         session_obj_id: editingSession._id, 
         title: formData.title,
@@ -631,14 +675,13 @@ const AdminBatchSessionPage = () => {
         startTime: formData.startTime,
         endTime: formData.endTime,
         meetingLinkOrLocation: formData.meetingLinkOrLocation,
-        googleClassroomLink: formData.googleClassroomLink // Added to payload
+        googleClassroomLink: formData.googleClassroomLink 
       };
       
       response = await updateSessionDetails(updatePayload);
     } else {
-      // Create Payload: batch_obj_id + fields
       const createPayload = {
-        batch_obj_id: batchId, // Use ID from URL params
+        batch_obj_id: batchId, 
         ...formData
       };
       response = await createSession(createPayload);
@@ -666,6 +709,21 @@ const AdminBatchSessionPage = () => {
     return false;
   };
 
+  const handleUnlinkStudent = async (student) => {
+    const confirmMsg = `This will remove student ${student.name} ${student.student_number} from the batch ${batchDetails?.batchName}. Are you sure?`;
+    
+    if (window.confirm(confirmMsg)) {
+      const response = await unlinkStudentFromBatch(batchId, student.student_number);
+      
+      if (response.success) {
+        alert("Student removed successfully.");
+        fetchData(); 
+      } else {
+        alert(response.message || "Failed to remove student.");
+      }
+    }
+  };
+
   const openCreateModal = () => {
     setEditingSession(null); 
     setIsSessionModalOpen(true);
@@ -678,7 +736,6 @@ const AdminBatchSessionPage = () => {
 
   return (
     <div className="pb-10">
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div className="flex items-center gap-4">
           <button 
@@ -689,7 +746,6 @@ const AdminBatchSessionPage = () => {
             <FaArrowLeft />
           </button>
           
-          {/* Dynamic Header Info */}
           <div>
             <div className="flex items-center gap-2">
                <h1 className="text-3xl font-bold">Batch Details</h1>
@@ -716,7 +772,6 @@ const AdminBatchSessionPage = () => {
                   </strong>
                 </p>
 
-                {/* Location Info (Only if Offline) */}
                 {batchDetails.batchType === "OFFLINE" && (
                   <p className="text-sm opacity-70 flex items-center gap-1">
                     <FaMapMarkerAlt size={12}/> {batchDetails.classLocation} ({batchDetails.cityCode})
@@ -730,10 +785,11 @@ const AdminBatchSessionPage = () => {
         </div>
 
         <div className="flex gap-3">
+          {/* UPDATED ADD STUDENT BUTTON STYLE */}
           <button 
             onClick={() => setIsStudentModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-white shadow-lg transition hover:scale-105"
-            style={{ backgroundColor: `var(${isDark ? "--border-dark" : "gray"})`, border: "1px solid rgba(255,255,255,0.2)" }}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold shadow-lg transition hover:scale-105 ${isDark ? 'text-white' : 'text-black'}`}
+            style={{ backgroundColor: `var(${isDark ? "--border-dark" : "rgba(0,0,0,0.1)"})`, border: "1px solid rgba(100,100,100,0.2)" }}
           >
             <FaUserPlus /> Add Student
           </button>
@@ -756,7 +812,6 @@ const AdminBatchSessionPage = () => {
       ) : (
         <div className="space-y-10">
           
-          {/* --- SESSIONS SECTION --- */}
           <section>
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
               <FaLayerGroup className="text-[var(--accent-purple)]" /> 
@@ -791,7 +846,6 @@ const AdminBatchSessionPage = () => {
             </div>
           </section>
 
-          {/* --- STUDENTS SECTION --- */}
           <section>
             <div className="flex items-center gap-3 mb-6 border-b pb-4" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>
               <FaUserGraduate className="text-2xl text-[var(--accent-teal)]" />
@@ -804,7 +858,12 @@ const AdminBatchSessionPage = () => {
             {students.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {students.map(student => (
-                  <BatchStudentCard key={student._id} student={student} isDark={isDark} />
+                  <BatchStudentCard 
+                    key={student._id} 
+                    student={student} 
+                    isDark={isDark} 
+                    onDelete={handleUnlinkStudent}
+                  />
                 ))}
               </div>
             ) : (
@@ -815,17 +874,15 @@ const AdminBatchSessionPage = () => {
         </div>
       )}
 
-      {/* Unified Modal for Creating / Editing Session */}
       <SessionModal 
         isOpen={isSessionModalOpen}
         onClose={() => setIsSessionModalOpen(false)}
         onSubmit={handleSessionSubmit}
         isDark={isDark}
-        batchDetails={batchDetails} // Pass details for dynamic rendering
+        batchDetails={batchDetails}
         editingSession={editingSession}
       />
 
-      {/* Modal for Adding Student */}
       <AddStudentModal 
         isOpen={isStudentModalOpen}
         onClose={() => setIsStudentModalOpen(false)}

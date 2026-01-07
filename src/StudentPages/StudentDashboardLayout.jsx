@@ -2,42 +2,35 @@
 
 import { useState, useEffect } from "react"
 import {
-  FaRegLightbulb,
-  FaBook,
-  FaPencilAlt,
-  FaQuestionCircle,
-  FaCalendarAlt,
-  FaSignOutAlt,
-  FaUserCircle,
-  FaAngleRight,
-  FaBars,
-  FaTimes,
+  FaHome,
+  FaCommentDots,
+  FaCompass,
+  FaCoins,
   FaSun,
   FaMoon,
-  FaFire,
-  FaPlus 
+  FaPlus
 } from "react-icons/fa"
-
-import { GiArtificialHive } from "react-icons/gi";
+import { MdOutlineRocketLaunch } from "react-icons/md"; 
+import { BsStars } from "react-icons/bs"
+import { HiOutlineLogout } from "react-icons/hi";
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom"
-import "../color.css" 
-import { checkRole, logout } from "../api.js" 
+import "../color.css"
+import { checkRole, logout } from "../api.js"
 
 // --- Helper: Full Page Message ---
 const FullPageMessage = ({ isDark, children }) => (
   <div
-    className="min-h-screen w-full flex flex-col items-center justify-center p-6"
+    className="min-h-screen w-full flex flex-col items-center justify-center p-6 transition-colors duration-300"
     style={{
-      backgroundColor: `var(${isDark ? "--bg-dark" : "--bg-light"})`,
-      color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`,
+      backgroundColor: isDark ? "#02040a" : "#F3F4F6", 
+      color: isDark ? "#E0E7FF" : "#1F2937",
     }}
   >
-    <div 
-      className="p-10 rounded-2xl border text-center"
+    <div
+      className="p-10 rounded-2xl border text-center shadow-2xl"
       style={{
-        backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
-        borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
-        backdropFilter: "blur(10px)"
+        backgroundColor: isDark ? "#0B0C1B" : "#FFFFFF",
+        borderColor: isDark ? "#1F2937" : "#E5E7EB",
       }}
     >
       {children}
@@ -45,172 +38,163 @@ const FullPageMessage = ({ isDark, children }) => (
   </div>
 )
 
-// --- Helper: SidebarLink ---
-const SidebarLink = ({ to, icon, label, isActive, isDark }) => (
-  <li>
+// --- Helper: Sidebar Item Component ---
+const SidebarItem = ({ to, icon, label, subLabel, isActive, isDark }) => {
+  return (
     <Link
       to={to}
-      className={`flex items-center gap-4 p-3 rounded-lg transition-all duration-200 ${
-        isActive 
-          ? "font-bold text-white shadow-lg" 
-          : "font-medium"
-      }`}
-      style={{
-        backgroundColor: isActive ? 'var(--accent-purple)' : 'transparent',
-        color: isActive ? 'white' : `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`,
-      }}
+      className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 mb-2 overflow-hidden
+        ${isActive 
+          ? "bg-cyan-500/10 shadow-[0_0_30px_rgba(6,182,212,0.15)] border border-cyan-500/20 backdrop-blur-md" 
+          : "text-gray-500 hover:bg-gray-500/10 hover:text-cyan-400 border border-transparent hover:backdrop-blur-sm"
+        }
+      `}
     >
-      {icon}
-      <span className="flex-1">{label}</span>
-      {isActive && <FaAngleRight className="text-xl" />}
+      {isActive && (
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent opacity-50 pointer-events-none" />
+      )}
+
+      <div 
+        className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 relative z-10
+          ${isActive 
+            ? "bg-cyan-500/20 text-cyan-400 shadow-inner shadow-cyan-500/20" 
+            : "bg-gray-500/10 text-gray-500 group-hover:bg-cyan-500/10 group-hover:text-cyan-400"
+          }
+        `}
+      >
+        <span className="text-lg">{icon}</span>
+      </div>
+
+      <div className="flex-1 relative z-10">
+        <span 
+          className={`font-semibold text-sm block transition-colors
+          ${isActive 
+             ? (isDark ? "text-cyan-50" : "text-black") 
+             : (isDark ? "text-gray-400" : "text-gray-600")
+          }`}
+        >
+          {label}
+        </span>
+        
+        <span className={`text-[10px] uppercase tracking-wider font-medium ${isActive ? "text-cyan-400/80" : "text-gray-500"}`}>
+          {subLabel}
+        </span>
+      </div>
+
+      {isActive && (
+        <BsStars className="w-4 h-4 text-cyan-400 animate-pulse relative z-10" />
+      )}
     </Link>
-  </li>
-);
+  )
+}
 
 // --- Sidebar Component ---
-const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen }) => {
-  const location = useLocation();
-  const isActive = (path) => location.pathname.startsWith(path);
-  const isExactActive = (path) => location.pathname === path;
+const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
+  const location = useLocation()
+  
+  const isActive = (path) => {
+    if (path === "/student/dashboard") return location.pathname === "/student/dashboard";
+    return location.pathname.startsWith(path);
+  }
 
   return (
-    <nav 
-      className={`w-72 h-screen fixed top-0 left-0 p-6 flex flex-col z-30 transition-all duration-300
-        ${isOpen ? "translate-x-0" : "-translate-x-full"}
-        md:translate-x-0
+    <aside
+      className={`fixed left-0 top-0 h-full w-72 flex flex-col z-50 transition-transform duration-300 border-r backdrop-blur-xl shadow-2xl
+        ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
       `}
       style={{
-        backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
-        borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
-        borderRightWidth: "1px",
-        backdropFilter: "blur(10px)"
+        backgroundColor: isDark ? "rgba(2, 4, 16, 0.8)" : "rgba(255, 255, 255, 0.85)", 
+        borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
       }}
     >
-      <div className="flex items-center gap-3 mb-10" style={{ color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
-        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-[var(--accent-purple)]">
-          <path d="M4 4H17.3334V17.3334H30.6666V30.6666H44V44H4V4Z" fill="currentColor"></path>
-        </svg>
-        <h2 className="font-bold text-2xl">GZ Student</h2>
-      </div>
+      <div className="absolute top-0 left-0 w-full h-64 bg-cyan-500/5 blur-[80px] pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-40 h-40 bg-purple-500/5 blur-[60px] pointer-events-none" />
 
-      <ul className="flex flex-col gap-2 flex-grow">
-        <SidebarLink to="/student/dashboard" icon={<FaRegLightbulb />} label="Dashboard" isActive={isExactActive("/student/dashboard")} isDark={isDark} />
-        <SidebarLink to="/student/dashboard/mybatches" icon={<FaBook />} label="My Batches" isActive={isActive("/student/dashboard/mybatches")} isDark={isDark} />
-         <SidebarLink to="/student/dashboard/asktoai" icon={<GiArtificialHive />} label="Ask to AI" isActive={isActive("/student/dashboard/asktoai")} isDark={isDark} />
-        <SidebarLink to="/student/dashboard/replit" icon={<FaPencilAlt />} label="Replit" isActive={isActive("/student/dashboard/replit")} isDark={isDark} />
-        <SidebarLink to="/student/dashboard/doubts" icon={<FaQuestionCircle />} label="Reflections" isActive={isActive("/student/dashboard/doubts")} isDark={isDark} />
-        <SidebarLink to="/student/dashboard/schedules" icon={<FaCalendarAlt />} label="Schedules" isActive={isActive("/student/dashboard/schedules")} isDark={isDark} />
-      </ul>
-      
-      <div className="flex flex-col gap-4">
-        <button onClick={onToggleTheme} className="flex items-center gap-4 p-3 rounded-lg font-medium transition" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`, backgroundColor: `var(${isDark ? "--bg-dark" : "rgba(0,0,0,0.03)"})` }}>
-          {isDark ? <FaSun /> : <FaMoon />} <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
-        </button>
-        <button onClick={onLogout} className="flex items-center gap-4 p-3 rounded-lg font-medium transition" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`, backgroundColor: `var(${isDark ? "--bg-dark" : "rgba(0,0,0,0.03)"})` }}>
-          <FaSignOutAlt /> <span>Logout</span>
-        </button>
-      </div>
-    </nav>
-  );
-};
-
-// --- Navbar Component ---
-const Navbar = ({ userData, onToggleSidebar, isDark }) => {
-  const ONLINE_UNIT = 1000
-  const OFFLINE_UNIT = 1500
-
-  const onlineCredit = typeof userData?.credit?.online === "number" ? userData.credit.online : null
-  const offlineCredit = typeof userData?.credit?.offline === "number" ? userData.credit.offline : null
-
-  const onlineClasses = onlineCredit !== null ? Math.floor(onlineCredit / ONLINE_UNIT) : null
-  const offlineClasses = offlineCredit !== null ? Math.floor(offlineCredit / OFFLINE_UNIT) : null
-
-  return (
-    <header
-      className="h-20 fixed top-0 left-0 right-0 flex items-center justify-between px-6 z-20 md:left-72"
-      style={{
-        backgroundColor: `var(${isDark ? "rgba(11, 12, 27, 0.8)" : "rgba(248, 249, 250, 0.8)"})`,
-        borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
-        borderBottomWidth: "1px",
-        backdropFilter: "blur(10px)",
-      }}
-    >
-      {/* LEFT SIDE */}
-      <div className="flex items-center gap-4">
-        <button onClick={onToggleSidebar} className="p-2 md:hidden">
-          <FaBars className="text-2xl" />
-        </button>
-        <div className="hidden sm:block">
-          <h3 className="font-bold text-lg">
-            Welcome, {userData.username}!
-            <span className="text-sm font-medium ml-2" style={{ color: "var(--accent-teal)" }}>({userData.user_number})</span>
-          </h3>
+      <div className="p-6 pb-4 border-b border-gray-500/10 relative z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-[1.25rem] bg-gradient-to-br from-cyan-600 via-blue-600 to-purple-600 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.4)] animate-[pulse_4s_ease-in-out_infinite]">
+            <MdOutlineRocketLaunch className="w-6 h-6 text-white drop-shadow-md" />
+          </div>
+          <div>
+            <h1 className="font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 tracking-tight">
+              SPARK
+            </h1>
+            <p className="text-[10px] text-gray-500 tracking-[0.25em] uppercase font-bold">
+              Ground Zero
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* RIGHT SIDE */}
-      <div className="flex items-center gap-6">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar relative z-10">
+        <SidebarItem to="/student/dashboard" icon={<FaHome />} label="Home" subLabel="Command Deck" isActive={isActive("/student/dashboard")} isDark={isDark} />
+        <SidebarItem to="/student/dashboard/asktoai" icon={<FaCommentDots />} label="Ask Spark" subLabel="Your Companion" isActive={isActive("/student/dashboard/asktoai")} isDark={isDark} />
+        <SidebarItem to="/student/dashboard/workspace" icon={<FaCompass />} label="My Space" subLabel="Your Universe" isActive={isActive("/student/dashboard/workspace")} isDark={isDark} />
+        {/* <SidebarItem to="/student/dashboard/credits" icon={<FaCoins />} label="Credits" subLabel="Your Wallet" isActive={isActive("/student/dashboard/credits")} isDark={isDark} /> */}
+        {/* <SidebarItem to="/student/dashboard/remaingsessionpurchase" icon={<FaPlus />} label="Top Up" subLabel="Add Funds" isActive={isActive("/student/dashboard/remaingsessionpurchase")} isDark={isDark} /> */}
+      </nav>
 
-        {/* ✅ UPDATED BUTTON: Regular navigation (No new tab) */}
-        <Link
-          to="/student/dashboard/remaingsessionpurchase"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-white font-bold text-sm shadow-md transition-transform hover:scale-105 active:scale-95"
-          style={{
-            background: "linear-gradient(90deg, var(--accent-teal), var(--accent-purple))"
-          }}
-        >
-          <FaPlus />
-          <span className="hidden sm:inline">Get More Credits</span>
-          <span className="inline sm:hidden">Add</span>
-        </Link>
+      <div className="p-4 border-t border-gray-500/10 flex flex-col gap-3 relative z-10 bg-gradient-to-t from-black/5 to-transparent">
+        <div className="flex items-center justify-between px-2 mb-1">
+             <button onClick={onToggleTheme} className={`p-2 rounded-lg transition-all ${isDark ? "text-gray-400 hover:text-white hover:bg-white/10" : "text-gray-400 hover:text-gray-800 hover:bg-black/5"}`} title="Toggle Theme">
+               {isDark ? (
+                          <FaSun className="text-sm text-white" />
+                        ) : (
+                          <FaMoon className="text-sm text-black" />
+                        )}
 
-        {/* CREDITS DISPLAY */}
-        {onlineClasses !== null && (
-          <div className="flex items-center gap-3">
-            <FaRegLightbulb className="text-2xl text-yellow-400" />
-            <div className="text-right hidden sm:block">
-              <p className="text-lg font-bold">{onlineClasses}</p>
-              <p className="text-xs opacity-80">Online</p>
-            </div>
+             </button>
+             <button onClick={onLogout} className="p-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all flex items-center gap-2" title="Logout">
+                <span className="text-[10px] font-bold uppercase tracking-widest">Logout</span>
+                <HiOutlineLogout className="text-sm" />
+             </button>
+        </div>
+        <div className={`flex items-center gap-3 px-3 py-3 rounded-2xl transition-all duration-300 border backdrop-blur-sm ${isDark ? "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10" : "bg-gray-100/80 border-gray-200 hover:bg-gray-200/80"}`}>
+          <div className="w-11 h-11 rounded-[1rem] bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-lg font-bold text-white shadow-lg shadow-indigo-500/30">
+            {userData?.username ? userData.username.charAt(0).toUpperCase() : "S"}
           </div>
-        )}
-
-        {offlineClasses !== null && (
-          <div className="flex items-center gap-3">
-            <FaFire className="text-2xl text-orange-500" />
-            <div className="text-right hidden sm:block">
-              <p className="text-lg font-bold">{offlineClasses}</p>
-              <p className="text-xs opacity-80">Offline</p>
-            </div>
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm font-bold truncate ${isDark ? "text-gray-100" : "text-gray-900"}`}>{userData?.username || "Space Explorer"}</p>
+            <p className="text-[10px] text-gray-500 flex items-center gap-1.5 mt-0.5 font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+              {userData?.class ? `${userData.class}th Grade` : "Student"}
+            </p>
           </div>
-        )}
-
+        </div>
       </div>
-    </header>
+    </aside>
   )
 }
 
 // --- Main Layout ---
 const StudentLayout = () => {
-  const [isDark, setIsDark] = useState(true)
+  const [isDark, setIsDark] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [authStatus, setAuthStatus] = useState({
-    isLoading: true, isAuthorized: false, userData: null, correctRole: "", message: "Checking authorization...",
-  })
+  const [authStatus, setAuthStatus] = useState({ isLoading: true, isAuthorized: false, userData: null, correctRole: "", message: "Checking authorization..." })
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
-    if (isDark) document.documentElement.classList.add("dark")
-    else document.documentElement.classList.remove("dark")
+    if (isDark) {
+      document.documentElement.classList.add("dark")
+      document.body.style.backgroundColor = "#02040a" 
+    } else {
+      document.documentElement.classList.remove("dark")
+      document.body.style.backgroundColor = "#F3F4F6"
+    }
   }, [isDark])
 
   useEffect(() => {
     const authorizePage = async () => {
-      const response = await checkRole("student")
-      if (response.success) {
-        setAuthStatus({ isLoading: false, isAuthorized: true, userData: response.data, correctRole: response.data.role, message: response.message })
-      } else {
-        setAuthStatus({ isLoading: false, isAuthorized: false, userData: null, correctRole: response.data?.correctRole || "", message: response.message })
+      try {
+        const response = await checkRole("student")
+        if (response.success) {
+          setAuthStatus({ isLoading: false, isAuthorized: true, userData: response.data, correctRole: response.data.role, message: response.message })
+        } else {
+          setAuthStatus({ isLoading: false, isAuthorized: false, userData: null, correctRole: response.data?.correctRole || "", message: response.message })
+        }
+      } catch (error) {
+        setAuthStatus({ isLoading: false, isAuthorized: false, message: "Authorization failed" })
       }
     }
     authorizePage()
@@ -218,30 +202,42 @@ const StudentLayout = () => {
 
   const handleLogout = () => logout(navigate)
 
-  if (authStatus.isLoading) return <FullPageMessage isDark={isDark}><h2 className="text-2xl font-bold">{authStatus.message}</h2></FullPageMessage>
+  if (authStatus.isLoading) return <FullPageMessage isDark={isDark}><h2 className="text-xl font-bold animate-pulse text-cyan-500">Initializing Command Deck...</h2></FullPageMessage>
   
   if (!authStatus.isAuthorized) {
     const isRoleMismatch = authStatus.correctRole && authStatus.correctRole !== "student"
     return (
       <FullPageMessage isDark={isDark}>
-        <h2 className="text-3xl font-bold text-red-500 mb-4">Access Denied</h2>
-        <p className="text-lg mb-6">{authStatus.message}</p>
-        <button onClick={() => navigate(isRoleMismatch ? `/${authStatus.correctRole}/dashboard` : "/login")} className="px-6 py-3 rounded-xl font-bold text-lg text-white" style={{ background: "linear-gradient(90deg, var(--accent-teal), var(--accent-purple))" }}>
-          {isRoleMismatch ? `Go to ${authStatus.correctRole} Dashboard` : "Go to Login"}
+        <h2 className="text-2xl font-bold text-red-400 mb-4">Access Denied</h2>
+        <p className="text-gray-400 mb-6">{authStatus.message}</p>
+        <button onClick={() => navigate(isRoleMismatch ? `/${authStatus.correctRole}/dashboard` : "/login")} className="px-6 py-2 rounded-lg font-bold text-sm text-white shadow-lg shadow-cyan-500/20" style={{ background: "linear-gradient(90deg, #06b6d4, #8b5cf6)" }}>
+          {isRoleMismatch ? `Switch to ${authStatus.correctRole}` : "Return to Login"}
         </button>
       </FullPageMessage>
     )
   }
 
+  // CHECK IF WE ARE ON THE CHAT PAGE
+  const isChatPage = location.pathname.includes('/asktoai');
+
   return (
-    <div className="min-h-screen" style={{ backgroundColor: `var(${isDark ? "--bg-dark" : "--bg-light"})`, color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
-      {isSidebarOpen && <div className="fixed inset-0 z-20 bg-black/50 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
-      <Sidebar isDark={isDark} onLogout={handleLogout} onToggleTheme={() => setIsDark(!isDark)} isOpen={isSidebarOpen} />
-      <Navbar userData={authStatus.userData} onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isDark={isDark} />
-      <main className="transition-all duration-300 md:ml-72 pt-20">
-        <div className="p-6 md:p-10">
-          <Outlet context={{ isDark, userData: authStatus.userData }} /> 
-        </div>
+    <div className={`min-h-screen flex ${isDark ? "bg-[#02040a] text-gray-100" : "bg-gray-50 text-gray-900"}`}>
+      {isSidebarOpen && <div className="fixed inset-0 z-30 bg-black/80 backdrop-blur-sm md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
+      <Sidebar isDark={isDark} onLogout={handleLogout} onToggleTheme={() => setIsDark(!isDark)} isOpen={isSidebarOpen} userData={authStatus.userData} />
+      
+      <button onClick={() => setIsSidebarOpen(prev => !prev)} className="md:hidden fixed top-4 left-4 z-50 p-3 rounded-full bg-cyan-600/20 border border-cyan-500/50 text-cyan-400 backdrop-blur-md">
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+      </button>
+
+      {/* Dynamic padding:
+         If isChatPage -> p-0 (full bleed)
+         Else -> p-8 md:p-12 (standard dashboard padding)
+      */}
+      <main 
+        className={`flex-1 transition-all duration-300 md:ml-72 overflow-x-hidden 
+          ${isChatPage ? "p-0 h-screen" : "p-8 md:p-12"}`}
+      >
+        <Outlet context={{ isDark, userData: authStatus.userData }} /> 
       </main>
     </div>
   )

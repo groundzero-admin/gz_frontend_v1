@@ -30,6 +30,8 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
     { to: "/admin/dashboard/teacher", icon: <FaChalkboardTeacher />, label: "Teachers" },
     { to: "/admin/dashboard/student", icon: <FaUserGraduate />, label: "Students" },
     { to: "/admin/dashboard/invitation", icon: <FaEnvelopeOpenText />, label: "Invitations" },
+    { to: "/admin/dashboard/email-otp", icon: <FaEnvelopeOpenText />, label: "Email & OTP" },
+
 
     // ✅ NEW ATTENDANCE ROUTE ADDED
     { to: "/admin/dashboard/attendance", icon: <FaUserGraduate />, label: "Attendance" },
@@ -155,7 +157,7 @@ const FullPageMessage = ({ isDark, children }) => (
 
 // --- The Main Layout Component (Handles Auth & State) ---
 const AdminLayout = () => {
-  const [isDark, setIsDark] = useState(true) // Default to dark
+  const [isDark, setIsDark] = useState(false) // Default to light
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [authStatus, setAuthStatus] = useState({
     isLoading: true,
