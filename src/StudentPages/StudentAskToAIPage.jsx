@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion'; 
 import ReactMarkdown from 'react-markdown'; 
@@ -10,7 +10,8 @@ import {
   FaMagic, 
   FaQuestionCircle, 
   FaCompass,
-  FaArrowDown
+  FaArrowDown,
+  FaHistory
 } from 'react-icons/fa';
 import { MdAutoAwesome } from "react-icons/md";
 import { setupGeneralChatThread, loadGeneralChatHistory, askGeneralQuestion } from '../api.js';
@@ -148,21 +149,30 @@ const StudentAskToAIPage = () => {
   const userData = context?.userData || { username: "Explorer" };
   const userName = userData.username;
 
+  // --- State for Messages & Pagination ---
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState("");
   const [threadId, setThreadId] = useState(null);
-  const [isLoading, setIsLoading] = useState(true); 
-  const [isSending, setIsSending] = useState(false);
-  const hasScrolledOnLoad = useRef(false);
-
-
-  const [showScrollButton, setShowScrollButton] = useState(false);
   
+  // Loading States
+  const [isLoading, setIsLoading] = useState(true); 
+  const [isSending, setIsSending] = useState(false); 
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false); 
+
+  // Pagination State
+  const [page, setPage] = useState(1);
+  // Removed hasMore state for UI hiding purposes, now controlled by alert
+
+  // UI State
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const [companionName, setCompanionName] = useState("Spark");
   
+  // Refs
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const inputRef = useRef(null);
+  const hasScrolledOnLoad = useRef(false);
+  const prevScrollHeightRef = useRef(0); 
 
   // --- 1. Fetch Companion Name ---
   useEffect(() => {
@@ -179,43 +189,56 @@ const StudentAskToAIPage = () => {
     fetchCompanionName();
   }, [userData]);
 
+  // --- Helper: Format API Response with Unique IDs ---
+  // IMPORTANT: We generate Unique IDs here. This fixes the Framer Motion jumpiness.
+  // If we don't have IDs, React re-renders the whole list when prepending, causing animations to re-run.
+  const formatHistoryData = (data) => {
+    const formatted = [];
+    // API returns latest first. We reverse to show [Oldest ... Newest]
+    const chronologicalBatch = [...data].reverse();
+    
+    chronologicalBatch.forEach((item, index) => {
+      // Create a pseudo-unique ID using timestamp + random + index to ensure stability
+      const uniqueId = item._id || `${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`;
 
-  // --- 2. Scroll Logic ---
-  const scrollToBottom = (behavior = "smooth") => {
-    messagesEndRef.current?.scrollIntoView({ behavior: behavior, block: "end" });
+      formatted.push({ 
+        id: `req-${uniqueId}`, 
+        role: 'user', 
+        text: item.prompt 
+      });
+
+      if (item.isBadPrompt) {
+        formatted.push({ 
+          id: `resp-bad-${uniqueId}`, 
+          role: 'model', 
+          text: "I cannot answer that as it violates safety guidelines." 
+        });
+      } else if (item.response) {
+        formatted.push({ 
+          id: `resp-${uniqueId}`, 
+          role: 'model', 
+          text: item.response 
+        });
+      }
+    });
+    return formatted;
   };
 
-  const handleScroll = () => {
-    if (chatContainerRef.current) {
-      const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
-      const isNotAtBottom = scrollHeight - scrollTop - clientHeight > 300;
-      setShowScrollButton(isNotAtBottom);
-    }
-  };
-
+  // --- 2. Initial Chat Setup (Load Page 1) ---
   useEffect(() => {
     const initializeChat = async () => {
       try {
         const threadRes = await setupGeneralChatThread();
         if (!threadRes.success) {
-           setMessages([{ role: 'model', text: "I'm having trouble connecting. " + threadRes.message }]);
+           setMessages([{ id: 'err-init', role: 'model', text: "I'm having trouble connecting. " + threadRes.message }]);
            setIsLoading(false);
            return;
         }
         setThreadId(threadRes.data.thread_id);
 
-        const historyRes = await loadGeneralChatHistory();
-        if (historyRes.success && historyRes.data.length > 0) {
-          const reversedHistory = [...historyRes.data].reverse();
-          const formattedHistory = [];
-          reversedHistory.forEach(item => {
-            formattedHistory.push({ role: 'user', text: item.prompt });
-            if (item.isBadPrompt) {
-              formattedHistory.push({ role: 'model', text: "I cannot answer that as it violates safety guidelines." });
-            } else if (item.response) {
-              formattedHistory.push({ role: 'model', text: item.response });
-            }
-          });
+        const historyRes = await loadGeneralChatHistory(1, 10);
+        if (historyRes.success && Array.isArray(historyRes.data) && historyRes.data.length > 0) {
+          const formattedHistory = formatHistoryData(historyRes.data);
           setMessages(formattedHistory);
         }
       } catch (error) {
@@ -227,20 +250,84 @@ const StudentAskToAIPage = () => {
     initializeChat();
   }, []);
 
-  // --- 3. Scroll when messages update (standard behavior) ---
-  useEffect(() => {
-     if (!isLoading) scrollToBottom("smooth");
-  }, [messages, isSending]);
+  // --- 3. Scroll Logic (Button Visibility Only) ---
+  const scrollToBottom = (behavior = "smooth") => {
+    messagesEndRef.current?.scrollIntoView({ behavior: behavior, block: "end" });
+  };
+
+  const handleScroll = () => {
+    if (!chatContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+    
+    const isNotAtBottom = scrollHeight - scrollTop - clientHeight > 300;
+    setShowScrollButton(isNotAtBottom);
+  };
+
+  // --- 4. Manual Load More Handler ---
+  const handleLoadMore = async () => {
+    if (isLoadingHistory) return;
+    
+    setIsLoadingHistory(true);
+    
+    // Capture current scroll height to restore position later
+    if (chatContainerRef.current) {
+        prevScrollHeightRef.current = chatContainerRef.current.scrollHeight;
+    }
+
+    const nextPage = page + 1;
+    
+    try {
+      const res = await loadGeneralChatHistory(nextPage, 10);
+      
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        const newMessages = formatHistoryData(res.data);
+        
+        // Prepend new (older) messages
+        setMessages(prev => [...newMessages, ...prev]);
+        setPage(nextPage);
+      } else {
+        // --- ALERT IF NO MORE MESSAGES ---
+        alert("You have reached the start of the conversation.");
+      }
+    } catch (err) {
+      console.error("Pagination error", err);
+      alert("Failed to load previous messages.");
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  // --- 5. Restore Scroll Position after Pagination ---
+  useLayoutEffect(() => {
+    // If we just loaded history (prevScrollHeightRef was set), restore position
+    if (chatContainerRef.current && prevScrollHeightRef.current > 0) {
+      const newScrollHeight = chatContainerRef.current.scrollHeight;
+      const heightDifference = newScrollHeight - prevScrollHeightRef.current;
+      
+      // Jump to the previous relative position instantly
+      chatContainerRef.current.scrollTop = heightDifference;
+      prevScrollHeightRef.current = 0; 
+    } 
+    // If this is a new message being sent/received (at the bottom), auto-scroll
+    else if (!isLoadingHistory && !isLoading && hasScrolledOnLoad.current) {
+        const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+        const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+        
+        if (isNearBottom || isSending) {
+           scrollToBottom("smooth");
+        }
+    }
+  }, [messages, isLoadingHistory, isLoading, isSending]);
 
 
   const handleSend = async () => {
     if (!inputText.trim() || !threadId || isSending) return;
     const textToSend = inputText;
     setInputText("");
-    setMessages(prev => [...prev, { role: 'user', text: textToSend }]);
+    // Use Date.now() for temp ID
+    setMessages(prev => [...prev, { id: `user-${Date.now()}`, role: 'user', text: textToSend }]);
     setIsSending(true);
     
-    // Quick scroll for user message
     setTimeout(() => scrollToBottom("smooth"), 50);
 
     try {
@@ -251,9 +338,9 @@ const StudentAskToAIPage = () => {
       } else {
         botReply = response.message;
       }
-      setMessages(prev => [...prev, { role: 'model', text: botReply }]);
+      setMessages(prev => [...prev, { id: `bot-${Date.now()}`, role: 'model', text: botReply }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', text: "System error. Please try again." }]);
+      setMessages(prev => [...prev, { id: `err-${Date.now()}`, role: 'model', text: "System error. Please try again." }]);
     } finally {
       setIsSending(false);
     }
@@ -377,31 +464,46 @@ const StudentAskToAIPage = () => {
           ) 
           
           : (
-            /* THE FIX: onAnimationComplete
-              This fires only after Framer Motion has finished the fade-in.
-              At this point, the DOM is fully stable, and the scroll will work 100% of the time.
-            */
             <motion.div 
-                              key="chat"
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                          onAnimationComplete={() => {
+              key="chat"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onAnimationComplete={() => {
                   if (!hasScrolledOnLoad.current) {
                     hasScrolledOnLoad.current = true;
-                    scrollToBottom("smooth");   // smooth on first load
+                    scrollToBottom("smooth");
                   }
-                }}
-
+              }}
               className="pb-4 pt-2"
             >
-              {messages.map((msg, idx) => (
+              {/* Load More Button - ALWAYS VISIBLE if messages exist */}
+              <div className="flex justify-center w-full py-4 min-h-[60px] items-center">
+                  {isLoadingHistory ? (
+                      <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                      <button 
+                        onClick={handleLoadMore}
+                        className={`flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-full border transition-all hover:scale-105 active:scale-95 shadow-lg backdrop-blur-sm
+                          ${isDark 
+                            ? "bg-white/5 border-white/10 text-cyan-400 hover:bg-white/10" 
+                            : "bg-white/80 border-gray-200 text-cyan-600 hover:bg-white"
+                          }
+                        `}
+                      >
+                        <FaHistory className="text-[10px]" /> Load Previous Messages
+                      </button>
+                  )}
+              </div>
+
+              {messages.map((msg) => (
                 <ChatMessage 
-                  key={idx} 
+                  key={msg.id} 
                   role={msg.role} 
                   text={msg.text} 
                   isDark={isDark} 
                 />
               ))}
+              
               {isSending && (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }} 

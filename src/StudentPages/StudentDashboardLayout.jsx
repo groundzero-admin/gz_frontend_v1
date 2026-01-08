@@ -131,8 +131,9 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
 
   return (
     <aside
+      /* CHANGED: md:translate-x-0 -> lg:translate-x-0 */
       className={`fixed left-0 top-0 h-full w-72 flex flex-col z-50 transition-transform duration-300 border-r backdrop-blur-xl shadow-2xl
-        ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}
       style={{
         backgroundColor: isDark ? "rgba(2, 4, 16, 0.8)" : "rgba(255, 255, 255, 0.85)", 
@@ -275,15 +276,19 @@ const StudentLayout = () => {
 
   return (
     <div className={`min-h-screen flex ${isDark ? "bg-[#02040a] text-gray-100" : "bg-gray-50 text-gray-900"}`}>
-      {isSidebarOpen && <div className="fixed inset-0 z-30 bg-black/80 backdrop-blur-sm md:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
+      {/* CHANGED: md:hidden -> lg:hidden (Overlay appears on tablet now) */}
+      {isSidebarOpen && <div className="fixed inset-0 z-30 bg-black/80 backdrop-blur-sm lg:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
+      
       <Sidebar isDark={isDark} onLogout={handleLogout} onToggleTheme={() => setIsDark(!isDark)} isOpen={isSidebarOpen} userData={authStatus.userData} />
       
-      <button onClick={() => setIsSidebarOpen(prev => !prev)} className="md:hidden fixed top-4 left-4 z-50 p-3 rounded-full bg-cyan-600/20 border border-cyan-500/50 text-cyan-400 backdrop-blur-md">
+      {/* CHANGED: md:hidden -> lg:hidden (Burger button appears on tablet now) */}
+      <button onClick={() => setIsSidebarOpen(prev => !prev)} className="lg:hidden fixed top-4 left-4 z-50 p-3 rounded-full bg-cyan-600/20 border border-cyan-500/50 text-cyan-400 backdrop-blur-md">
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
       </button>
 
       <main 
-        className={`flex-1 transition-all duration-300 md:ml-72 overflow-x-hidden 
+        /* CHANGED: md:ml-72 -> lg:ml-72 (Margin only applied on large screens) */
+        className={`flex-1 transition-all duration-300 lg:ml-72 overflow-x-hidden 
           ${isChatPage ? "p-0 h-screen" : "p-8 md:p-12"}`}
       >
         <Outlet context={{ isDark, userData: authStatus.userData }} /> 

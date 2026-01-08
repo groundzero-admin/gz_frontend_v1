@@ -111,7 +111,7 @@ const TeacherDoubtsPage = () => {
     
     if (response.success) {
 
-        console.log(response.data )
+        // console.log(response.data )
       setDoubts(response.data);
     } else {
       // Only alert if it's a real error, not just empty list

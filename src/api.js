@@ -119,7 +119,7 @@ export const login = async (email, password, navigate) => {
     });
     const data = await response.json();
 
-    console.log(data)
+    // console.log(data)
     if (data.success) {
       const role = data.role;
       navigate(`/${role}/dashboard`);
@@ -534,20 +534,21 @@ export const setupGeneralChatThread = async () => {
 /**
  * (STUDENT) Loads the student's entire chat history.
  */
-export const loadGeneralChatHistory = async () => {
+export const loadGeneralChatHistory = async (page = 1, limit = 3) => {
   try {
     const response = await fetch(loadGeneralChatHistoryPath, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({}) // Send empty body
+      body: JSON.stringify({ page, limit })
     });
-    return await response.json(); // Returns { success: true, data: [...] }
+    return await response.json();
   } catch (error) {
     console.error("Load General Chat History error:", error);
     return { success: false, message: "Network error loading chat." };
   }
 };
+
 
 /**
  * (STUDENT) Asks a GENERAL question to the AI assistant.
