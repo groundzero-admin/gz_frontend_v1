@@ -97,13 +97,14 @@ const StudentPaymentStatusHandler = ({ isDark }) => {
                 <div className="p-2 rounded-full bg-[var(--accent-teal)] text-white text-xs">
                   <FaPhoneAlt />
                 </div>
-                <span className="font-mono font-medium" style={{ color: textColor }}>+91 98765 43210</span>
+                <span className="font-mono font-medium" style={{ color: textColor }}>+91 9618132923</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-[var(--accent-teal)] text-white text-xs">
                   <FaEnvelope />
                 </div>
-                <span className="font-mono font-medium" style={{ color: textColor }}>support@example.com</span>
+                <span className="font-mono font-medium" style={{ color: textColor }}>shivangi@groundzero.world</span>
+                <span className="font-mono font-medium" style={{ color: textColor }}>saranya@groundzero.world </span>
               </div>
             </div>
           </div>

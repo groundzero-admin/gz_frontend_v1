@@ -4,7 +4,7 @@ import { Moon, Sun, XCircle, Mail, Phone, Home, ArrowRight, RefreshCcw } from "l
 
 const PaymentFailure = () => {
   const navigate = useNavigate();
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false );
   const [countdown, setCountdown] = useState(60);
 
   // Auto-redirect logic
@@ -93,7 +93,8 @@ const PaymentFailure = () => {
                     </div>
                     <div>
                         <p className="text-xs font-bold uppercase opacity-60" style={{ color: 'var(--text-secondary)' }}>Email Support</p>
-                        <p className="font-semibold break-all" style={{ color: 'var(--text-primary)' }}>support@future-skills.com</p>
+                     <p className="font-semibold break-all" style={{ color: 'var(--text-primary)' }}>shivangi@groundzero.world</p>
+                        <p className="font-semibold break-all" style={{ color: 'var(--text-primary)' }}> saranya@groundzero.world </p>
                     </div>
                 </div>
 
@@ -104,7 +105,7 @@ const PaymentFailure = () => {
                     </div>
                     <div>
                         <p className="text-xs font-bold uppercase opacity-60" style={{ color: 'var(--text-secondary)' }}>Call Us</p>
-                        <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>+91 98765 43210</p>
+                        <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>+91  9618132923</p>
                     </div>
                 </div>
             </div>

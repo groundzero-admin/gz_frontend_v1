@@ -21,19 +21,19 @@ import AdminStudentPromptHistory from './AdminPages/AdminSpecificStudentHistory.
 import StudentAskToAIPage from './StudentPages/StudentAskToAIPage.jsx'
 import AdminBatchesPage from './AdminPages/AdminBatchesPage.jsx'
 import AdminBatchWeekPage from './AdminPages/AdminBatchSessionPage.jsx'
-import StudentMyBatches from './StudentPages/StudentMyBatches.jsx'
+// import StudentMyBatches from './StudentPages/StudentMyBatches.jsx'
 // import StudentAllBatchesPage from './StudentPages/StudentAllBatches.jsx'
 import TeacherAllLiveBatchesPage from './TeacherPages/TeacherAllBatchesPage.jsx'
 import TeacherSpecificBatchDetailPage from './TeacherPages/TeacherSpecificBatchDetails.jsx'
-import StudentDoubtsPage from './StudentPages/StudentDoubtPage.jsx'
+// import StudentDoubtsPage from './StudentPages/StudentDoubtPage.jsx'
 import TeacherDoubtsPage from './TeacherPages/TeacherDoubts.jsx'
 import AttendancePage from './AdminPages/AdminAttendance.jsx'
 import BuyCourse from './BuyCourse.jsx'
 import PaymentSuccess from './paymentsuccess.jsx'
 import PaymentFailure from './paymentfailure.jsx'
 import StudentRegistration from './StudentNewOnBoardingPage.jsx'
-import StudentRemainingSessionPurchase from './StudentPages/StudentRemainingSessionPurchase.jsx'
-import StudentPaymentStatusHandler from './StudentPages/StudentPaymentStatusHandler.jsx'
+// import StudentRemainingSessionPurchase from './StudentPages/StudentRemainingSessionPurchase.jsx'
+// import StudentPaymentStatusHandler from './StudentPages/StudentPaymentStatusHandler.jsx'
 import TeacherSignupPage from './TeacherPages/TeacherSignupPage.jsx'
 import ParentSignupPage from './ParentPages/ParentRegistration.jsx'
 import StudentSignupDirectPage from './StudentPages/StudentSignupDirectPage.jsx'
@@ -47,6 +47,7 @@ import BookOneOnOneSession_Spark from './BookOneOnOne_Spark.jsx'
 import StudentMySpacePage from './StudentPages/StudentWorkspace.jsx'
 import Admin_GetAllLinksOtp from './AdminPages/Admin_get_all_link_otp_for_mail.jsx'
 import SparkBookCatchUpSession from './StudentPages/StudentZohoCatchUpPage.jsx'
+import NotFoundPage from './NotFound404Page.jsx'
 
 
 
@@ -57,6 +58,10 @@ function App() {
   return (
     <Routes>
       {/* Route for the Landing Page */}
+
+      <Route path="*" element={<NotFoundPage />} />
+
+
       <Route path="/" element={< LandingPageMain />} />
       <Route path="/book-discovery-call-builderos" element={< BookingPage_BuilderOs />} />
       <Route path="/book-discovery-call-spark" element={< BookingPage_Spark />} />
