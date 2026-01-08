@@ -141,7 +141,8 @@ const SessionCard = ({ session, status, isDark }) => {
       if (session.sessionType === 'OFFLINE') return null;
 
       return (
-        <div className="flex gap-2 w-full">
+        // CHANGED: Added flex-col for mobile/tablet/small laptop, xl:flex-row for big screens
+        <div className="flex flex-col xl:flex-row gap-2 w-full">
           <a
             href={session.meetingLinkOrLocation || "#"}
             target={session.meetingLinkOrLocation ? "_blank" : "_self"}
@@ -200,7 +201,8 @@ const SessionCard = ({ session, status, isDark }) => {
     // --- SCENARIO 3: MISSED ---
     if (status === 'missed') {
       return (
-        <div className="flex gap-2 w-full">
+        // CHANGED: Added flex-col for mobile/tablet/small laptop, xl:flex-row for big screens
+        <div className="flex flex-col xl:flex-row gap-2 w-full">
           <a
             href={ `./dashboard/catchup-session` }
             target="_blank"
