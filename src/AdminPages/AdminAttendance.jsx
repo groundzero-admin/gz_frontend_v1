@@ -239,7 +239,7 @@ export default function AttendancePage() {
 
     if (res.success) {
        // Ideally use a toast here instead of alert
-       console.log(res.message);
+      //  console.log(res.message);
        
       setSessionStudents(prev => prev.map(s => 
         s.student_obj_id === student.student_obj_id 

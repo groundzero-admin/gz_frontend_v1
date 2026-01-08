@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Rocket, Compass, BookOpen, Linkedin, Twitter, Check, Sun, Moon, X, Loader2 } from 'lucide-react';
+import { Rocket, Compass, BookOpen, Linkedin, Twitter, Check, Sun, Moon, X, Loader2 , Sparkles , ArrowRight  } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion'; // 1. Import Framer Motion
 
@@ -280,17 +280,17 @@ const LandingPageMain = () => {
         >
           <div className={`backdrop-blur-xl border rounded-[5px] px-6 py-3 flex items-center justify-between w-full max-w-5xl shadow-2xl transition-all duration-300 ${styles.navbar}`}>
           <div className="flex items-center">
-  <img
-    src={isDark ? logoFullWhite : logoFullBlack}
-    alt="Ground Zero"
-    className="
-      h-[20px]
-      w-auto
-      object-contain
-      select-none
-    "
-  />
-</div>
+                  <img
+                    src={isDark ? logoFullWhite : logoFullBlack}
+                    alt="Ground Zero"
+                    className="
+                      h-[20px]
+                      w-auto
+                      object-contain
+                      select-none
+                    "
+                  />
+          </div>
 
             
             <div className="hidden md:flex items-center gap-8 text-sm font-medium">
@@ -333,6 +333,34 @@ const LandingPageMain = () => {
           className="relative pt-44 pb-24 px-4 flex flex-col items-center justify-center text-center min-h-[85vh]"
         >
           <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] w-[350px] h-[350px] blur-[120px] rounded-full pointer-events-none z-0 transition-colors duration-500 ${isDark ? 'bg-cyan-500/20' : 'bg-cyan-400/10'}`} />
+
+
+                  {/* NEW BUTTON ADDITION START */}
+          <motion.button
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            onClick={() => navigate('/spark')}
+            className={`
+              mb-8 px-5 py-2 rounded-full text-sm font-semibold border flex items-center gap-2 transition-all hover:scale-105 backdrop-blur-md z-10
+              ${isDark 
+                ? 'bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]' 
+                : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 shadow-sm hover:shadow-md'
+              }
+            `}
+          >
+            <Sparkles size={16} className={isDark ? "text-purple-400" : "text-purple-600"} />
+            Make your kid's future ready
+                 <ArrowRight
+                    size={16}
+                    className={`${isDark ? "text-purple-400" : "text-purple-600"} ml-1`}
+                  />
+
+
+          </motion.button>
+          {/* NEW BUTTON ADDITION END */}
+
+
 
           <HeroHeading isDark={isDark} />
           
