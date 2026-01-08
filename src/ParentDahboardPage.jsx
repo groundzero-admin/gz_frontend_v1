@@ -169,7 +169,7 @@ const HistoryRow = ({ item, isDark }) => (
 
 // --- Main Page Component ---
 const ParentDashboardPage = () => {
-  const [isDark, setIsDark] = useState(true)
+  const [isDark, setIsDark] = useState(false )
   const [authStatus, setAuthStatus] = useState({
     isLoading: true,
     isAuthorized: false,

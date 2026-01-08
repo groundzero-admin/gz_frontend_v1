@@ -230,7 +230,7 @@ const Navbar = ({ userData, onToggleSidebar, isDark }) => (
 
 // --- TeacherLayout Component ---
 const TeacherLayout = () => {
-  const [isDark, setIsDark] = useState(true)
+  const [isDark, setIsDark] = useState(false )
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [authStatus, setAuthStatus] = useState({
     isLoading: true,

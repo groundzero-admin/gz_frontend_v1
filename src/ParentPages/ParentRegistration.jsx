@@ -54,7 +54,7 @@ const ParentSignupPage = () => {
   const token = searchParams.get('token');
 
   // --- Theme State (Default to Dark) ---
-  const [isDark, setIsDark] = useState(true); 
+  const [isDark, setIsDark] = useState(false ); 
 
   // --- Logic State ---
   const [step, setStep] = useState('VALIDATING'); // VALIDATING, FORM, SUCCESS, ERROR
