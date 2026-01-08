@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import { 
   Rocket, Check, Sun, Moon, Lightbulb, BrainCircuit, Network, MessageCircle, 
   Heart, Cpu, Star, ArrowRight, X, Loader2, Calendar, Video, Twitter, Linkedin
@@ -192,6 +192,18 @@ const FormModal = ({ isOpen, onClose, url, title, isDark }) => {
 const GroundZeroSpark = () => {
   const [isDark, setIsDark] = useState(false);
   const [isWebinarOpen, setIsWebinarOpen] = useState(false); 
+
+
+  const [authState, setAuthState] = useState({
+  checked: false,
+  isLoggedIn: false,
+  role: null,
+  name: null
+});
+
+
+
+
   const navigate = useNavigate();
   const toggleTheme = () => setIsDark(!isDark);
 
@@ -207,21 +219,55 @@ const GroundZeroSpark = () => {
   const closeWebinar = () => setIsWebinarOpen(false);
 
   // --- Handle Login Click ---
-  const handleLoginClick = async () => {
+const handleLoginClick = () => {
+  if (!authState.checked) return;
+
+  if (authState.isLoggedIn) {
+    navigate(`/${authState.role}/dashboard`);
+  } else {
+    navigate('/login');
+  }
+};
+
+
+
+  useEffect(() => {
+  const checkAuth = async () => {
     try {
-      const response = await whoami();
-      
-      if (response.success && response.data) {
-        const { role } = response.data;
-        navigate(`/${role}/dashboard`);
+      const res = await whoami();
+
+      if (res?.success && res?.data?.role) {
+        setAuthState({
+          checked: true,
+          isLoggedIn: true,
+          role: res.data.role,     // "parent"
+          name: res.data.name
+        });
       } else {
-        navigate('/login');
+        setAuthState({
+          checked: true,
+          isLoggedIn: false,
+          role: null,
+          name: null
+        });
       }
-    } catch (error) {
-      console.error("Auth check failed", error);
-      navigate('/login');
+    } catch (err) {
+      console.error("whoami failed:", err);
+      setAuthState({
+        checked: true,
+        isLoggedIn: false,
+        role: null,
+        name: null
+      });
     }
   };
+
+  checkAuth();
+}, []);
+
+
+
+
 
   // --- Styles ---
   const styles = {
