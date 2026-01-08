@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion'; 
-import ReactMarkdown from 'react-markdown'; // Import Markdown
-import remarkGfm from 'remark-gfm'; // Import GFM plugin
+import ReactMarkdown from 'react-markdown'; 
+import remarkGfm from 'remark-gfm'; 
 import { 
   FaPaperPlane, 
   FaRegLightbulb, 
   FaStar, 
   FaMagic, 
   FaQuestionCircle, 
-  FaCompass 
+  FaCompass,
+  FaArrowDown
 } from 'react-icons/fa';
 import { MdAutoAwesome } from "react-icons/md";
 import { setupGeneralChatThread, loadGeneralChatHistory, askGeneralQuestion } from '../api.js';
@@ -91,7 +92,6 @@ const QuickSuggestionChip = ({ text, onClick, isDark }) => (
   </motion.button>
 );
 
-// --- UPDATED CHAT MESSAGE WITH MARKDOWN SUPPORT ---
 const ChatMessage = ({ role, text, isDark }) => {
   const isUser = role === 'user';
   return (
@@ -116,12 +116,10 @@ const ChatMessage = ({ role, text, isDark }) => {
           }
         `}
       >
-        {/* Render Markdown Here */}
         <ReactMarkdown 
           children={text} 
           remarkPlugins={[remarkGfm]}
           components={{
-            // Custom styling for specific Markdown elements to fit the chat theme
             p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
             ul: ({node, ...props}) => <ul className="list-disc pl-4 mb-2 space-y-1" {...props} />,
             ol: ({node, ...props}) => <ol className="list-decimal pl-4 mb-2 space-y-1" {...props} />,
@@ -155,9 +153,45 @@ const StudentAskToAIPage = () => {
   const [threadId, setThreadId] = useState(null);
   const [isLoading, setIsLoading] = useState(true); 
   const [isSending, setIsSending] = useState(false);
+  const hasScrolledOnLoad = useRef(false);
+
+
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  
+  const [companionName, setCompanionName] = useState("Spark");
   
   const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
   const inputRef = useRef(null);
+
+  // --- 1. Fetch Companion Name ---
+  useEffect(() => {
+    const fetchCompanionName = () => {
+        const userKey = userData.email || userData.user_number || "guest";
+        const storageKey = `student_companion_name_${userKey}`;
+        const savedName = localStorage.getItem(storageKey);
+        if (savedName && savedName.trim() !== "") {
+            setCompanionName(savedName);
+        } else {
+            setCompanionName("Spark");
+        }
+    };
+    fetchCompanionName();
+  }, [userData]);
+
+
+  // --- 2. Scroll Logic ---
+  const scrollToBottom = (behavior = "smooth") => {
+    messagesEndRef.current?.scrollIntoView({ behavior: behavior, block: "end" });
+  };
+
+  const handleScroll = () => {
+    if (chatContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+      const isNotAtBottom = scrollHeight - scrollTop - clientHeight > 300;
+      setShowScrollButton(isNotAtBottom);
+    }
+  };
 
   useEffect(() => {
     const initializeChat = async () => {
@@ -193,9 +227,11 @@ const StudentAskToAIPage = () => {
     initializeChat();
   }, []);
 
+  // --- 3. Scroll when messages update (standard behavior) ---
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+     if (!isLoading) scrollToBottom("smooth");
   }, [messages, isSending]);
+
 
   const handleSend = async () => {
     if (!inputText.trim() || !threadId || isSending) return;
@@ -203,6 +239,9 @@ const StudentAskToAIPage = () => {
     setInputText("");
     setMessages(prev => [...prev, { role: 'user', text: textToSend }]);
     setIsSending(true);
+    
+    // Quick scroll for user message
+    setTimeout(() => scrollToBottom("smooth"), 50);
 
     try {
       const response = await askGeneralQuestion(threadId, textToSend);
@@ -269,7 +308,7 @@ const StudentAskToAIPage = () => {
           </div>
           <div>
             <h2 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
-              Spark <span className="text-cyan-400 text-sm align-top">✨</span>
+              {companionName} <span className="text-cyan-400 text-sm align-top">✨</span>
             </h2>
             <p className="text-xs text-gray-500 font-medium">Friendly & Curious • Here to help you explore!</p>
           </div>
@@ -277,10 +316,13 @@ const StudentAskToAIPage = () => {
       </motion.div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 overflow-y-auto px-2 custom-scrollbar relative z-10 pt-2 pb-4">
+      <div 
+        ref={chatContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-2 custom-scrollbar relative z-10 pt-2 pb-4"
+      >
         <AnimatePresence mode="wait">
           
-          {/* 1. LOADING STATE */}
           {isLoading ? (
             <motion.div
               key="loader"
@@ -293,7 +335,6 @@ const StudentAskToAIPage = () => {
             </motion.div>
           ) 
           
-          /* 2. EMPTY STATE */
           : messages.length === 0 ? (
             <motion.div 
               key="empty"
@@ -303,11 +344,11 @@ const StudentAskToAIPage = () => {
               exit="exit"
               className="h-full flex flex-col items-center justify-center max-w-2xl mx-auto px-4"
             >
-              <div className={`p-8 rounded-3xl border mb-10 text-left w-full relative overflow-hidden shadow-2xl backdrop-blur-md
+               {/* Empty State Content */}
+               <div className={`p-8 rounded-3xl border mb-10 text-left w-full relative overflow-hidden shadow-2xl backdrop-blur-md
                  ${isDark ? "bg-[#111827]/60 border-white/10" : "bg-white/60 border-gray-200"}`}
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/20 blur-[50px] rounded-full"></div>
-                
                 <div className="flex items-start gap-5 relative z-10">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center flex-shrink-0 shadow-lg animate-pulse">
                     <MdAutoAwesome className="text-white text-xl" />
@@ -317,37 +358,40 @@ const StudentAskToAIPage = () => {
                       Hey {userName}! 👋
                     </h3>
                     <p className={`text-base leading-relaxed ${isDark ? "text-gray-300" : "text-gray-600"}`}>
-                      I'm Spark, your personal learning companion. Ask me anything, explore new topics, or let's solve a problem together!
+                      I'm {companionName}, your personal learning companion. Ask me anything, explore new topics, or let's solve a problem together!
                     </p>
                   </div>
                 </div>
               </div>
-
               <div className="w-full">
                  <p className="text-gray-500 text-sm mb-4 flex items-center gap-2 font-medium">
                    <FaRegLightbulb className="text-yellow-500" /> Not sure where to start?
                  </p>
                  <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                    {suggestions.map((s, idx) => (
-                      <BigSuggestionChip 
-                        key={idx}
-                        icon={s.icon} 
-                        text={s.text} 
-                        onClick={() => handleSuggestionClick(s.text)}
-                        isDark={isDark} 
-                      />
+                      <BigSuggestionChip key={idx} icon={s.icon} text={s.text} onClick={() => handleSuggestionClick(s.text)} isDark={isDark} />
                    ))}
                  </div>
               </div>
             </motion.div>
           ) 
           
-          /* 3. CHAT HISTORY STATE */
           : (
+            /* THE FIX: onAnimationComplete
+              This fires only after Framer Motion has finished the fade-in.
+              At this point, the DOM is fully stable, and the scroll will work 100% of the time.
+            */
             <motion.div 
-              key="chat"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+                              key="chat"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                          onAnimationComplete={() => {
+                  if (!hasScrolledOnLoad.current) {
+                    hasScrolledOnLoad.current = true;
+                    scrollToBottom("smooth");   // smooth on first load
+                  }
+                }}
+
               className="pb-4 pt-2"
             >
               {messages.map((msg, idx) => (
@@ -372,11 +416,32 @@ const StudentAskToAIPage = () => {
                    </div>
                 </motion.div>
               )}
+              {/* Invisible element to scroll to */}
               <div ref={messagesEndRef} />
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* Floating Scroll to Bottom Button */}
+      <AnimatePresence>
+        {showScrollButton && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            onClick={() => scrollToBottom("smooth")}
+            className={`absolute bottom-24 right-8 z-30 p-3 rounded-full shadow-xl border backdrop-blur-md transition-all
+              ${isDark 
+                ? "bg-[#1e293b]/90 border-white/10 text-cyan-400 hover:bg-[#1e293b]" 
+                : "bg-white/90 border-gray-200 text-cyan-600 hover:bg-white"
+              }
+            `}
+          >
+            <FaArrowDown className="text-sm" />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Input Area */}
       <motion.div 
@@ -385,16 +450,10 @@ const StudentAskToAIPage = () => {
         animate="visible"
         className="m-4 mt-0 relative z-20"
       >
-        
         {messages.length > 0 && (
           <div className="flex items-center gap-2 mb-3 overflow-x-auto no-scrollbar px-1 py-1 mask-linear-fade">
              {suggestions.map((s, idx) => (
-                <QuickSuggestionChip 
-                  key={idx}
-                  text={s.text}
-                  onClick={() => handleSuggestionClick(s.text)}
-                  isDark={isDark} 
-                />
+                <QuickSuggestionChip key={idx} text={s.text} onClick={() => handleSuggestionClick(s.text)} isDark={isDark} />
              ))}
           </div>
         )}
@@ -413,7 +472,7 @@ const StudentAskToAIPage = () => {
             type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
-            placeholder="Ask Spark anything..."
+            placeholder={`Ask ${companionName} anything...`}
             disabled={isLoading || isSending}
             className={`flex-1 bg-transparent px-4 py-3 outline-none text-sm placeholder-gray-500
               ${isDark ? "text-white" : "text-gray-900"}
@@ -434,10 +493,9 @@ const StudentAskToAIPage = () => {
         </form>
         
         <p className="text-center text-[10px] text-gray-500 mt-2 opacity-60">
-          Spark is friendly and ready to help!
+          {companionName} is friendly and ready to help!
         </p>
       </motion.div>
-
     </div>
   );
 };

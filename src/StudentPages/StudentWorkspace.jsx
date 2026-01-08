@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaPencilAlt,
-  FaPlus,
   FaStar, 
-  FaGlobeAmericas
+  FaGlobeAmericas,
+  FaTimes
 } from 'react-icons/fa';
 import { MdOutlineRocketLaunch } from "react-icons/md"; 
 import { MessageCircle, Sparkles, Star } from 'lucide-react';
@@ -120,7 +120,6 @@ const ProfileCard = ({ userData, isDark, onProfileUpdate }) => {
     return (
       <motion.div 
         variants={cardVariants} 
-        // Added Hover Scale Effect
         whileHover={{ scale: 1.01 }} 
         className="relative col-span-1 md:col-span-2 mb-6 z-10"
       >
@@ -133,7 +132,6 @@ const ProfileCard = ({ userData, isDark, onProfileUpdate }) => {
            {!isEditing ? (
                <button 
                 onClick={() => setIsEditing(true)} 
-                // Added Hover Scale Effect to Button
                 className="flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500 hover:bg-cyan-400 hover:scale-105 active:scale-95 text-white font-bold text-xs transition-all shadow-lg shadow-cyan-500/30"
                >
                   <FaPencilAlt /> Customize
@@ -150,8 +148,9 @@ const ProfileCard = ({ userData, isDark, onProfileUpdate }) => {
            )}
         </div>
   
+        {/* Removed backdrop-blur-md to fix hover blur issue */}
         <div className={`relative p-8 rounded-3xl border overflow-hidden transition-all duration-300
-          ${isDark ? "bg-[#13111C]/60 border-yellow-500/20 backdrop-blur-md" : "bg-white/40 border-yellow-400/50 backdrop-blur-md shadow-xl"}
+          ${isDark ? "bg-[#13111C]/80 border-yellow-500/20" : "bg-white/60 border-yellow-400/50 shadow-xl"}
         `}>
           <MdOutlineRocketLaunch 
             className={`absolute -right-6 -bottom-6 text-9xl opacity-[0.07] rotate-[-45deg] pointer-events-none
@@ -161,7 +160,7 @@ const ProfileCard = ({ userData, isDark, onProfileUpdate }) => {
 
           <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
               <div className="relative group">
-                  <div className={`absolute inset-0 rounded-full blur-md opacity-70 transition-all duration-500 group-hover:blur-lg
+                  <div className={`absolute inset-0 rounded-full blur-md opacity-70 transition-all duration-500
                       ${isDark ? "bg-gradient-to-tr from-yellow-400 via-purple-500 to-cyan-500" : "bg-gradient-to-tr from-yellow-300 via-pink-400 to-cyan-400"}
                   `}></div>
                   <div className={`relative w-28 h-28 rounded-full flex items-center justify-center text-5xl font-bold border-4 shadow-2xl
@@ -237,11 +236,11 @@ const CompanionCard = ({ isDark, userData }) => {
 
     useEffect(() => {
         const saved = localStorage.getItem(storageKey);
-        setCompanionName(saved || "Spark");
+        setCompanionName(saved || "");
     }, [storageKey]); 
 
     const handleSave = () => {
-        const nameToSave = companionName.trim() === "" ? "Spark" : companionName;
+        const nameToSave = companionName.trim();
         setCompanionName(nameToSave);
         localStorage.setItem(storageKey, nameToSave);
         setIsEditing(false);
@@ -250,10 +249,10 @@ const CompanionCard = ({ isDark, userData }) => {
     return (
         <motion.div 
           variants={cardVariants} 
-          // Added Hover Scale Effect
           whileHover={{ scale: 1.02 }}
+          // Removed backdrop-blur-md
           className={`p-6 rounded-3xl border flex flex-col h-full shadow-lg relative overflow-hidden group transition-all duration-300 z-10
-          ${isDark ? "bg-[#13111C]/60 border-white/5 backdrop-blur-md" : "bg-white/40 border-blue-100 shadow-blue-500/5 backdrop-blur-md"}
+          ${isDark ? "bg-[#13111C]/80 border-white/5" : "bg-white/60 border-blue-100 shadow-blue-500/5"}
         `}>
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
@@ -263,18 +262,10 @@ const CompanionCard = ({ isDark, userData }) => {
                     <p className={`text-[10px] ${isDark ? "text-gray-500" : "text-slate-400"}`}>Here is your learning companion</p>
                 </div>
             </div>
-            <button 
-                onClick={() => setIsEditing(true)}
-                // Added Hover Scale Effect to Pencil
-                className={`p-1.5 rounded-full transition-all opacity-30 hover:opacity-100 hover:scale-110 active:scale-95 ${isDark ? "hover:bg-white/10 text-white" : "hover:bg-gray-100 text-slate-600"}`}
-            >
-                <FaPencilAlt size={12} />
-            </button>
           </div>
           
           <div className="flex flex-col gap-1 flex-1">
-              <div className="relative">
-                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">NAME YOUR COMPANION</p>
+              <div className="relative flex items-center gap-2 mt-2">
                  {isEditing ? (
                      <input 
                         autoFocus
@@ -283,19 +274,27 @@ const CompanionCard = ({ isDark, userData }) => {
                         onChange={(e) => setCompanionName(e.target.value)}
                         onBlur={handleSave} 
                         onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                        className={`w-full bg-transparent text-xl font-bold outline-none border-b-2 pb-1 ${isDark ? "text-cyan-400 border-cyan-500/50" : "text-cyan-600 border-cyan-400/50"}`} 
+                        placeholder="Name your companion..."
+                        className={`w-full bg-transparent text-xl font-bold outline-none border-b-2 pb-1 ${isDark ? "text-cyan-400 border-cyan-500/50 placeholder:text-white/20" : "text-cyan-600 border-cyan-400/50 placeholder:text-gray-400"}`} 
                      />
                  ) : (
-                    <h4 
+                    <div 
                         onClick={() => setIsEditing(true)} 
-                        className={`text-xl font-bold truncate cursor-pointer ${isDark ? "text-cyan-400" : "text-cyan-600"}`}
+                        className="flex items-center gap-3 w-full cursor-pointer group"
                     >
-                        {companionName}
-                    </h4>
+                        <h4 className={`text-xl font-bold truncate ${companionName ? (isDark ? "text-cyan-400" : "text-cyan-600") : "text-gray-400/60 italic"}`}>
+                            {companionName || "Name your companion..."}
+                        </h4>
+                        
+                        <FaPencilAlt 
+                           size={12} 
+                           className={`opacity-30 group-hover:opacity-100 transition-all ${isDark ? "text-white" : "text-slate-600"}`} 
+                        />
+                    </div>
                  )}
               </div>
 
-              <div className="flex items-center gap-3 my-2">
+              <div className="flex items-center gap-3 my-4">
                   <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
                       <Sparkles className="text-white w-6 h-6 animate-pulse" />
                   </div>
@@ -308,7 +307,7 @@ const CompanionCard = ({ isDark, userData }) => {
               
               <div className="mt-auto -mb-1">
                   <div className={`p-4 rounded-2xl text-xs italic relative border ${isDark ? "bg-white/5 border-white/5 text-gray-400" : "bg-white/60 border-blue-50 text-slate-600 shadow-sm"}`}>
-                      "Hi! I'm {companionName}. Let's solve some mysteries today!"
+                      "Hi! I'm {companionName || "your friend"}. Let's solve some mysteries today!"
                   </div>
               </div>
           </div>
@@ -324,7 +323,7 @@ const MissionCard = ({ isDark, userData }) => {
     const storageKey = `student_mission_${userKey}`;
 
     useEffect(() => { 
-        setMission(localStorage.getItem(storageKey) || "Build my own video game"); 
+        setMission(localStorage.getItem(storageKey) || ""); 
     }, [storageKey]);
 
     const handleChange = (e) => {
@@ -335,20 +334,22 @@ const MissionCard = ({ isDark, userData }) => {
     return (
         <motion.div 
             variants={cardVariants} 
-            // Added Hover Scale Effect
             whileHover={{ scale: 1.02 }}
-            className={`p-6 rounded-3xl border flex flex-col h-full shadow-lg relative overflow-hidden z-10 ${isDark ? "bg-[#13111C]/60 border-white/5 backdrop-blur-md" : "bg-white/40 border-purple-100 backdrop-blur-md"}`}
+            // Removed backdrop-blur-md
+            className={`p-6 rounded-3xl border flex flex-col h-full shadow-lg relative overflow-hidden z-10 ${isDark ? "bg-[#13111C]/80 border-white/5" : "bg-white/60 border-purple-100"}`}
         >
             <div className={`absolute bottom-0 right-0 w-32 h-32 blur-[50px] rounded-full pointer-events-none opacity-50 ${isDark ? "bg-purple-500/20" : "bg-purple-300/30"}`}></div>
             
             <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                     <MdOutlineRocketLaunch size={18} className="text-purple-400" />
-                    <div><h3 className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-800"}`}>My Mission</h3><p className={`text-[10px] ${isDark ? "text-gray-500" : "text-slate-400"}`}>What do you want to achieve?</p></div>
+                    <div>
+                        <h3 className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-800"}`}>My Mission</h3>
+                        <p className={`text-[10px] ${isDark ? "text-gray-500" : "text-slate-400"}`}>What do you want to achieve?</p>
+                    </div>
                 </div>
                 <button 
                     onClick={() => inputRef.current?.focus()} 
-                    // Added Hover Scale Effect to Pencil
                     className={`opacity-30 hover:opacity-100 hover:scale-110 active:scale-95 transition-all ${isDark ? "text-white" : "text-slate-600"}`}
                 >
                     <FaPencilAlt size={12} />
@@ -359,7 +360,9 @@ const MissionCard = ({ isDark, userData }) => {
                 ref={inputRef}
                 value={mission} 
                 onChange={handleChange} 
-                className={`w-full h-full bg-transparent resize-none outline-none text-2xl font-bold leading-tight placeholder-gray-400/50 ${isDark ? "text-white" : "text-slate-900"}`} 
+                className={`w-full h-full bg-transparent resize-none outline-none text-2xl font-bold leading-tight 
+                    ${isDark ? "text-white placeholder:text-white/20" : "text-slate-900 placeholder:text-gray-300"}
+                `} 
                 placeholder="Type your big goal here..." 
             />
         </motion.div>
@@ -374,7 +377,7 @@ const QuickFactsCard = ({ userData, isDark }) => {
     const storageKey = `student_cool_thing_${userKey}`;
 
     useEffect(() => { 
-        setCoolThing(localStorage.getItem(storageKey) || "I can code in Python! 🐍"); 
+        setCoolThing(localStorage.getItem(storageKey) || ""); 
     }, [storageKey]);
 
     const handleChange = (e) => {
@@ -385,9 +388,9 @@ const QuickFactsCard = ({ userData, isDark }) => {
     return (
         <motion.div 
             variants={cardVariants} 
-            // Added Hover Scale Effect
             whileHover={{ scale: 1.02 }}
-            className={`p-6 rounded-3xl border flex flex-col shadow-lg h-full z-10 ${isDark ? "bg-[#13111C]/60 border-white/5 backdrop-blur-md" : "bg-white/40 border-orange-100 backdrop-blur-md"}`}
+            // Removed backdrop-blur-md
+            className={`p-6 rounded-3xl border flex flex-col shadow-lg h-full z-10 ${isDark ? "bg-[#13111C]/80 border-white/5" : "bg-white/60 border-orange-100"}`}
         >
             <div className="flex items-center gap-2 mb-6"><FaStar size={18} className="text-yellow-400" /><h3 className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-800"}`}>Quick Facts</h3></div>
             <div className="flex gap-12 mb-6">
@@ -399,7 +402,6 @@ const QuickFactsCard = ({ userData, isDark }) => {
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">ONE COOL THING ABOUT ME</p>
                     <button 
                         onClick={() => inputRef.current?.focus()} 
-                        // Added Hover Scale Effect to Pencil
                         className={`opacity-30 hover:opacity-100 hover:scale-110 active:scale-95 transition-all ${isDark ? "text-white" : "text-slate-600"}`}
                     >
                         <FaPencilAlt size={12} />
@@ -410,68 +412,136 @@ const QuickFactsCard = ({ userData, isDark }) => {
                     type="text" 
                     value={coolThing} 
                     onChange={handleChange} 
-                    className={`w-full bg-transparent border-b py-1 text-sm outline-none focus:border-yellow-500 transition-colors font-medium ${isDark ? "border-white/10 text-gray-200" : "border-gray-300 text-slate-800 focus:border-yellow-500"}`} 
+                    placeholder="Tell us one more cool thing..."
+                    className={`w-full bg-transparent border-b py-1 text-sm outline-none focus:border-yellow-500 transition-colors font-medium 
+                        ${isDark 
+                            ? "border-white/10 text-gray-200 placeholder:text-white/20" 
+                            : "border-gray-300 text-slate-800 focus:border-yellow-500 placeholder:text-gray-400"
+                        }`} 
                 />
             </div>
         </motion.div>
     );
 };
 
+// --- UPDATED INTERESTS CARD ---
 const InterestsCard = ({ isDark, userData }) => {
     const [tags, setTags] = useState([]);
-    const defaultInterests = ["Coding", "Robotics", "Gaming", "Science", "Drawing", "Music", "Reading", "Space"];
+    const [newInterest, setNewInterest] = useState("");
+    
+    // Default options (The "old" small cards)
+    const defaultInterests = ["Coding" , "Science", "Drawing", "Space"];
     
     const userKey = userData?.email || userData?.user_number || "guest";
     const storageKey = `student_interests_${userKey}`;
 
     useEffect(() => { 
         const saved = localStorage.getItem(storageKey); 
-        setTags(saved ? JSON.parse(saved) : ["Coding", "Gaming", "Robotics"]); 
+        setTags(saved ? JSON.parse(saved) : ["Coding", "Gaming"]); 
     }, [storageKey]);
     
-    const toggleTag = (tag) => { 
-        const newTags = tags.includes(tag) ? tags.filter(t => t !== tag) : [...tags, tag]; 
+    const toggleTag = (tag) => {
+        let newTags;
+        if (tags.includes(tag)) {
+            newTags = tags.filter(t => t !== tag);
+        } else {
+            newTags = [...tags, tag];
+        }
         setTags(newTags); 
         localStorage.setItem(storageKey, JSON.stringify(newTags)); 
+    };
+
+    const handleKeyDown = (e) => {
+        // Pressing Enter adds the tag
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Prevent creating a new line in the textarea
+            const trimmed = newInterest.trim();
+            if (trimmed && !tags.includes(trimmed)) {
+                 const newTags = [...tags, trimmed];
+                 setTags(newTags); 
+                 localStorage.setItem(storageKey, JSON.stringify(newTags)); 
+                 setNewInterest("");
+            }
+        }
     };
     
     return (
         <motion.div 
             variants={cardVariants} 
-            // Added Hover Scale Effect
             whileHover={{ scale: 1.02 }}
             className={`p-6 rounded-3xl border flex flex-col shadow-lg h-full z-10 
             ${isDark 
-                ? "bg-[#13111C]/60 border-white/5 backdrop-blur-md" 
-                : "bg-white/40 border-violet-100 shadow-violet-500/5 backdrop-blur-md"
+                ? "bg-[#13111C]/80 border-white/5" 
+                : "bg-white/60 border-violet-100 shadow-violet-500/5"
             }
         `}>
-            <div className="flex items-center gap-2 mb-4">
-                <FaStar size={18} className={isDark ? "text-pink-400" : "text-violet-500"} />
-                <div>
-                  <h3 className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-800"}`}>What I Like</h3>
-                  <p className={`text-[10px] ${isDark ? "text-gray-500" : "text-slate-400"}`}>Pick the things you enjoy.</p>
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                    <FaStar size={18} className={isDark ? "text-pink-400" : "text-violet-500"} />
+                    <div>
+                        <h3 className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-800"}`}>What I Like</h3>
+                        <p className={`text-[10px] ${isDark ? "text-gray-500" : "text-slate-400"}`}>Pick favorites or add your own.</p>
+                    </div>
                 </div>
             </div>
-            <div className="flex flex-wrap gap-2 content-start">
-              {defaultInterests.map((interest) => {
+
+            {/* Multi-line Input Field (Textarea) */}
+            <div className="relative mb-4 flex-1">
+                <textarea 
+                    value={newInterest}
+                    onChange={(e) => setNewInterest(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Type an interest and press Enter..." 
+                    className={`w-full h-full bg-transparent border rounded-xl p-3 text-sm outline-none font-bold resize-none
+                        ${isDark 
+                            ? "border-white/10 text-white placeholder:text-white/20 focus:border-pink-400 focus:bg-white/5" 
+                            : "border-gray-300 text-slate-800 placeholder:text-gray-400 focus:border-violet-400 focus:bg-white"
+                        }
+                    `}
+                    style={{ minHeight: '60px' }} 
+                />
+                 <FaPencilAlt size={12} className={`absolute right-3 top-3 opacity-30 ${isDark ? "text-white" : "text-slate-600"}`} />
+            </div>
+            
+            {/* Tags Display Area (Defaults + Custom) */}
+            <div className="flex flex-wrap gap-2 content-start overflow-y-auto max-h-[100px] scrollbar-hide">
+              {/* 1. Render Default Options */}
+              {defaultInterests.map(interest => {
                   const isSelected = tags.includes(interest);
                   return (
                     <button 
-                      key={interest} 
-                      onClick={() => toggleTag(interest)} 
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 border flex items-center gap-2 hover:scale-105 active:scale-95
-                      ${isSelected 
-                        ? "bg-cyan-500 border-cyan-400 text-white shadow-lg shadow-cyan-500/20 scale-105" 
-                        : isDark 
-                          ? "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10" 
-                          : "bg-white border-violet-200 text-slate-600 hover:bg-violet-50 hover:border-violet-300"
-                      }`
-                    }>
+                        key={interest}
+                        onClick={() => toggleTag(interest)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 border flex items-center gap-2 hover:scale-105 active:scale-95
+                            ${isSelected 
+                                ? "bg-cyan-500 border-cyan-400 text-white shadow-lg shadow-cyan-500/20" 
+                                : isDark 
+                                    ? "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10" 
+                                    : "bg-white border-violet-200 text-slate-600 hover:bg-violet-50 hover:border-violet-300"
+                            }
+                        `}
+                    >
                         {interest}
                     </button>
                   )
               })}
+
+              {/* 2. Render Custom Added Tags */}
+              <AnimatePresence>
+                {tags.filter(t => !defaultInterests.includes(t)).map(tag => (
+                    <motion.button 
+                        key={tag} 
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        onClick={() => toggleTag(tag)}
+                        className={`group px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-300 border flex items-center gap-2 hover:scale-105 active:scale-95 bg-cyan-500 border-cyan-400 text-white shadow-lg shadow-cyan-500/20`}
+                    >
+                        {tag}
+                        <FaTimes className="text-[10px] opacity-50 group-hover:opacity-100" />
+                    </motion.button>
+                ))}
+              </AnimatePresence>
             </div>
         </motion.div>
     );
