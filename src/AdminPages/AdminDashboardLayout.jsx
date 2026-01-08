@@ -25,16 +25,16 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
   const currentPath = location.pathname
 
   const sidebarLinks = [
-    { to: "/admin/dashboard/request", icon: <FaRegLightbulb />, label: "Requests" },
+    { to: "/admin/dashboard/request", icon: <FaRegLightbulb />, label: "Paid Registration Requests" },
     { to: "/admin/dashboard/batches", icon: <FaBook />, label: "Batches" },
     { to: "/admin/dashboard/teacher", icon: <FaChalkboardTeacher />, label: "Teachers" },
-    { to: "/admin/dashboard/student", icon: <FaUserGraduate />, label: "Students" },
-    { to: "/admin/dashboard/invitation", icon: <FaEnvelopeOpenText />, label: "Invitations" },
-    { to: "/admin/dashboard/email-otp", icon: <FaEnvelopeOpenText />, label: "Email & OTP" },
+    { to: "/admin/dashboard/student", icon: <FaUserGraduate />, label: "Students Info" },
+    { to: "/admin/dashboard/invitation", icon: <FaEnvelopeOpenText />, label: "Invite New User" },
+    { to: "/admin/dashboard/email-otp", icon: <FaEnvelopeOpenText />, label: "Onboarding Links & OTP" },
 
 
     // ✅ NEW ATTENDANCE ROUTE ADDED
-    { to: "/admin/dashboard/attendance", icon: <FaUserGraduate />, label: "Attendance" },
+    { to: "/admin/dashboard/attendance", icon: <FaUserGraduate />, label: "Mark Attendance" },
   ]
 
 
