@@ -17,7 +17,8 @@ import {
   FaExternalLinkAlt,
   FaCopy,
   FaCheck,
-  FaTrash
+  FaTrash ,
+ FaFileImport
 } from "react-icons/fa";
 
 // Import API functions
@@ -266,8 +267,8 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit, isDark }) => {
   );
 };
 
-// --- Session Modal (Handles Create AND Edit) ---
-const SessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSession, batchDetails }) => {
+// --- Updated Session Modal with Full Import (Date & Time included) ---
+const SessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSession, batchDetails, existingSessions = [] }) => {
   const [formData, setFormData] = useState({
     session_number: '',
     title: '',
@@ -279,6 +280,10 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSession, batch
     googleClassroomLink: '' 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Import Feature State
+  const [showImportInput, setShowImportInput] = useState(false);
+  const [importSessionNum, setImportSessionNum] = useState("");
 
   const isOnline = (batchDetails?.batchType || '').toUpperCase() === 'ONLINE';
 
@@ -295,18 +300,57 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSession, batch
         googleClassroomLink: editingSession.googleClassroomLink || ''
       });
     } else {
+      // Create Mode Default
+      const maxSessionNum = existingSessions.reduce((max, s) => Math.max(max, Number(s.session_number || 0)), 0);
       setFormData(prev => ({
         ...prev,
+        session_number: String(maxSessionNum + 1), 
         title: '', description: '', date: '', meetingLinkOrLocation: '', googleClassroomLink: ''
       }));
     }
-  }, [editingSession, isOpen]);
+    setShowImportInput(false);
+    setImportSessionNum("");
+  }, [editingSession, isOpen, existingSessions]);
 
   if (!isOpen) return null;
 
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  // --- Logic: Import From Old Session ---
+  const handleImport = () => {
+    const targetNum = Number(importSessionNum);
+    if (!targetNum) return;
+
+    const sourceSession = existingSessions.find(s => Number(s.session_number) === targetNum);
+
+    if (sourceSession) {
+      setFormData(prev => ({
+        ...prev,
+        // Clone Content
+        title: sourceSession.title || "",
+        description: sourceSession.description || "",
+        
+        // --- UPDATED: Clone Date and Time ---
+        date: sourceSession.date ? new Date(sourceSession.date).toISOString().split('T')[0] : "",
+        startTime: sourceSession.startTime || "10:00 AM",
+        endTime: sourceSession.endTime || "11:00 AM",
+        
+        // Clone Links
+        meetingLinkOrLocation: sourceSession.meetingLinkOrLocation || "",
+        googleClassroomLink: sourceSession.googleClassroomLink || "",
+        
+        // Logic: Create Mode = Next #, Edit Mode = Same #
+        session_number: editingSession ? prev.session_number : String(sourceSession.session_number)
+      }));
+      
+      setShowImportInput(false);
+      setImportSessionNum("");
+    } else {
+      alert(`Session ${targetNum} not found in this batch.`);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -333,11 +377,7 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSession, batch
     
     if (success) {
       if (!editingSession) {
-        setFormData(prev => ({ 
-          ...prev, 
-          session_number: String(Number(prev.session_number) + 1), 
-          title: '', description: '', date: '', meetingLinkOrLocation: '', googleClassroomLink: '' 
-        }));
+        setFormData(prev => ({ ...prev, title: '', description: '' }));
       }
       onClose();
     }
@@ -356,18 +396,64 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSession, batch
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(5px)" }}>
       <div 
-        className="relative w-full max-w-lg p-6 rounded-2xl border max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-lg p-6 rounded-2xl border max-h-[90vh] overflow-y-auto custom-scrollbar"
         style={{
           backgroundColor: `var(${isDark ? "--bg-dark" : "--bg-light"})`,
           borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
           color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`
         }}
       >
-        <button onClick={onClose} className="absolute top-5 right-5 text-lg opacity-70 hover:opacity-100"><FaTimes /></button>
-        <h2 className="text-xl font-bold mb-6">
-          {editingSession ? "Edit Session" : "Create New Session"}
-        </h2>
+        {/* Header Actions */}
+        <div className="flex justify-between items-start mb-6">
+          <h2 className="text-xl font-bold">
+            {editingSession ? "Edit Session" : "Create New Session"}
+          </h2>
+          
+          <div className="flex items-center gap-2">
+            {/* Import Button */}
+            <button 
+              type="button"
+              onClick={() => setShowImportInput(!showImportInput)}
+              className="px-3 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-2 transition hover:bg-blue-500 hover:text-white hover:border-blue-500"
+              style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}
+              title="Import from another session"
+            >
+              <FaFileImport /> Import from prev session
+            </button>
+
+            <button onClick={onClose} className="p-2 text-lg opacity-70 hover:opacity-100"><FaTimes /></button>
+          </div>
+        </div>
         
+        {/* --- IMPORT INPUT AREA (Visible only when Import clicked) --- */}
+        {showImportInput && (
+          <div className="mb-6 p-4 rounded-xl border border-dashed border-blue-500/50 bg-blue-500/10 animate-fade-in">
+             <label className="block text-xs font-bold text-blue-600 mb-2 uppercase">Import from Old Session</label>
+             <div className="flex gap-2">
+               <input 
+                  type="number"
+                  value={importSessionNum}
+                  onChange={(e) => setImportSessionNum(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleImport()}
+                  className="flex-1 px-3 py-2 text-sm rounded border"
+                  style={inputStyle}
+                  placeholder="Enter Session Number (e.g. 3)"
+                  autoFocus
+               />
+               <button 
+                 type="button" 
+                 onClick={handleImport} 
+                 className="px-4 py-2 text-xs rounded bg-blue-600 text-white font-bold hover:bg-blue-700 whitespace-nowrap"
+               >
+                 Clone & Fill
+               </button>
+             </div>
+             <p className="text-[10px] mt-2 opacity-60">
+               Clones Date, Time, Title & Links. Sets Session # to <span className="font-bold">Next (+1)</span>.
+             </p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           
           <div className="grid grid-cols-4 gap-4">
@@ -382,7 +468,7 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSession, batch
                 style={inputStyle} 
                 required 
                 placeholder="1"
-                disabled={!!editingSession}
+                disabled={!!editingSession} 
               />
             </div>
             <div className="col-span-3">
@@ -452,6 +538,10 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSession, batch
     </div>
   );
 };
+
+
+
+
 
 // --- Helper: Link Action Button ---
 const LinkActionButton = ({ url, label, icon: Icon, colorClass, isDark }) => {
@@ -881,6 +971,9 @@ const AdminBatchSessionPage = () => {
         isDark={isDark}
         batchDetails={batchDetails}
         editingSession={editingSession}
+
+        existingSessions={sessions}
+
       />
 
       <AddStudentModal 
