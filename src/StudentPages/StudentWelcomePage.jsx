@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , useRef } from 'react';
 import { useOutletContext } from 'react-router-dom'; 
 import { motion, AnimatePresence } from 'framer-motion'; 
 import { 
@@ -13,7 +13,8 @@ import {
   Video, 
   CalendarPlus, 
   Star,
-  BookOpen
+  BookOpen 
+
 } from 'lucide-react';
 import { BsStars } from "react-icons/bs"; 
 
@@ -64,16 +65,16 @@ const WelcomeBanner = ({ username }) => {
     let icon = "";
 
     if (hour >= 5 && hour < 12) {
-      newGreeting = "Rise and shine, space explorer!";
+      newGreeting = "Rise and shine ";
       icon = "☀️";
     } else if (hour >= 12 && hour < 17) {
-      newGreeting = "Afternoon mission check!";
+      newGreeting = "Afternoon mission check ";
       icon = "🚀";
     } else if (hour >= 17 && hour < 21) {
-      newGreeting = "Good evening, stargazer!";
+      newGreeting = "Good evening ";
       icon = "🌌";
     } else {
-      newGreeting = "Hello night owl!";
+      newGreeting = "Hello night owl ";
       icon = "🦉";
     }
 
@@ -109,29 +110,36 @@ const WelcomeBanner = ({ username }) => {
              Spark Ground Zero
            </h1>
            <p className="text-xl md:text-2xl font-medium text-gray-300 flex items-center gap-2">
-              <span className="text-2xl">{greetingData.icon}</span> {greetingData.text}, <span className="text-cyan-400 font-bold">{username}</span>!
+              <span className="text-2xl">{greetingData.icon}</span> {greetingData.text},  <span className="text-cyan-400 font-bold">{username}</span>!
            </p>
         </div>
-        <p className="text-gray-400 max-w-xl text-sm md:text-base leading-relaxed">
-          Ready to explore, create, and discover? Your learning adventure continues here ✨
+        <p className="text-gray-400 max-w-3xl text-sm md:text-base leading-relaxed">
+          Ready to explore, create, and discover? Your learning adventure continues here✨
         </p>
       </div>
     </motion.div>
   );
 };
 
+
+
 // --- Component: Session Card ---
 const SessionCard = ({ session, status, isDark }) => {
+  // State to track if the user is hovering over the description
+  const [isDescHovered, setIsDescHovered] = useState(false);
+
   const statusStyles = {
     upcoming: 'border-cyan-500/40 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]',
     completed: 'border-emerald-500/40 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)]',
     missed: 'border-amber-500/40 hover:shadow-[0_0_20px_rgba(245,158,11,0.15)]',
   };
 
-  const calendlyLink = 'https://calendly.com/spark-ground-zero/follow-up-session';
-
   const getActionButton = () => {
+    // --- SCENARIO 1: UPCOMING ---
     if (status === 'upcoming') {
+      // FIX: If Offline, do not show any buttons (Location is purely informational)
+      if (session.sessionType === 'OFFLINE') return null;
+
       return (
         <div className="flex gap-2 w-full">
           <a
@@ -169,7 +177,11 @@ const SessionCard = ({ session, status, isDark }) => {
       );
     }
 
+    // --- SCENARIO 2: COMPLETED ---
     if (status === 'completed') {
+       // FIX: If Offline, hide the Classroom button
+       if (session.sessionType === 'OFFLINE') return null;
+
       return (
         <a
           href={session.googleClassroomLink || "#"}
@@ -185,6 +197,7 @@ const SessionCard = ({ session, status, isDark }) => {
       );
     }
 
+    // --- SCENARIO 3: MISSED ---
     if (status === 'missed') {
       return (
         <div className="flex gap-2 w-full">
@@ -198,25 +211,27 @@ const SessionCard = ({ session, status, isDark }) => {
             Catch Up
           </a>
 
-          <a
-            href={session.googleClassroomLink || "#"}
-            target={session.googleClassroomLink ? "_blank" : "_self"}
-            rel="noopener noreferrer"
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold border
-                ${isDark 
-                  ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white" 
-                  : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black"
-                }
-                ${!session.googleClassroomLink ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
-            `}
-          >
-            <BookOpen className="w-4 h-4" />
-            Classroom
-          </a>
+          {/* FIX: Only show Classroom button if NOT offline */}
+          {session.sessionType !== 'OFFLINE' && (
+            <a
+              href={session.googleClassroomLink || "#"}
+              target={session.googleClassroomLink ? "_blank" : "_self"}
+              rel="noopener noreferrer"
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold border
+                  ${isDark 
+                    ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white" 
+                    : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black"
+                  }
+                  ${!session.googleClassroomLink ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
+              `}
+            >
+              <BookOpen className="w-4 h-4" />
+              Classroom
+            </a>
+          )}
         </div>
       );
     }
-
     return null;
   };
 
@@ -225,8 +240,9 @@ const SessionCard = ({ session, status, isDark }) => {
 
   return (
     <motion.div
+      layout // This ensures the whole card resizes smoothly when children resize
       variants={itemVariants} 
-      className={`backdrop-blur-sm border-2 rounded-3xl p-5 transition-all duration-300 hover:-translate-y-1 flex flex-col h-full
+      className={`backdrop-blur-sm border-2 rounded-3xl p-5 transition-all duration-300 flex flex-col h-full
         ${statusStyles[status]}
         ${isDark ? "bg-gray-900/40" : "bg-white/60"}
       `}
@@ -257,6 +273,60 @@ const SessionCard = ({ session, status, isDark }) => {
             <span className="text-sm">{session.meetingLinkOrLocation || "Location TBD"}</span>
           </div>
         )}
+
+        {/* --- NEW DESCRIPTION SECTION (With fix) --- */}
+        {session.description && (
+          <motion.div 
+            layout
+            onHoverStart={() => setIsDescHovered(true)}
+            onHoverEnd={() => setIsDescHovered(false)}
+            className={`relative rounded-xl p-3 mt-2 cursor-pointer border transition-colors duration-300
+              ${isDark 
+                ? "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20" 
+                : "bg-gray-50 border-gray-100 hover:bg-gray-100 hover:border-gray-200"
+              }
+            `}
+          >
+            {/* Simple Static Header */}
+            <div className="flex items-center gap-2 mb-1 opacity-70">
+              <span className="text-[10px] font-bold uppercase tracking-wider">
+                Session Details
+              </span>
+            </div>
+
+            {/* Animating Text Container with min-h */}
+            <motion.div
+              initial={{ height: "2.5rem" }} 
+              animate={{ height: isDescHovered ? "auto" : "2.5rem" }}
+              transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
+              className="overflow-hidden min-h-[2.5rem]" 
+            >
+              <p 
+                className={`text-xs leading-relaxed whitespace-pre-line
+                  ${isDark ? "text-gray-300" : "text-gray-600"}
+                `}
+              >
+                {session.description}
+              </p>
+            </motion.div>
+
+            {/* Visual Fade Indicator */}
+            <AnimatePresence>
+              {!isDescHovered && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className={`absolute bottom-0 left-0 right-0 h-6 rounded-b-xl bg-gradient-to-t pointer-events-none
+                    ${isDark ? "from-[#111827] to-transparent" : "from-white to-transparent"}
+                  `} 
+                />
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+        {/* --- END DESCRIPTION SECTION --- */}
+
       </div>
 
       <div className="mt-auto pt-2">
@@ -266,9 +336,50 @@ const SessionCard = ({ session, status, isDark }) => {
   );
 };
 
-// --- Component: Session Section ---
+
+
+
+// --- Component: Session Section (Final Polish) ---
 const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+  // 1. Logic Configuration
+  const isUpcoming = type === "upcoming";
+  const INITIAL_COUNT = 2; 
+
+  // 2. State Management
+  const [visibleCount, setVisibleCount] = useState(
+    isUpcoming ? INITIAL_COUNT : sessions.length
+  );
+  
+  const lastCardRef = useRef(null);
+
+  // Sync state if sessions data updates from backend
+  useEffect(() => {
+    setVisibleCount(isUpcoming ? INITIAL_COUNT : sessions.length);
+  }, [sessions, isUpcoming]);
+
+  // 3. Derived State
+  const visibleSessions = sessions.slice(0, visibleCount);
+  const showLoadMore = isUpcoming && sessions.length > visibleCount;
+  const showShowLess = isUpcoming && visibleCount > INITIAL_COUNT;
+
+  const handleLoadMore = () => {
+    setVisibleCount(sessions.length);
+  };
+
+  const handleShowLess = () => {
+    setVisibleCount(INITIAL_COUNT);
+  };
+
+  // Scroll to new items when expanded
+  useEffect(() => {
+    if (visibleCount > INITIAL_COUNT && lastCardRef.current) {
+        setTimeout(() => {
+            lastCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 400);
+    }
+  }, [visibleCount]);
 
   const sectionConfig = {
     upcoming: {
@@ -276,68 +387,161 @@ const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark
       color: 'text-cyan-400',
       bgColor: isDark ? 'bg-cyan-950/20' : 'bg-cyan-50/50',
       borderColor: 'border-cyan-500/20',
-      emptyText: 'No missions scheduled yet! Check back soon 🚀',
+      emptyText: 'No missions scheduled yet 🚀',
     },
     completed: {
       icon: CheckCircle2,
       color: 'text-emerald-400',
       bgColor: isDark ? 'bg-emerald-950/20' : 'bg-emerald-50/50',
       borderColor: 'border-emerald-500/20',
-      emptyText: 'Your first adventure awaits! ⭐',
+      emptyText: 'Your first adventure awaits ⭐',
     },
     missed: {
       icon: Sparkles,
       color: 'text-amber-400',
       bgColor: isDark ? 'bg-amber-950/20' : 'bg-amber-50/50',
       borderColor: 'border-amber-500/20',
-      emptyText: "All caught up! You're doing great!",
+      emptyText: "All caught up!",
     },
   };
 
   const config = sectionConfig[type];
   const Icon = config.icon;
 
+  // --- ANIMATION VARIANTS ---
+  const accordionVariants = {
+    collapsed: { 
+      height: 0, 
+      opacity: 0,
+      overflow: "hidden", 
+      transition: { duration: 0.3, ease: "easeInOut" }
+    },
+    expanded: { 
+      height: "auto", 
+      opacity: 1,
+      transition: { duration: 0.4, ease: "easeInOut" },
+      transitionEnd: { overflow: "visible" } // Keeps overflow visible for "Show More"
+    }
+  };
+
   return (
-    <motion.div variants={itemVariants} className="mb-6">
+    <motion.div layout className="mb-6">
+      {/* HEADER */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className={`w-full flex items-center justify-between p-5 rounded-2xl border-2 transition-all duration-300 hover:bg-white/5
-          ${config.bgColor}
-          ${config.borderColor}
+        className={`w-full flex items-center justify-between p-5 rounded-2xl border-2 transition-all duration-300
+          ${config.bgColor} ${config.borderColor}
           ${isExpanded ? 'rounded-b-none border-b-0' : ''}
         `}
       >
         <div className="flex items-center gap-3">
           <Icon className={`w-6 h-6 ${config.color}`} />
           <span className={`text-lg font-bold ${config.color}`}>{title}</span>
-          <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${isDark ? "bg-black/20 text-gray-300" : "bg-white/50 text-gray-600"}`}>
-            {sessions.length}
+          <span className={` py-1 rounded-full text-xs font-bold 
+            ${isDark ? "bg-black/20 text-gray-300" : "bg-white/50 text-gray-600"}`}>
+            ( {sessions.length} )
           </span>
         </div>
-        {isExpanded ? <ChevronUp className={`w-5 h-5 ${config.color}`} /> : <ChevronDown className={`w-5 h-5 ${config.color}`} />}
+        {/* {isExpanded ? (
+          <ChevronUp className={`w-5 h-5 ${config.color}`} />
+        ) : (
+          <ChevronDown className={`w-5 h-5 ${config.color}`} />
+        )} */}
       </button>
 
+      {/* CONTENT WRAPPER */}
       <motion.div
-        initial={false}
-        animate={{ height: isExpanded ? "auto" : 0, opacity: isExpanded ? 1 : 0 }}
-        transition={{ duration: 0.4, ease: "easeInOut" }}
-        className="overflow-hidden"
+        variants={accordionVariants}
+        initial={defaultExpanded ? "expanded" : "collapsed"}
+        animate={isExpanded ? "expanded" : "collapsed"}
+        className="border-2 border-t-0 rounded-b-2xl flex flex-col gap-6 origin-top"
+        style={{ 
+           borderColor: isDark ? 'rgba(6,182,212,0.1)' : 'rgba(6,182,212,0.2)',
+           backgroundColor: isDark ? 'rgba(8,51,68,0.2)' : 'rgba(236,254,255,0.5)'
+        }}
       >
-        <div className={`p-5 border-2 border-t-0 rounded-b-2xl ${config.borderColor} ${config.bgColor}`}>
+        {/* Inner Padding Wrapper */}
+        <motion.div 
+           layout 
+           // This Spring transition is the key to the smooth "Show Less" height reduction
+           transition={{ layout: { type: "spring", stiffness: 300, damping: 30 } }}
+           className={`p-5 ${config.borderColor} ${config.bgColor}`}
+        >
           {sessions.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {sessions.map((session) => (
-                <SessionCard key={session._id} session={session} status={type} isDark={isDark} />
-              ))}
-            </div>
+            <>
+              {/* GRID */}
+              <motion.div 
+                layout
+                className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+              >
+                <AnimatePresence initial={false} mode="sync">
+                  {visibleSessions.map((session, index) => {
+                    const isLast = index === visibleSessions.length - 1;
+                    return (
+                      <motion.div 
+                        key={session._id} 
+                        layout="position"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }} // Faster exit for snap
+                        transition={{ duration: 0.3 }}
+                        ref={isLast ? lastCardRef : null}
+                      >
+                        <SessionCard
+                          session={session}
+                          status={type}
+                          isDark={isDark}
+                        />
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </motion.div>
+
+              {/* CONTROLS */}
+              {isUpcoming && sessions.length > INITIAL_COUNT && (
+                <motion.div layout className="flex justify-center border-t border-dashed border-gray-500/30 pt-4 mt-4">
+                  {showLoadMore ? (
+                    <button
+                      onClick={handleLoadMore}
+                      className={`group flex items-center gap-2 px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 border
+                        ${isDark 
+                          ? "bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white hover:border-gray-500" 
+                          : "bg-white/80 border-gray-200 text-gray-500 hover:bg-white hover:text-black hover:border-gray-400 shadow-sm"
+                        }
+                      `}
+                    >
+                      <span>Show {sessions.length - visibleCount} More</span>
+                      {/* <ChevronDown className="w-4 h-4 transition-transform group-hover:translate-y-1" /> */}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleShowLess}
+                      className={`group flex items-center gap-2 px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 border
+                        ${isDark 
+                          ? "bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white hover:border-gray-500" 
+                          : "bg-white/80 border-gray-200 text-gray-500 hover:bg-white hover:text-black hover:border-gray-400 shadow-sm"
+                        }
+                      `}
+                    >
+                      <span>Show Less</span>
+                      {/* <ChevronUp className="w-4 h-4 transition-transform group-hover:-translate-y-1" /> */}
+                    </button>
+                  )}
+                </motion.div>
+              )}
+            </>
           ) : (
-            <p className="text-center text-gray-500 py-8 font-medium">{config.emptyText}</p>
+            <p className="text-center text-gray-500 py-8 font-medium">
+              {config.emptyText}
+            </p>
           )}
-        </div>
+        </motion.div>
       </motion.div>
     </motion.div>
   );
 };
+
 
 
 

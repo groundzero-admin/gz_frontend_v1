@@ -67,7 +67,7 @@ const SidebarItem = ({ to, icon, label, subLabel, isActive, isDark }) => {
 
       <div className="flex-1 relative z-10">
         <span 
-          className={`font-semibold text-sm block transition-colors
+          className={`font-semibold text-sm block transition-colors truncate
           ${isActive 
              ? (isDark ? "text-cyan-50" : "text-black") 
              : (isDark ? "text-gray-400" : "text-gray-600")
@@ -91,11 +91,43 @@ const SidebarItem = ({ to, icon, label, subLabel, isActive, isDark }) => {
 // --- Sidebar Component ---
 const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
   const location = useLocation()
+  const [companionName, setCompanionName] = useState("Spark");
   
   const isActive = (path) => {
     if (path === "/student/dashboard") return location.pathname === "/student/dashboard";
     return location.pathname.startsWith(path);
   }
+
+  // --- LOGIC: Fetch Companion Name from LocalStorage ---
+  useEffect(() => {
+    const updateCompanionName = () => {
+      if (!userData) return;
+      
+      const userKey = userData.email || userData.user_number || "guest";
+      const storageKey = `student_companion_name_${userKey}`;
+      const savedName = localStorage.getItem(storageKey);
+
+      if (savedName && savedName.trim() !== "") {
+        setCompanionName(savedName);
+      } else {
+        setCompanionName("Spark");
+      }
+    };
+
+    // Run immediately
+    updateCompanionName();
+
+    // Listen for storage changes (if updated in another tab)
+    window.addEventListener("storage", updateCompanionName);
+    // Listen for window focus (if updated in 'My Space' then clicked Sidebar)
+    window.addEventListener("focus", updateCompanionName);
+
+    return () => {
+      window.removeEventListener("storage", updateCompanionName);
+      window.removeEventListener("focus", updateCompanionName);
+    };
+  }, [userData]);
+
 
   return (
     <aside
@@ -127,11 +159,33 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar relative z-10">
-        <SidebarItem to="/student/dashboard" icon={<FaHome />} label="Home" subLabel="Command Deck" isActive={isActive("/student/dashboard")} isDark={isDark} />
-        <SidebarItem to="/student/dashboard/asktoai" icon={<FaCommentDots />} label="Ask Spark" subLabel="Your Companion" isActive={isActive("/student/dashboard/asktoai")} isDark={isDark} />
-        <SidebarItem to="/student/dashboard/workspace" icon={<FaCompass />} label="My Space" subLabel="Your Universe" isActive={isActive("/student/dashboard/workspace")} isDark={isDark} />
-        {/* <SidebarItem to="/student/dashboard/credits" icon={<FaCoins />} label="Credits" subLabel="Your Wallet" isActive={isActive("/student/dashboard/credits")} isDark={isDark} /> */}
-        {/* <SidebarItem to="/student/dashboard/remaingsessionpurchase" icon={<FaPlus />} label="Top Up" subLabel="Add Funds" isActive={isActive("/student/dashboard/remaingsessionpurchase")} isDark={isDark} /> */}
+        <SidebarItem 
+            to="/student/dashboard" 
+            icon={<FaHome />} 
+            label="Home" 
+            subLabel="Command Deck" 
+            isActive={isActive("/student/dashboard")} 
+            isDark={isDark} 
+        />
+        
+        {/* DYNAMIC COMPANION LABEL */}
+        <SidebarItem 
+            to="/student/dashboard/asktoai" 
+            icon={<FaCommentDots />} 
+            label={`Ask ${companionName}`} 
+            subLabel="Your Companion" 
+            isActive={isActive("/student/dashboard/asktoai")} 
+            isDark={isDark} 
+        />
+        
+        <SidebarItem 
+            to="/student/dashboard/workspace" 
+            icon={<FaCompass />} 
+            label="My Space" 
+            subLabel="Your Universe" 
+            isActive={isActive("/student/dashboard/workspace")} 
+            isDark={isDark} 
+        />
       </nav>
 
       <div className="p-4 border-t border-gray-500/10 flex flex-col gap-3 relative z-10 bg-gradient-to-t from-black/5 to-transparent">
@@ -217,7 +271,6 @@ const StudentLayout = () => {
     )
   }
 
-  // CHECK IF WE ARE ON THE CHAT PAGE
   const isChatPage = location.pathname.includes('/asktoai');
 
   return (
@@ -229,10 +282,6 @@ const StudentLayout = () => {
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
       </button>
 
-      {/* Dynamic padding:
-         If isChatPage -> p-0 (full bleed)
-         Else -> p-8 md:p-12 (standard dashboard padding)
-      */}
       <main 
         className={`flex-1 transition-all duration-300 md:ml-72 overflow-x-hidden 
           ${isChatPage ? "p-0 h-screen" : "p-8 md:p-12"}`}

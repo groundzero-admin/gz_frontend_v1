@@ -54,7 +54,7 @@ const InputField = ({
 )
 
 const InviteOnboardPage = () => {
-  const [isDark, setIsDark] = useState(true)
+  const [isDark, setIsDark] = useState(false  )
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 

@@ -20,7 +20,7 @@ import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 gsap.registerPlugin(ScrollToPlugin);
 
 const BookingPage_Spark = () => {
-  const [isDark, setIsDark] = useState(true); // Default Dark for Spark
+  const [isDark, setIsDark] = useState(false); // Default light for Spark
   const [iframeLoading, setIframeLoading] = useState(true);
   const navigate = useNavigate();
 

@@ -19,7 +19,7 @@ import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 gsap.registerPlugin(ScrollToPlugin);
 
 const BookOneOnOneSession_Spark = () => {
-  const [isDark, setIsDark] = useState(true); // Default to Dark for Spark theme
+  const [isDark, setIsDark] = useState(false ); // Default to light for Spark theme
   const [iframeLoading, setIframeLoading] = useState(true);
   const navigate = useNavigate();
 
