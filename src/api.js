@@ -1208,7 +1208,25 @@ export const updateBatchStatus = async (batch_obj_id, status) => {
 
 
 
-
+export const updateStudentPassword = async (studentId, newPassword) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/updatestudentpassword`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ 
+        student_obj_id: studentId, 
+        new_password: newPassword 
+      }),
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    console.error("Error updating student password:", error);
+    throw error;
+  }
+};
 
 
 

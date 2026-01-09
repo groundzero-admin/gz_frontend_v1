@@ -347,7 +347,7 @@ const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark
 
   // 1. Logic Configuration
   const isUpcoming = type === "upcoming";
-  const INITIAL_COUNT = 2; 
+  const INITIAL_COUNT = 3 ; 
 
   // 2. State Management
   const [visibleCount, setVisibleCount] = useState(
