@@ -564,7 +564,7 @@ const handleLoginClick = () => {
                 <span className="text-4xl font-bold text-cyan-400">₹1,500</span><span className="text-xs opacity-60 ml-2">/ Session</span>
               </div>
               <ul className="space-y-4 mb-8 flex-1">
-                {["Small Group format", "2 sessions / week for 6 weeks", "Collaborative learning environment", "Demo Day: projects presentation", "Next batch starts 10th Jan"].map((item, i) => (
+                {["Small Group format", "2 sessions / week for 6 weeks", "Collaborative learning environment", "Demo Day: projects presentation", "Next batch starts 21st March"].map((item, i) => (
                   <li key={i} className={`flex items-start gap-3 text-sm ${styles.subtext}`}>
                     <Check size={18} className="text-blue-500 mt-0.5" /> {item}
                   </li>
