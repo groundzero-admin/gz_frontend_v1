@@ -212,6 +212,24 @@ export default function AttendancePage() {
 
   // 4. Handle Session Click -> Load Attendance List
   const handleSessionClick = async (session) => {
+
+
+     const now = new Date();
+  const sessionEnd = getSessionEndDateTime(session.date, session.endTime);
+   const niceDate = new Date(session.date).toLocaleDateString();
+
+  // 🔒 Block attendance before session ends
+  if (now < sessionEnd) {
+    alert(
+      `Attendance can be marked only after the session ends.\n\n` +
+      `Session ends at: ${niceDate} - ${session.endTime}`
+    );
+    return;
+  }
+
+
+
+
     setShowSessionsModal(false); 
     
     setSelectedSession(session);
@@ -267,6 +285,27 @@ export default function AttendancePage() {
 
   // helper: style values from CSS variables (return string like 'var(--bg-dark)')
   const v = (name) => `var(${isDark ? `--${name}-dark` : `--${name}-light`})`;
+
+
+
+  // Converts "10:30 AM" + "2026-01-15" → JS Date object
+function getSessionEndDateTime(sessionDate, endTime) {
+  const date = new Date(sessionDate);
+
+  // endTime example: "12:10 PM"
+  const [time, meridian] = endTime.split(" ");
+  let [hours, minutes] = time.split(":").map(Number);
+
+  if (meridian === "PM" && hours !== 12) hours += 12;
+  if (meridian === "AM" && hours === 12) hours = 0;
+
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+}
+
+
+
+
 
   return (
     <div
