@@ -191,7 +191,7 @@ const BookOneOnOneSession_Spark = () => {
             <div className="flex flex-col h-full justify-between">
               <div>
                 <h3 className="font-extrabold text-3xl mb-1">
-                  ₹2,500 <span className={`text-sm font-medium ${isDark ? "text-gray-500" : "text-slate-400"}`}>/ session</span>
+                  ₹3,000 <span className={`text-sm font-medium ${isDark ? "text-gray-500" : "text-slate-400"}`}>/ session</span>
                 </h3>
                 <p className={`text-xs leading-relaxed ${isDark ? "text-gray-400" : "text-slate-500"}`}>
                   Pay per session. No commitments. Book only what you need.
