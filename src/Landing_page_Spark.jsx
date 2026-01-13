@@ -529,7 +529,7 @@ const handleLoginClick = () => {
               <h3 className="text-2xl font-bold mb-2">Personalised Mentorship</h3>
               <p className={`text-sm mb-6 ${styles.subtext}`}>For the kids who want personalised approach</p>
               <div className="mb-6">
-                <span className="text-4xl font-bold">₹2,500</span><span className="text-xs opacity-60 ml-2">/ Session</span>
+                <span className="text-4xl font-bold">₹3,000</span><span className="text-xs opacity-60 ml-2">/ Session</span>
               </div>
               <ul className="space-y-4 mb-8 flex-1">
                 {["1:1 Live Sessions", "Fully Self-paced", "Unblocking specific hurdles", "Lock in sessions as you need them", "K-12 academic support provided"].map((item, i) => (
