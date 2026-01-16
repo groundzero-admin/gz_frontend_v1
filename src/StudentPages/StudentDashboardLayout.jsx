@@ -1,14 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
   FaHome,
   FaCommentDots,
   FaCompass,
-  FaCoins,
   FaSun,
-  FaMoon,
-  FaPlus
+  FaMoon
 } from "react-icons/fa"
 import { MdOutlineRocketLaunch } from "react-icons/md"; 
 import { BsStars } from "react-icons/bs"
@@ -38,15 +36,17 @@ const FullPageMessage = ({ isDark, children }) => (
   </div>
 )
 
-// --- Helper: Sidebar Item Component ---
+// --- Helper: Sidebar Item Component (Optimized) ---
 const SidebarItem = ({ to, icon, label, subLabel, isActive, isDark }) => {
   return (
     <Link
       to={to}
-      className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 mb-2 overflow-hidden
+      // OPTIMIZATION: Removed 'backdrop-blur-md' from non-active state to save resources
+      // Added 'transform-gpu' to active state to smooth out the glow effect rendering
+      className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 mb-2 overflow-hidden transform-gpu
         ${isActive 
-          ? "bg-cyan-500/10 shadow-[0_0_30px_rgba(6,182,212,0.15)] border border-cyan-500/20 backdrop-blur-md" 
-          : "text-gray-500 hover:bg-gray-500/10 hover:text-cyan-400 border border-transparent hover:backdrop-blur-sm"
+          ? "bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.15)] border border-cyan-500/20 backdrop-blur-md" 
+          : "text-gray-500 hover:bg-gray-500/5 hover:text-cyan-400 border border-transparent"
         }
       `}
     >
@@ -88,7 +88,7 @@ const SidebarItem = ({ to, icon, label, subLabel, isActive, isDark }) => {
   )
 }
 
-// --- Sidebar Component ---
+// --- Sidebar Component (Optimized) ---
 const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
   const location = useLocation()
   const [companionName, setCompanionName] = useState("Spark");
@@ -98,7 +98,6 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
     return location.pathname.startsWith(path);
   }
 
-  // --- LOGIC: Fetch Companion Name from LocalStorage ---
   useEffect(() => {
     const updateCompanionName = () => {
       if (!userData) return;
@@ -114,12 +113,8 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
       }
     };
 
-    // Run immediately
     updateCompanionName();
-
-    // Listen for storage changes (if updated in another tab)
     window.addEventListener("storage", updateCompanionName);
-    // Listen for window focus (if updated in 'My Space' then clicked Sidebar)
     window.addEventListener("focus", updateCompanionName);
 
     return () => {
@@ -131,22 +126,25 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
 
   return (
     <aside
-      /* CHANGED: md:translate-x-0 -> lg:translate-x-0 */
-      className={`fixed left-0 top-0 h-full w-72 flex flex-col z-50 transition-transform duration-300 border-r backdrop-blur-xl shadow-2xl
+      // OPTIMIZATION: 'transform-gpu' and 'will-change-transform' force the browser
+      // to use the Graphics Card for the slide-in animation, making it silky smooth.
+      className={`fixed left-0 top-0 h-full w-72 flex flex-col z-50 transition-transform duration-300 border-r backdrop-blur-xl shadow-2xl transform-gpu will-change-transform
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}
       style={{
-        backgroundColor: isDark ? "rgba(2, 4, 16, 0.8)" : "rgba(255, 255, 255, 0.85)", 
+        backgroundColor: isDark ? "rgba(2, 4, 16, 0.85)" : "rgba(255, 255, 255, 0.9)", 
         borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
       }}
     >
-      <div className="absolute top-0 left-0 w-full h-64 bg-cyan-500/5 blur-[80px] pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-40 h-40 bg-purple-500/5 blur-[60px] pointer-events-none" />
+      {/* OPTIMIZATION: Added transform-gpu to these static blobs so they don't cause layout repaints */}
+      <div className="absolute top-0 left-0 w-full h-64 bg-cyan-500/5 blur-[80px] pointer-events-none transform-gpu" />
+      <div className="absolute bottom-0 right-0 w-40 h-40 bg-purple-500/5 blur-[60px] pointer-events-none transform-gpu" />
 
       <div className="p-6 pb-4 border-b border-gray-500/10 relative z-10">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-[1.25rem] bg-gradient-to-br from-cyan-600 via-blue-600 to-purple-600 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.4)] animate-[pulse_4s_ease-in-out_infinite]">
-            <MdOutlineRocketLaunch className="w-6 h-6 text-white drop-shadow-md" />
+          {/* OPTIMIZATION: Reduced shadow spread and complex overlapping animations */}
+          <div className="w-12 h-12 rounded-[1.25rem] bg-gradient-to-br from-cyan-600 via-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+             <MdOutlineRocketLaunch className="w-6 h-6 text-white drop-shadow-md" />
           </div>
           <div>
             <h1 className="font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 tracking-tight">
@@ -169,7 +167,6 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
             isDark={isDark} 
         />
         
-        {/* DYNAMIC COMPANION LABEL */}
         <SidebarItem 
             to="/student/dashboard/asktoai" 
             icon={<FaCommentDots />} 
@@ -192,12 +189,7 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
       <div className="p-4 border-t border-gray-500/10 flex flex-col gap-3 relative z-10 bg-gradient-to-t from-black/5 to-transparent">
         <div className="flex items-center justify-between px-2 mb-1">
              <button onClick={onToggleTheme} className={`p-2 rounded-lg transition-all ${isDark ? "text-gray-400 hover:text-white hover:bg-white/10" : "text-gray-400 hover:text-gray-800 hover:bg-black/5"}`} title="Toggle Theme">
-               {isDark ? (
-                          <FaSun className="text-sm text-white" />
-                        ) : (
-                          <FaMoon className="text-sm text-black" />
-                        )}
-
+               {isDark ? <FaSun className="text-sm text-white" /> : <FaMoon className="text-sm text-black" />}
              </button>
              <button onClick={onLogout} className="p-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all flex items-center gap-2" title="Logout">
                 <span className="text-[10px] font-bold uppercase tracking-widest">Logout</span>
@@ -211,7 +203,7 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
           <div className="flex-1 min-w-0">
             <p className={`text-sm font-bold truncate ${isDark ? "text-gray-100" : "text-gray-900"}`}>{userData?.username || "Space Explorer"}</p>
             <p className="text-[10px] text-gray-500 flex items-center gap-1.5 mt-0.5 font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
               {userData?.class ? `${userData.class}th Grade` : "Student"}
             </p>
           </div>
@@ -276,18 +268,16 @@ const StudentLayout = () => {
 
   return (
     <div className={`min-h-screen flex ${isDark ? "bg-[#02040a] text-gray-100" : "bg-gray-50 text-gray-900"}`}>
-      {/* CHANGED: md:hidden -> lg:hidden (Overlay appears on tablet now) */}
-      {isSidebarOpen && <div className="fixed inset-0 z-30 bg-black/80 backdrop-blur-sm lg:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
+      {/* Overlay: Removed expensive blur, just simple transparency */}
+      {isSidebarOpen && <div className="fixed inset-0 z-30 bg-black/80 lg:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
       
       <Sidebar isDark={isDark} onLogout={handleLogout} onToggleTheme={() => setIsDark(!isDark)} isOpen={isSidebarOpen} userData={authStatus.userData} />
       
-      {/* CHANGED: md:hidden -> lg:hidden (Burger button appears on tablet now) */}
       <button onClick={() => setIsSidebarOpen(prev => !prev)} className="lg:hidden fixed top-4 left-4 z-50 p-3 rounded-full bg-cyan-600/20 border border-cyan-500/50 text-cyan-400 backdrop-blur-md">
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
       </button>
 
       <main 
-        /* CHANGED: md:ml-72 -> lg:ml-72 (Margin only applied on large screens) */
         className={`flex-1 transition-all duration-300 lg:ml-72 overflow-x-hidden 
           ${isChatPage ? "p-0 h-screen" : "p-8 md:p-12"}`}
       >

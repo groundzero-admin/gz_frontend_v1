@@ -9,8 +9,7 @@ import {
   FaArrowLeft,
   FaEye,
   FaEyeSlash,
-  FaRocket,
-  FaSpinner, // Import the spinner icon
+  FaSpinner, 
 } from "react-icons/fa"
 import { useNavigate } from "react-router-dom"
 import "./color.css"
@@ -28,7 +27,7 @@ const InputField = ({
   isDark,
   endIcon,
   onEndIconClick,
-  disabled // Add disabled prop to inputs to prevent editing while loading
+  disabled
 }) => (
   <div className="relative mb-4">
     <span className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
@@ -40,7 +39,7 @@ const InputField = ({
       id={id}
       value={value}
       onChange={onChange}
-      disabled={disabled} // Disable input
+      disabled={disabled}
       className="w-full pl-12 pr-12 py-3 rounded-lg border bg-transparent transition relative z-0 focus:outline-none focus:ring-2 focus:ring-[var(--accent-teal)] disabled:opacity-50 disabled:cursor-not-allowed"
       style={{
         borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
@@ -52,7 +51,7 @@ const InputField = ({
     />
     {endIcon && (
       <span
-        onClick={!disabled ? onEndIconClick : undefined} // Disable click if loading
+        onClick={!disabled ? onEndIconClick : undefined}
         className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 transition ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-80'}`}
         style={{
           color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` 
@@ -65,13 +64,10 @@ const InputField = ({
 )
 
 const AuthPage = () => {
-  const [isDark, setIsDark] = useState(false) // Default Light Mode
-
+  const [isDark, setIsDark] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  
-  // New state for loading status
   const [isLoading, setIsLoading] = useState(false)
 
   const navigate = useNavigate()
@@ -84,16 +80,14 @@ const AuthPage = () => {
     }
   }, [isDark])
 
-  // --- Generate Stars ---
+  // Optimization: Reduced star count from 50 to 20 and removed animation properties
   const stars = useMemo(() => {
     const starData = [];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 20; i++) {
       starData.push({
         left: `${Math.random() * 100}%`,
         top: `${Math.random() * 100}%`,
-        size: Math.random() * 3 + 1 + 'px',
-        delay: `${Math.random() * 3}s`,
-        duration: `${Math.random() * 3 + 2}s`
+        size: Math.random() * 2 + 1 + 'px', // Smaller, static stars
       });
     }
     return starData;
@@ -101,23 +95,15 @@ const AuthPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
-    // Prevent double submission
     if (isLoading) return;
 
     setIsLoading(true);
 
     try {
-      // We await the login. If successful, navigate happens inside login() 
-      // or subsequent code. If it fails, it throws, and we catch it.
       await login(email, password, navigate);
     } catch (error) {
       console.error("Login failed", error);
-      // Optional: Add a toast notification here for error
     } finally {
-      // Re-enable the button after the request finishes (whether success or fail)
-      // Note: If navigate unmounts this component, this might trigger a warning,
-      // but usually safe in modern React.
       setIsLoading(false);
     }
   }
@@ -130,51 +116,29 @@ const AuthPage = () => {
         color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`,
       }}
     >
-      {/* --- Background Effects & Space Elements --- */}
+      {/* --- Optimized Background --- */}
       <div className="absolute inset-0 pointer-events-none z-0">
+          {/* Simple static grid pattern */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.05)_1px,transparent_0)] bg-[size:20px_20px] opacity-50"></div>
           
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[600px] bg-[linear-gradient(135deg,rgba(138,43,226,0.3)_0%,rgba(0,196,204,0.2)_50%,rgba(60,60,246,0.3)_100%)] rounded-full blur-[80px] opacity-40 animate-[gradient-animation_20s_ease_infinite]"></div>
+          {/* Static Gradient Blob (Removed Animation & Reduced Blur) */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[500px] bg-gradient-to-b from-purple-500/10 to-teal-500/10 rounded-full blur-3xl opacity-30"></div>
 
-          {/* Stars */}
+          {/* Static Stars (No Twinkle Animation) */}
           {stars.map((star, index) => (
             <div
               key={index}
-              className="absolute rounded-full bg-white star-twinkle"
+              className="absolute rounded-full bg-white"
               style={{
                 left: star.left,
                 top: star.top,
                 width: star.size,
                 height: star.size,
-                animationDelay: star.delay,
-                animationDuration: star.duration,
                 backgroundColor: isDark ? '#ffffff' : 'var(--accent-purple)',
-                opacity: isDark ? 0.8 : 0.4
+                opacity: 0.4
               }}
             ></div>
           ))}
-
-          {/* --- ROCKET 1: Starts Bottom Left --- */}
-          <div className="absolute rocket-1 z-0">
-            <FaRocket 
-              className="text-4xl md:text-6xl" 
-              style={{ 
-                 color: 'var(--accent-teal)',
-                 filter: `drop-shadow(0 0 10px var(--accent-teal))`
-              }} 
-            />
-          </div>
-
-          {/* --- ROCKET 2: Starts Bottom Right --- */}
-          <div className="absolute rocket-2 z-0">
-            <FaRocket 
-              className="text-4xl md:text-6xl" 
-              style={{ 
-                 color: 'var(--accent-purple)',
-                 filter: `drop-shadow(0 0 10px var(--accent-purple))`
-              }} 
-            />
-          </div>
       </div>
 
       {/* Back Button */}
@@ -217,7 +181,7 @@ const AuthPage = () => {
 
       {/* Login Card */}
       <div
-        className="relative z-20 max-w-md w-full p-8 sm:p-10 rounded-2xl border backdrop-blur-xl transition shadow-2xl"
+        className="relative z-20 max-w-md w-full p-8 sm:p-10 rounded-2xl border backdrop-blur-md transition shadow-2xl"
         style={{
           backgroundColor: `var(${isDark ? "--card-dark" : "--card-light"})`,
           borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
@@ -236,7 +200,7 @@ const AuthPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             isDark={isDark}
-            disabled={isLoading} // Disable input when loading
+            disabled={isLoading} 
           />
 
           <InputField
@@ -247,7 +211,7 @@ const AuthPage = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             isDark={isDark}
-            disabled={isLoading} // Disable input when loading
+            disabled={isLoading}
             endIcon={showPassword ? <FaEyeSlash /> : <FaEye />}
             onEndIconClick={() => setShowPassword(!showPassword)}
           />
@@ -271,98 +235,6 @@ const AuthPage = () => {
           </button>
         </form>
       </div>
-
-      <style jsx>{`
-        @keyframes gradient-animation {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
-        }
-
-        .star-twinkle {
-          animation-name: twinkle;
-          animation-iteration-count: infinite;
-          animation-direction: alternate;
-          animation-timing-function: ease-in-out;
-        }
-
-        @keyframes twinkle {
-          0% { opacity: 0.3; transform: scale(0.8); }
-          100% { opacity: 1; transform: scale(1.1); }
-        }
-
-        /* --- ROCKET ANIMATIONS --- */
-        
-        /* Rocket 1: Bottom Left to Center to Top Left */
-        .rocket-1 {
-           position: absolute;
-           bottom: 100px;
-           left: -100px;
-           opacity: 0.8;
-           /* 15s duration, infinite loop */
-           animation: collisionLeft 15s ease-in-out infinite; 
-        }
-
-        /* Rocket 2: Bottom Right to Center to Top Right */
-        .rocket-2 {
-           position: absolute;
-           bottom: 100px;
-           right: -100px;
-           opacity: 0.8;
-           animation: collisionRight 15s ease-in-out infinite;
-        }
-
-        /* KEYFRAMES FOR ROCKET 1 (The Lefty) */
-        @keyframes collisionLeft {
-           0% {
-              transform: translate(0, 0) rotate(0deg);
-              opacity: 0;
-           }
-           10% { opacity: 0.8; }
-           
-           /* Move to Center */
-           45% {
-              transform: translate(45vw, -45vh) rotate(0deg);
-           }
-           
-           /* COLLISION MOMENT (50%) - Rotate to deflect */
-           50% {
-              transform: translate(50vw, -50vh) rotate(-90deg);
-           }
-
-           /* Fly away to Top Left */
-           100% {
-              transform: translate(0vw, -100vh) rotate(-90deg);
-              opacity: 0;
-           }
-        }
-
-        /* KEYFRAMES FOR ROCKET 2 (The Righty) */
-        @keyframes collisionRight {
-           0% {
-              transform: translate(0, 0) rotate(-90deg);
-              opacity: 0;
-           }
-           10% { opacity: 0.8; }
-
-           /* Move to Center */
-           45% {
-              transform: translate(-45vw, -45vh) rotate(-90deg);
-           }
-
-           /* COLLISION MOMENT (50%) - Rotate to deflect */
-           50% {
-              transform: translate(-50vw, -50vh) rotate(0deg);
-           }
-
-           /* Fly away to Top Right */
-           100% {
-              transform: translate(0vw, -100vh) rotate(0deg);
-              opacity: 0;
-           }
-        }
-
-      `}</style>
     </div>
   )
 }

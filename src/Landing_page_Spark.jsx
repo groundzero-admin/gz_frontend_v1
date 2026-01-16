@@ -1,144 +1,81 @@
-import React, { useState , useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { 
   Rocket, Check, Sun, Moon, Lightbulb, BrainCircuit, Network, MessageCircle, 
-  Heart, Cpu, Star, ArrowRight, X, Loader2, Calendar, Video, Twitter, Linkedin
+  Heart, Cpu, Star, X, Loader2, Calendar, Video, Twitter, Linkedin
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { whoami } from './api.js'; 
 
-
 import logoFullBlack from './Logo/gz_logo_with_name_black.png';
 import logoFullWhite from './Logo/gz_logo_with_name_white.png';
 
-
-
-
-// --- CSS for Background Animations ---
-const animationStyles = `
-  @keyframes float-slow {
-    0% { transform: translate(0px, 0px) scale(1); }
-    33% { transform: translate(30px, -50px) scale(1.1); }
-    66% { transform: translate(-20px, 20px) scale(0.9); }
-    100% { transform: translate(0px, 0px) scale(1); }
-  }
-  
-  @keyframes scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  @keyframes hover-space {
-    0% { transform: translate(0, 0) rotate(var(--r)); }
-    50% { transform: translate(20px, -20px) rotate(calc(var(--r) + 5deg)); }
-    100% { transform: translate(0, 0) rotate(var(--r)); }
-  }
-
-  @keyframes twinkle {
-    0%, 100% { opacity: 0.4; transform: scale(0.8); }
-    50% { opacity: 1; transform: scale(1.1) rotate(15deg); }
-  }
-
-  .animate-float-slow { animation: float-slow 15s ease-in-out infinite; }
-  .animate-scroll { animation: scroll 60s linear infinite; }
-  .animate-scroll:hover { animation-play-state: paused; }
-  
-  .animate-hover-space { 
-    animation: hover-space 30s ease-in-out infinite; 
-  }
-  
-  .animate-twinkle { animation: twinkle 5s ease-in-out infinite; }
-
+// --- Global CSS: Smooth Scroll & Text Optimization ---
+const globalStyles = `
   html { scroll-behavior: smooth; }
+  body { text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
 `;
 
 // --- Framer Motion Variants ---
 const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
 };
 
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
+    transition: { staggerChildren: 0.1 }
   }
 };
 
 const hoverScale = {
-  whileHover: { scale: 1.05 },
-  whileTap: { scale: 0.95 }
+  whileHover: { scale: 1.02 },
+  whileTap: { scale: 0.98 }
 };
 
-// --- Space Background ---
-const SpaceBackground = ({ isDark }) => {
-  if (!isDark) return null;
-
-  const stars = Array.from({ length: 12 }).map((_, i) => {
-    const sizeRoll = Math.random();
-    let iconSize = 12; 
-    if (sizeRoll > 0.8) iconSize = 24; 
-    else if (sizeRoll > 0.5) iconSize = 16; 
-
-    return {
-      top: `${Math.random() * 100}%`,
-      left: `${Math.random() * 100}%`,
-      delay: `${Math.random() * 5}s`,
-      size: iconSize,
-      rotation: `${Math.random() * 360}deg`
-    };
-  });
-
-  return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none select-none z-0">
-      {stars.map((star, i) => (
-        <div 
-          key={i}
-          className="absolute animate-twinkle text-cyan-100/80 drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]"
-          style={{ 
-            top: star.top, 
-            left: star.left, 
-            animationDelay: star.delay,
-            transform: `rotate(${star.rotation})`
-          }}
-        >
-          <Star size={star.size} fill="currentColor" />
-        </div>
-      ))}
-      
-      {/* Ships */}
-      <motion.div 
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2 }}
-        className="absolute top-[15%] left-[10%] animate-hover-space text-white/5" style={{ '--r': '15deg' }}
-      >
-        <Rocket size={56} className="text-cyan-500/10" />
-      </motion.div>
-      <motion.div 
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2, delay: 0.5 }}
-        className="absolute top-[50%] right-[8%] animate-hover-space text-white/5" style={{ animationDelay: '-5s', '--r': '-12deg' }}
-      >
-        <Rocket size={48} className="text-blue-500/10" />
-      </motion.div>
-      <motion.div 
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2, delay: 1 }}
-        className="absolute bottom-[20%] left-[20%] animate-hover-space text-white/5" style={{ animationDelay: '-12s', '--r': '45deg' }}
-      >
-        <Rocket size={64} className="text-purple-500/10" />
-      </motion.div>
-    </div>
-  );
-};
-
-// --- Background Orbs ---
-const BackgroundOrbs = ({ isDark }) => (
+// --- OPTIMIZED BACKGROUNDS ---
+const BackgroundOrbs = memo(({ isDark }) => (
   <div className="fixed inset-0 overflow-hidden pointer-events-none select-none z-0">
-    <div className={`absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] blur-[120px] rounded-full animate-float-slow transition-colors duration-500 ${isDark ? 'bg-cyan-500/10' : 'bg-cyan-400/20'}`} />
-    <div className={`absolute bottom-[-10%] right-[-10%] w-[35vw] h-[35vw] blur-[100px] rounded-full animate-float-slow transition-colors duration-500 ${isDark ? 'bg-blue-600/10' : 'bg-blue-400/20'}`} style={{ animationDelay: '-2s' }} />
+     <div 
+       className="absolute inset-0 w-full h-full transition-colors duration-500"
+       style={{
+         background: isDark 
+           ? `
+             radial-gradient(circle at 15% 15%, rgba(6,182,212, 0.15) 0%, transparent 40%),
+             radial-gradient(circle at 85% 85%, rgba(37,99,235, 0.15) 0%, transparent 40%),
+             radial-gradient(circle at 50% 50%, rgba(168,85,247, 0.05) 0%, transparent 60%)
+             `
+           : `
+             radial-gradient(circle at 15% 15%, rgba(34,211,238, 0.4) 0%, transparent 40%),
+             radial-gradient(circle at 85% 85%, rgba(96,165,250, 0.4) 0%, transparent 40%),
+             radial-gradient(circle at 50% 50%, rgba(192,132,252, 0.15) 0%, transparent 60%)
+             `,
+         backgroundColor: isDark ? '#0B0C15' : '#f8fafc' 
+       }}
+     />
   </div>
-);
+));
+
+const SpaceBackground = memo(({ isDark }) => {
+  if (!isDark) return null;
+  return (
+    <div 
+        className="fixed inset-0 pointer-events-none z-0 opacity-40"
+        style={{
+            backgroundImage: `
+                radial-gradient(1px 1px at 10% 10%, white 100%, transparent),
+                radial-gradient(1px 1px at 20% 80%, white 100%, transparent),
+                radial-gradient(2px 2px at 40% 40%, white 100%, transparent),
+                radial-gradient(1px 1px at 70% 20%, white 100%, transparent),
+                radial-gradient(1.5px 1.5px at 90% 90%, white 100%, transparent)
+            `,
+            backgroundSize: '100% 100%',
+        }}
+    />
+  );
+});
 
 // --- Modal Component ---
 const FormModal = ({ isOpen, onClose, url, title, isDark }) => {
@@ -146,41 +83,30 @@ const FormModal = ({ isOpen, onClose, url, title, isDark }) => {
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div onClick={onClose} className="absolute inset-0 bg-black/80 cursor-pointer" />
           <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose} 
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer" 
-          />
-          <motion.div 
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            transition={{ type: "spring", duration: 0.5 }}
-            className={`relative w-full max-w-3xl h-[85vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col ${isDark ? 'bg-[#13141F] border border-white/10' : 'bg-white border border-slate-200'}`}
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            className={`relative w-full max-w-3xl h-[85vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col ${isDark ? 'bg-[#13141F] border border-gray-800' : 'bg-white border border-gray-200'}`}
           >
-            <div className={`flex justify-between items-center p-4 border-b ${isDark ? 'border-white/10 bg-[#13141F]' : 'border-slate-100 bg-white'}`}>
+            <div className={`flex justify-between items-center p-4 border-b ${isDark ? 'border-gray-800 bg-[#13141F]' : 'border-gray-100 bg-white'}`}>
               <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
-              <button onClick={onClose} className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'}`}>
-                <X size={20} />
+              <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100/10">
+                <X size={20} className={isDark ? "text-white" : "text-black"} />
               </button>
             </div>
             <div className={`flex-1 relative ${isDark ? 'bg-black' : 'bg-white'}`}>
-               <div className="absolute inset-0 flex items-center justify-center -z-10">
-                  <Loader2 className="animate-spin text-slate-400" />
-               </div>
                <iframe 
                 src={url} 
-                className="w-full h-full border-0 transition-all duration-300" 
+                loading="lazy"
+                className="w-full h-full border-0" 
                 title="Form"
                 style={{ 
                   filter: isDark ? 'invert(1) hue-rotate(180deg) contrast(0.9)' : 'none',
                   backgroundColor: isDark ? 'black' : 'white' 
                 }}
-              >
-                Loading...
-              </iframe>
+              />
             </div>
           </motion.div>
         </div>
@@ -193,16 +119,12 @@ const GroundZeroSpark = () => {
   const [isDark, setIsDark] = useState(false);
   const [isWebinarOpen, setIsWebinarOpen] = useState(false); 
 
-
   const [authState, setAuthState] = useState({
-  checked: false,
-  isLoggedIn: false,
-  role: null,
-  name: null
-});
-
-
-
+    checked: false,
+    isLoggedIn: false,
+    role: null,
+    name: null
+  });
 
   const navigate = useNavigate();
   const toggleTheme = () => setIsDark(!isDark);
@@ -218,69 +140,54 @@ const GroundZeroSpark = () => {
   const openWebinar = () => setIsWebinarOpen(true);
   const closeWebinar = () => setIsWebinarOpen(false);
 
-  // --- Handle Login Click ---
-const handleLoginClick = () => {
-  if (!authState.checked) return;
-
-  if (authState.isLoggedIn) {
-    navigate(`/${authState.role}/dashboard`);
-  } else {
-    navigate('/login');
-  }
-};
-
-
-
-  useEffect(() => {
-  const checkAuth = async () => {
-    try {
-      const res = await whoami();
-
-      if (res?.success && res?.data?.role) {
-        setAuthState({
-          checked: true,
-          isLoggedIn: true,
-          role: res.data.role,     // "parent"
-          name: res.data.name
-        });
-      } else {
-        setAuthState({
-          checked: true,
-          isLoggedIn: false,
-          role: null,
-          name: null
-        });
-      }
-    } catch (err) {
-      console.error("whoami failed:", err);
-      setAuthState({
-        checked: true,
-        isLoggedIn: false,
-        role: null,
-        name: null
-      });
+  const handleLoginClick = () => {
+    if (!authState.checked) return;
+    if (authState.isLoggedIn) {
+      navigate(`/${authState.role}/dashboard`);
+    } else {
+      navigate('/login');
     }
   };
 
-  checkAuth();
-}, []);
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await whoami();
+        if (res?.success && res?.data?.role) {
+          setAuthState({
+            checked: true,
+            isLoggedIn: true,
+            role: res.data.role,     
+            name: res.data.name
+          });
+        } else {
+          setAuthState({ checked: true, isLoggedIn: false, role: null, name: null });
+        }
+      } catch (err) {
+        setAuthState({ checked: true, isLoggedIn: false, role: null, name: null });
+      }
+    };
+    checkAuth();
+  }, []);
 
-
-
-
-
-  // --- Styles ---
+  // --- Styles: Solid Colors & High Opacity (No Blur) ---
   const styles = {
-    bg: isDark ? "bg-[#0B0C15]" : "bg-slate-50",
+    bg: "bg-transparent", 
     text: isDark ? "text-gray-100" : "text-slate-900",
     subtext: isDark ? "text-gray-400" : "text-slate-600",
-    navbar: isDark ? "bg-[#13141F]/80 border-white/10" : "bg-white/80 border-slate-200",
-    card: isDark ? "bg-[#13141F]/60 border-white/5 hover:border-cyan-500/30" : "bg-white border-slate-200 shadow-xl hover:border-cyan-500/40",
-    uspIcon: isDark ? "bg-slate-800/50 text-cyan-400" : "bg-cyan-50 text-cyan-600",
-    footer: isDark ? "bg-[#0B0C15] border-white/10" : "bg-slate-100 border-slate-200",
+    navbar: isDark 
+      ? "bg-[#13141F]/95 border-gray-800 shadow-md" 
+      : "bg-white/95 border-gray-200 shadow-sm",
+    card: isDark 
+      ? "bg-[#13141F]/90 border-gray-800 hover:border-cyan-500 transition-colors will-change-transform" 
+      : "bg-white/90 border-gray-200 shadow-md hover:border-cyan-500/50 transition-all will-change-transform",
+    uspIcon: isDark ? "bg-slate-800 text-cyan-400" : "bg-cyan-50 text-cyan-600",
+    footer: isDark 
+      ? "bg-[#0B0C15]/95 border-gray-800" 
+      : "bg-slate-50/95 border-gray-200",
     fancyCard: isDark 
-      ? "bg-[#13141F]/60 border-white/10 hover:border-cyan-500/50" 
-      : "bg-white border-slate-200 hover:border-cyan-500/50 hover:shadow-2xl"
+      ? "bg-[#13141F]/90 border-gray-800 hover:border-cyan-500" 
+      : "bg-white/90 border-gray-200 hover:border-cyan-500 hover:shadow-lg"
   };
 
   const reviews = [
@@ -292,14 +199,12 @@ const handleLoginClick = () => {
     { name: "Arjun P.", role: "Parent of 9-year-old", text: "Finally a program that isn't just coding syntax. It's about logic, empathy, and building useful things." },
   ];
   
-  const allReviews = [...reviews, ...reviews, ...reviews]; 
-
   return (
     <>
-    <div className={`min-h-screen font-sans selection:bg-cyan-500/50 selection:text-white overflow-hidden relative transition-colors duration-500 ${styles.bg} ${styles.text}`}>
-      <style>{animationStyles}</style>
+    <div className={`min-h-screen font-sans selection:bg-cyan-500/50 selection:text-white relative transition-colors duration-300 ${styles.bg} ${styles.text}`}>
+      <style>{globalStyles}</style>
       
-      {/* Background Layers */}
+      {/* Optimized Backgrounds */}
       <BackgroundOrbs isDark={isDark} />
       <SpaceBackground isDark={isDark} />
 
@@ -307,26 +212,19 @@ const handleLoginClick = () => {
         
         {/* ================= NAVBAR ================= */}
         <motion.nav 
-          initial={{ y: -100, opacity: 0 }}
+          initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.5 }}
           className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center pt-6 px-4"
         >
-          <div className={`backdrop-blur-xl border rounded-[5px] px-6 py-3 flex items-center justify-between w-full max-w-5xl shadow-2xl transition-all duration-300 ${styles.navbar}`}>
+          <div className={`border rounded-[5px] px-6 py-3 flex items-center justify-between w-full max-w-5xl transition-colors duration-300 ${styles.navbar}`}>
               <div className="flex items-center">
                   <img
                     src={isDark ? logoFullWhite : logoFullBlack}
                     alt="Ground Zero Spark"
-                    className="
-                      h-[22px]
-                      md:h-[24px]
-                      w-auto
-                      object-contain
-                      select-none
-                    "
+                    className="h-[22px] md:h-[24px] w-auto object-contain select-none"
                   />
               </div>
-
             
             <div className="hidden md:flex items-center gap-8 text-sm font-medium">
               {['Curriculum', 'Programs', 'Stories', 'About'].map((item) => (
@@ -343,21 +241,19 @@ const handleLoginClick = () => {
             
             <div className="flex items-center gap-4">
               <motion.button 
-                whileHover={{ scale: 1.1, rotate: 15 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={toggleTheme} 
-                className={`p-2 rounded-full transition-all ${isDark ? 'bg-white/10 text-yellow-300' : 'bg-slate-200 text-slate-600'}`}
+                className={`p-2 rounded-full transition-colors ${isDark ? 'bg-gray-800 text-yellow-300' : 'bg-gray-100 text-slate-600'}`}
               >
                 {isDark ? <Sun size={18} /> : <Moon size={18} />}
               </motion.button>
 
               <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                {...hoverScale}
                 onClick={handleLoginClick}
-                className={`border text-xs md:text-sm font-semibold px-5 py-2 rounded-[5px] transition-all shadow-lg 
+                className={`border text-xs md:text-sm font-semibold px-5 py-2 rounded-[5px] transition-all shadow-md will-change-transform
                   ${isDark 
-                    ? 'bg-slate-800/80 text-purple-400 border-purple-500/30 hover:bg-purple-500 hover:text-white' 
+                    ? 'bg-slate-800 text-purple-400 border-purple-500/30 hover:bg-purple-900/30' 
                     : 'bg-purple-600 text-white border-transparent hover:bg-purple-700'
                   }`}
               >
@@ -365,10 +261,9 @@ const handleLoginClick = () => {
               </motion.button>
 
               <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                {...hoverScale}
                 onClick={() => navigate('/book-discovery-call-spark')}
-                className={`hidden md:block border text-xs md:text-sm font-semibold px-5 py-2 rounded-[5px] transition-all shadow-lg ${isDark ? 'bg-slate-800/80 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500 hover:text-black' : 'bg-slate-900 text-white border-transparent hover:bg-slate-700'}`}
+                className={`hidden md:block border text-xs md:text-sm font-semibold px-5 py-2 rounded-[5px] transition-all shadow-md will-change-transform ${isDark ? 'bg-slate-800 text-cyan-400 border-cyan-500/30 hover:bg-cyan-900/30' : 'bg-slate-900 text-white border-transparent hover:bg-slate-700'}`}
               >
                 Book a Call
               </motion.button>
@@ -376,56 +271,56 @@ const handleLoginClick = () => {
           </div>
         </motion.nav>
 
-        {/* ================= HERO SECTION ================= */}
-        <section className="relative pt-80 pb-32 px-4 text-center">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-cyan-500/20 blur-[120px] rounded-full pointer-events-none" />
+        {/* ================= HERO SECTION (Centered Layout) ================= */}
+        {/* CHANGED: pt-44 -> min-h-[85vh] + flex-col justify-center. This moves text lower and keeps it centered. */}
+        <section className="relative min-h-[85vh] flex flex-col items-center justify-center px-4 text-center">
           
-          <motion.h1 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1]"
-          >
-            Make your kids <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500">future ready</span>
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className={`text-xl md:text-2xl max-w-2xl mx-auto mb-12 font-medium ${styles.subtext}`}
-          >
-            Thinking skills and responsible AI, taught through real problem-solving.
-          </motion.p>
+          {/* Static Gradient Blob */}
+          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] w-[400px] h-[400px] rounded-full pointer-events-none z-0 ${isDark ? 'bg-cyan-500/10 blur-3xl' : 'bg-cyan-400/10 blur-3xl'}`} />
           
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="flex flex-col sm:flex-row justify-center gap-5"
-          >
-            <motion.button 
-                {...hoverScale}
-                onClick={() => navigate('/book-discovery-call-spark')} 
-                className="bg-cyan-400 hover:bg-cyan-300 text-black font-bold px-10 py-4 rounded-full transition-transform shadow-[0_0_30px_rgba(34,211,238,0.4)]"
-              >
-                Book a discovery call &rarr;
-              </motion.button>
-            <motion.button 
-              {...hoverScale}
-              onClick={(e) => handleScroll(e, 'programs')} 
-              className={`border px-10 py-4 rounded-full font-semibold transition-all ${isDark ? 'border-white/20 hover:bg-white/10 text-white' : 'border-slate-300 hover:bg-slate-100 text-slate-800'}`}
+          <div className="relative z-10 max-w-6xl mx-auto pt-20">
+            <motion.h1 
+              variants={fadeInUp}
+              initial="hidden" animate="visible"
+              className="text-5xl md:text-7xl font-extrabold tracking-tight mb-8 leading-[1.1]"
             >
-              Explore Programs
-            </motion.button>
-          </motion.div>
+              Make your kids <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500">future ready</span>
+            </motion.h1>
+            <motion.p 
+              variants={fadeInUp}
+              initial="hidden" animate="visible"
+              className={`text-xl md:text-2xl max-w-2xl mx-auto mb-12 font-medium ${styles.subtext}`}
+            >
+              Thinking skills and responsible AI, taught through real problem-solving.
+            </motion.p>
+            
+            <motion.div 
+              variants={fadeInUp}
+              initial="hidden" animate="visible"
+              className="flex flex-col sm:flex-row justify-center gap-5"
+            >
+              <motion.button 
+                  {...hoverScale}
+                  onClick={() => navigate('/book-discovery-call-spark')} 
+                  className="bg-cyan-400 hover:bg-cyan-300 text-black font-bold px-10 py-4 rounded-full transition-transform shadow-lg will-change-transform"
+                >
+                  Book a discovery call &rarr;
+                </motion.button>
+              <motion.button 
+                {...hoverScale}
+                onClick={(e) => handleScroll(e, 'programs')} 
+                className={`border px-10 py-4 rounded-full font-semibold transition-all will-change-transform ${isDark ? 'border-gray-600 hover:border-gray-400 text-white' : 'border-slate-300 hover:bg-slate-100 text-slate-800'}`}
+              >
+                Explore Programs
+              </motion.button>
+            </motion.div>
+          </div>
         </section>
 
         {/* ================= USP / CURRICULUM ================= */}
         <section id="curriculum" className="py-24 px-4 max-w-7xl mx-auto">
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
             className="text-center mb-20"
           >
             <h2 className="text-3xl md:text-5xl font-bold mb-4">
@@ -452,7 +347,7 @@ const handleLoginClick = () => {
               <motion.div 
                 key={i} 
                 variants={fadeInUp}
-                className={`p-8 rounded-2xl border backdrop-blur-md transition-all group ${styles.card}`}
+                className={`p-8 rounded-2xl border transition-transform duration-300 group hover:-translate-y-1 ${styles.card}`}
               >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 ${styles.uspIcon}`}>
                   <item.icon size={24} />
@@ -465,14 +360,11 @@ const handleLoginClick = () => {
           </motion.div>
         </section>
 
-        {/* ================= TESTIMONIALS (Infinite Scroll) ================= */}
+        {/* ================= TESTIMONIALS (Optimized Grid) ================= */}
         <motion.section 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
           id="stories" 
-          className="py-20 overflow-hidden relative"
+          className="py-20"
         >
           <div className="max-w-7xl mx-auto px-4 mb-16 text-center">
             <h2 className="text-3xl md:text-5xl font-bold mb-4">
@@ -481,42 +373,37 @@ const handleLoginClick = () => {
             <p className={`${styles.subtext}`}>Stories from the Ground Zero community</p>
           </div>
 
-          <div className="flex w-full overflow-hidden mask-linear-gradient">
-            <div className="flex gap-6 animate-scroll w-max px-6">
-              {allReviews.map((t, i) => (
-                <div key={i} className={`p-8 rounded-3xl border backdrop-blur-md w-[350px] md:w-[450px] flex-shrink-0 flex flex-col justify-between ${styles.card}`}>
-                  <div>
-                    <div className="text-5xl text-blue-500/20 font-serif mb-6">“</div>
-                    <p className={`text-base font-medium leading-relaxed mb-8 ${styles.subtext}`}>{t.text}</p>
+          <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {reviews.map((t, i) => (
+              <div key={i} className={`p-8 rounded-3xl border flex flex-col justify-between ${styles.card}`}>
+                <div>
+                  <div className="text-5xl text-blue-500/20 font-serif mb-6">“</div>
+                  <p className={`text-base font-medium leading-relaxed mb-8 ${styles.subtext}`}>{t.text}</p>
+                </div>
+                <div className={`pt-6 border-t flex items-center gap-3 ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-300 flex items-center justify-center font-bold text-black text-sm">
+                    {t.name.charAt(0)}
                   </div>
-                  <div className="pt-6 border-t border-white/5 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-300 flex items-center justify-center font-bold text-black text-sm">
-                      {t.name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">{t.name}</p>
-                      <p className="text-xs opacity-60">{t.role}</p>
-                    </div>
+                  <div>
+                    <p className="font-bold text-sm">{t.name}</p>
+                    <p className="text-xs opacity-60">{t.role}</p>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </motion.section>
 
         {/* ================= PROGRAMS ================= */}
         <section id="programs" className="py-24 px-4 max-w-7xl mx-auto">
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
             className="text-center mb-20"
           >
             <h2 className="text-3xl md:text-5xl font-bold mb-4">Our Programs</h2>
             <p className={styles.subtext}>Choose the program which fits your requirement.</p>
           </motion.div>
 
-          {/* UPDATED GRID */}
           <motion.div 
             variants={staggerContainer}
             initial="hidden"
@@ -525,7 +412,7 @@ const handleLoginClick = () => {
             className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch"
           >
             {/* Card 1: Personalised Mentorship */}
-            <motion.div variants={fadeInUp} whileHover={{ y: -8 }} className={`p-8 rounded-3xl border flex flex-col h-full transition-all ${styles.card}`}>
+            <motion.div variants={fadeInUp} className={`p-8 rounded-3xl border flex flex-col h-full transition-transform hover:-translate-y-1 ${styles.card}`}>
               <h3 className="text-2xl font-bold mb-2">Personalised Mentorship</h3>
               <p className={`text-sm mb-6 ${styles.subtext}`}>For the kids who want personalised approach</p>
               <div className="mb-6">
@@ -541,20 +428,18 @@ const handleLoginClick = () => {
                 <motion.button 
                       {...hoverScale}
                       onClick={() => navigate('/book-one-on-one-session-spark')}
-                      className={`w-full py-4 rounded-xl font-bold border transition-all
-                        ${
-                          isDark
-                            ? 'border-blue-400/60 text-blue-300 hover:bg-blue-400/10'
+                      className={`w-full py-4 rounded-xl font-bold border transition-all will-change-transform
+                        ${isDark
+                            ? 'border-blue-400/60 text-blue-300 hover:bg-blue-900/20'
                             : 'border-blue-500/50 text-blue-600 hover:bg-blue-50'
                         }`}
                     >
                       Book your session
                  </motion.button>
-
             </motion.div>
 
             {/* Card 2: Spark Online */}
-            <motion.div variants={fadeInUp} whileHover={{ y: -16 }} className={`relative p-8 rounded-3xl border flex flex-col h-full transform lg:-translate-y-4 ${isDark ? 'bg-[#13141F] border-cyan-500/50 shadow-[0_0_60px_-12px_rgba(34,211,238,0.25)]' : 'bg-white border-blue-500 shadow-xl'}`}>
+            <motion.div variants={fadeInUp} className={`relative p-8 rounded-3xl border flex flex-col h-full transform lg:-translate-y-4 ${isDark ? 'bg-[#13141F] border-cyan-500/50' : 'bg-white border-blue-500 shadow-xl'}`}>
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-cyan-400 to-blue-500 text-black text-xs font-bold px-4 py-1 rounded-full shadow-lg flex items-center gap-1">
                 <Star size={12} fill="black" /> Popular
               </div>
@@ -573,7 +458,7 @@ const handleLoginClick = () => {
               <motion.button 
                 {...hoverScale}
                 onClick={() => navigate('/buycourse?coursetype=ONLINE')}
-                className="w-full py-4 rounded-xl font-bold bg-cyan-400 hover:bg-cyan-300 text-black transition-all shadow-lg hover:shadow-cyan-400/20"
+                className="w-full py-4 rounded-xl font-bold bg-cyan-400 hover:bg-cyan-300 text-black transition-all shadow-md will-change-transform"
               >
                 Book your spot
               </motion.button>
@@ -583,23 +468,20 @@ const handleLoginClick = () => {
             {/* Card 3 (Column 3): Stacked Consultation + Webinar */}
             <div className="flex flex-col gap-6 h-full">
               
-              {/* Consultation Card (Compact Header) */}
+              {/* Consultation Card */}
               <motion.div 
                 variants={fadeInUp}
                 whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={() => navigate('/book-discovery-call-spark')}
                 className={`flex-1 p-8 rounded-3xl border flex flex-col justify-between transition-all cursor-pointer ${styles.fancyCard}`}
               >
                 <div>
-                  {/* Icon and Title Inline */}
                   <div className="flex items-center gap-3 mb-4">
                     <div className={`p-2 rounded-lg ${isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-600'}`}>
                       <Calendar size={20} />
                     </div>
                     <h3 className="text-lg font-bold leading-tight">Schedule Consultation</h3>
                   </div>
-                  
                   <p className={`text-sm ${styles.subtext}`}>
                     We'll discuss your child's learning needs, walk you through the program, and see if Ground Zero aligns with you.
                   </p>
@@ -609,16 +491,14 @@ const handleLoginClick = () => {
                 </div>
               </motion.div>
 
-              {/* Webinar Card (Compact Header) */}
+              {/* Webinar Card */}
               <motion.div 
                 variants={fadeInUp}
                 whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
                 onClick={openWebinar}
                 className={`flex-1 p-8 rounded-3xl border flex flex-col justify-between transition-all cursor-pointer ${styles.fancyCard}`}
               >
                 <div>
-                   {/* Icon and Title Inline */}
                    <div className="flex items-center gap-3 mb-4">
                     <div className={`p-2 rounded-lg ${isDark ? 'bg-cyan-500/20 text-cyan-400' : 'bg-cyan-100 text-cyan-600'}`}>
                       <Video size={20} />
@@ -640,7 +520,7 @@ const handleLoginClick = () => {
                     ))}
                   </ul>
                 </div>
-                <div className={`mt-4 w-full py-3 rounded-xl font-bold text-center border transition-all ${isDark ? 'border-cyan-500/30 hover:bg-cyan-500/10 text-cyan-400' : 'border-slate-300 hover:bg-slate-100 text-slate-800'}`}>
+                <div className={`mt-4 w-full py-3 rounded-xl font-bold text-center border transition-all ${isDark ? 'border-cyan-500/30 hover:bg-cyan-900/30 text-cyan-400' : 'border-slate-300 hover:bg-slate-100 text-slate-800'}`}>
                   Reserve your spot
                 </div>
               </motion.div>
@@ -649,17 +529,14 @@ const handleLoginClick = () => {
           </motion.div>
         </section>
 
-        {/* ================= FOUNDER (2-CARD LAYOUT) ================= */}
+        {/* ================= FOUNDER ================= */}
         <section id="about" className="py-24 px-4 max-w-4xl mx-auto">
           <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
             className="flex flex-col gap-6"
           >
              {/* Quote Card */}
-            <div className={`p-10 md:p-12 rounded-3xl border relative overflow-hidden ${isDark ? 'bg-[#13141F] border-white/10' : 'bg-white border-slate-200 shadow-lg'}`}>
+            <div className={`p-10 md:p-12 rounded-3xl border relative overflow-hidden ${isDark ? 'bg-[#13141F] border-gray-800' : 'bg-white border-slate-200 shadow-sm'}`}>
               <div className="absolute top-6 left-8 text-6xl text-cyan-500/20 font-serif leading-none">“</div>
               <h3 className="relative z-10 text-xl md:text-2xl font-medium leading-relaxed mt-4">
                 The world is changing exponentially. Most jobs your child aspires to today won't exist in 15 years. 
@@ -670,16 +547,14 @@ const handleLoginClick = () => {
             </div>
 
             {/* Profile Card */}
-            <div className={`p-8 md:p-10 rounded-3xl border flex flex-col md:flex-row items-center gap-8 ${isDark ? 'bg-[#13141F] border-white/10' : 'bg-white border-slate-200 shadow-lg'}`}>
+            <div className={`p-8 md:p-10 rounded-3xl border flex flex-col md:flex-row items-center gap-8 ${isDark ? 'bg-[#13141F] border-gray-800' : 'bg-white border-slate-200 shadow-sm'}`}>
               
-              {/* Avatar */}
               <div className="shrink-0 w-28 h-28 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 p-[2px]">
                 <div className={`w-full h-full rounded-full flex items-center justify-center text-3xl font-bold ${isDark ? 'bg-[#0B0C15] text-white' : 'bg-white text-slate-900'}`}>
                   SS
                 </div>
               </div>
 
-              {/* Info */}
               <div className="flex-1 text-center md:text-left">
                 <h4 className="text-2xl font-bold mb-1">Shivangi Srivastava</h4>
                 <p className="text-cyan-500 text-sm font-bold uppercase tracking-wider mb-4">Founder, Ground Zero</p>
@@ -687,10 +562,10 @@ const handleLoginClick = () => {
                   Ex AVP New Initiatives, Swiggy | Ex CTO and Co-Founder at Tazzo | BTech (CSE) IIT Guwahati
                 </p>
                 <div className="flex justify-center md:justify-start gap-4">
-                  <a href="https://x.com/shivangi_sriv" target='_blank' className={`p-2.5 rounded-lg transition-colors ${isDark ? 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}>
+                  <a href="https://x.com/shivangi_sriv" target='_blank' rel="noreferrer" className={`p-2.5 rounded-lg transition-colors ${isDark ? 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}>
                     <Twitter size={18} />
                   </a>
-                  <a href="https://www.linkedin.com/in/shivangi-srivastava-36bb1323/" target='_blank' className={`p-2.5 rounded-lg transition-colors ${isDark ? 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}>
+                  <a href="https://www.linkedin.com/in/shivangi-srivastava-36bb1323/" target='_blank' rel="noreferrer" className={`p-2.5 rounded-lg transition-colors ${isDark ? 'bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}>
                     <Linkedin size={18} />
                   </a>
                 </div>
@@ -703,10 +578,7 @@ const handleLoginClick = () => {
         {/* ================= CTA ================= */}
         <section className="py-32 text-center">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
             className="max-w-4xl mx-auto px-4"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-10 leading-tight">
@@ -717,14 +589,14 @@ const handleLoginClick = () => {
               <motion.button 
                 {...hoverScale}
                 onClick={() => navigate('/book-discovery-call-spark')} 
-                className="bg-cyan-400 hover:bg-cyan-300 text-black font-bold px-10 py-4 rounded-full transition-transform shadow-[0_0_30px_rgba(34,211,238,0.4)]"
+                className="bg-cyan-400 hover:bg-cyan-300 text-black font-bold px-10 py-4 rounded-full transition-transform shadow-lg will-change-transform"
               >
                 Book a discovery call &rarr;
               </motion.button>
               <motion.button 
                 {...hoverScale}
                 onClick={openWebinar}
-                className={`border px-10 py-4 rounded-full font-semibold transition-all ${isDark ? 'border-white/20 hover:bg-white/10' : 'border-slate-300 hover:bg-slate-100'}`}
+                className={`border px-10 py-4 rounded-full font-semibold transition-all will-change-transform ${isDark ? 'border-gray-600 hover:bg-white/10' : 'border-slate-300 hover:bg-slate-100'}`}
               >
                 Join our next webinar
               </motion.button>
@@ -752,8 +624,7 @@ const handleLoginClick = () => {
       onClose={closeWebinar} 
       isDark={isDark}
       title="Register for Webinar"
-    url="https://docs.google.com/forms/d/1f7-IOT4bcMiKhZvUp3GKZ7HfCbEXbJQouw7XO2gTOao/viewform?embedded=true"
-
+      url="https://docs.google.com/forms/d/1f7-IOT4bcMiKhZvUp3GKZ7HfCbEXbJQouw7XO2gTOao/viewform?embedded=true"
     />
     </>
   );

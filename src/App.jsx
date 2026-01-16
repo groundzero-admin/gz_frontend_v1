@@ -41,7 +41,7 @@ import LandingPageMain from './LandingPageMain.jsx'
 import BookingPage_BuilderOs from './BookDiscoveryCall_BuilderOS.jsx'
 import BookOneOnOneSession_BuilderOS from './BookOneOnOneSession_BuilderOSs.jsx'
 import FormSquad_BuilderOS from './FormSquad_BuilderOS.jsx'
-import TestPage from './TestPage.jsx'
+// import TestPage from './TestPage.jsx'
 import BookingPage_Spark from './BookDiscoveryCall_Spark.jsx'
 import BookOneOnOneSession_Spark from './BookOneOnOne_Spark.jsx'
 import StudentMySpacePage from './StudentPages/StudentWorkspace.jsx'
@@ -88,7 +88,7 @@ function App() {
       {/* Route for the Login/Auth Page */}
       <Route path="/login" element={<AuthPage />} />
       <Route path="/invite/onboard" element={<InviteOnboardPage />} />
-      <Route path="/test" element={<TestPage />} />
+      {/* <Route path="/test" element={<TestPage />} /> */}
 
 
 

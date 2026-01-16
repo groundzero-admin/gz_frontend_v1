@@ -27,15 +27,15 @@ const headerVariants = {
 };
 
 const contentVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
+  hidden: { opacity: 0, scale: 0.98 }, // Reduced scale for less work
   visible: { 
     opacity: 1, 
     scale: 1,
-    transition: { duration: 0.4, ease: "easeOut" }
+    transition: { duration: 0.3, ease: "easeOut" } // Faster duration
   },
   exit: { 
     opacity: 0, 
-    scale: 0.95,
+    scale: 0.98,
     transition: { duration: 0.2 } 
   }
 };
@@ -45,7 +45,7 @@ const footerVariants = {
   visible: { 
     opacity: 1, 
     y: 0, 
-    transition: { delay: 0.2, type: "spring", stiffness: 50, damping: 20 }
+    transition: { delay: 0.1, type: "spring", stiffness: 50, damping: 20 }
   }
 };
 
@@ -53,10 +53,10 @@ const footerVariants = {
 
 const BigSuggestionChip = ({ icon, text, onClick, isDark }) => (
   <motion.button 
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
+    whileHover={{ scale: 1.02 }} // Reduced hover scale for performance
+    whileTap={{ scale: 0.98 }}
     onClick={onClick}
-    className={`flex items-center gap-2 px-4 py-3 rounded-full border transition-all duration-300 group backdrop-blur-sm
+    className={`flex items-center gap-2 px-4 py-3 rounded-full border transition-all duration-300 group backdrop-blur-sm transform-gpu
       ${isDark 
         ? "border-white/10 bg-white/5 hover:bg-white/10 hover:border-cyan-400/50" 
         : "border-gray-200 bg-white/60 hover:bg-white hover:border-cyan-400/50 shadow-sm"
@@ -82,7 +82,7 @@ const QuickSuggestionChip = ({ text, onClick, isDark }) => (
     whileHover={{ scale: 1.05 }}
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
-    className={`flex-shrink-0 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all duration-300 whitespace-nowrap backdrop-blur-md
+    className={`flex-shrink-0 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all duration-300 whitespace-nowrap backdrop-blur-md transform-gpu
       ${isDark
         ? "border-cyan-500/20 bg-cyan-500/5 hover:bg-cyan-500/15 text-cyan-400 hover:text-cyan-200"
         : "border-cyan-500/20 bg-cyan-50 hover:bg-cyan-100 text-cyan-600 hover:text-black font-semibold"
@@ -97,9 +97,9 @@ const ChatMessage = ({ role, text, isDark }) => {
   const isUser = role === 'user';
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, y: 10 }} // Removed scale animation on list items for better performance
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2 }}
       className={`flex w-full mb-6 ${isUser ? 'justify-end' : 'justify-start'} px-4`}
     >
       {!isUser && (
@@ -108,7 +108,7 @@ const ChatMessage = ({ role, text, isDark }) => {
         </div>
       )}
       <div 
-        className={`relative px-5 py-3.5 max-w-[85%] md:max-w-[75%] text-sm leading-relaxed shadow-md backdrop-blur-sm
+        className={`relative px-5 py-3.5 max-w-[85%] md:max-w-[75%] text-sm leading-relaxed shadow-md backdrop-blur-sm transform-gpu
           ${isUser 
             ? 'bg-cyan-600/90 text-white rounded-2xl rounded-tr-sm' 
             : isDark 
@@ -161,9 +161,6 @@ const StudentAskToAIPage = () => {
 
   // Pagination State
   const [page, setPage] = useState(1);
-  // Removed hasMore state for UI hiding purposes, now controlled by alert
-
-  // UI State
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [companionName, setCompanionName] = useState("Spark");
   
@@ -174,7 +171,6 @@ const StudentAskToAIPage = () => {
   const hasScrolledOnLoad = useRef(false);
   const prevScrollHeightRef = useRef(0); 
 
-  // --- 1. Fetch Companion Name ---
   useEffect(() => {
     const fetchCompanionName = () => {
         const userKey = userData.email || userData.user_number || "guest";
@@ -189,16 +185,11 @@ const StudentAskToAIPage = () => {
     fetchCompanionName();
   }, [userData]);
 
-  // --- Helper: Format API Response with Unique IDs ---
-  // IMPORTANT: We generate Unique IDs here. This fixes the Framer Motion jumpiness.
-  // If we don't have IDs, React re-renders the whole list when prepending, causing animations to re-run.
   const formatHistoryData = (data) => {
     const formatted = [];
-    // API returns latest first. We reverse to show [Oldest ... Newest]
     const chronologicalBatch = [...data].reverse();
     
     chronologicalBatch.forEach((item, index) => {
-      // Create a pseudo-unique ID using timestamp + random + index to ensure stability
       const uniqueId = item._id || `${Date.now()}-${index}-${Math.random().toString(36).substr(2, 9)}`;
 
       formatted.push({ 
@@ -224,7 +215,6 @@ const StudentAskToAIPage = () => {
     return formatted;
   };
 
-  // --- 2. Initial Chat Setup (Load Page 1) ---
   useEffect(() => {
     const initializeChat = async () => {
       try {
@@ -250,7 +240,6 @@ const StudentAskToAIPage = () => {
     initializeChat();
   }, []);
 
-  // --- 3. Scroll Logic (Button Visibility Only) ---
   const scrollToBottom = (behavior = "smooth") => {
     messagesEndRef.current?.scrollIntoView({ behavior: behavior, block: "end" });
   };
@@ -258,18 +247,14 @@ const StudentAskToAIPage = () => {
   const handleScroll = () => {
     if (!chatContainerRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
-    
     const isNotAtBottom = scrollHeight - scrollTop - clientHeight > 300;
     setShowScrollButton(isNotAtBottom);
   };
 
-  // --- 4. Manual Load More Handler ---
   const handleLoadMore = async () => {
     if (isLoadingHistory) return;
-    
     setIsLoadingHistory(true);
     
-    // Capture current scroll height to restore position later
     if (chatContainerRef.current) {
         prevScrollHeightRef.current = chatContainerRef.current.scrollHeight;
     }
@@ -281,12 +266,9 @@ const StudentAskToAIPage = () => {
       
       if (res.success && Array.isArray(res.data) && res.data.length > 0) {
         const newMessages = formatHistoryData(res.data);
-        
-        // Prepend new (older) messages
         setMessages(prev => [...newMessages, ...prev]);
         setPage(nextPage);
       } else {
-        // --- ALERT IF NO MORE MESSAGES ---
         alert("You have reached the start of the conversation.");
       }
     } catch (err) {
@@ -297,18 +279,13 @@ const StudentAskToAIPage = () => {
     }
   };
 
-  // --- 5. Restore Scroll Position after Pagination ---
   useLayoutEffect(() => {
-    // If we just loaded history (prevScrollHeightRef was set), restore position
     if (chatContainerRef.current && prevScrollHeightRef.current > 0) {
       const newScrollHeight = chatContainerRef.current.scrollHeight;
       const heightDifference = newScrollHeight - prevScrollHeightRef.current;
-      
-      // Jump to the previous relative position instantly
       chatContainerRef.current.scrollTop = heightDifference;
       prevScrollHeightRef.current = 0; 
     } 
-    // If this is a new message being sent/received (at the bottom), auto-scroll
     else if (!isLoadingHistory && !isLoading && hasScrolledOnLoad.current) {
         const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
         const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
@@ -324,7 +301,6 @@ const StudentAskToAIPage = () => {
     if (!inputText.trim() || !threadId || isSending) return;
     const textToSend = inputText;
     setInputText("");
-    // Use Date.now() for temp ID
     setMessages(prev => [...prev, { id: `user-${Date.now()}`, role: 'user', text: textToSend }]);
     setIsSending(true);
     
@@ -361,23 +337,11 @@ const StudentAskToAIPage = () => {
   return (
     <div className="flex flex-col h-screen relative overflow-hidden">
       
-      {/* Global Background Nebula Effect */}
+      {/* ✅ OPTIMIZED: Static Background (Removed Infinite Animation) */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: -1 }}>
-          <motion.div 
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="absolute top-[-20%] left-[-20%] w-[800px] h-[800px] bg-cyan-500/10 rounded-full blur-[150px]"
-          />
-          <motion.div 
-            animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
-            transition={{ duration: 12, repeat: Infinity, ease: "linear", delay: 2 }}
-            className="absolute bottom-[-20%] right-[-20%] w-[800px] h-[800px] bg-purple-600/10 rounded-full blur-[150px]"
-          />
-          <motion.div 
-            animate={{ opacity: [0.1, 0.3, 0.1] }}
-            transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute top-[30%] left-[20%] w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[120px]"
-          />
+          <div className="absolute top-[-20%] left-[-20%] w-[800px] h-[800px] bg-cyan-500/10 rounded-full blur-[100px] opacity-40 transform-gpu" />
+          <div className="absolute bottom-[-20%] right-[-20%] w-[800px] h-[800px] bg-purple-600/10 rounded-full blur-[100px] opacity-30 transform-gpu" />
+          <div className="absolute top-[30%] left-[20%] w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-[80px] opacity-20 transform-gpu" />
       </div>
 
       {/* Header */}
@@ -435,9 +399,10 @@ const StudentAskToAIPage = () => {
                <div className={`p-8 rounded-3xl border mb-10 text-left w-full relative overflow-hidden shadow-2xl backdrop-blur-md
                  ${isDark ? "bg-[#111827]/60 border-white/10" : "bg-white/60 border-gray-200"}`}
               >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/20 blur-[50px] rounded-full"></div>
+                {/* Static glow instead of infinite pulse */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/20 blur-[40px] rounded-full"></div>
                 <div className="flex items-start gap-5 relative z-10">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center flex-shrink-0 shadow-lg animate-pulse">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-purple-500 to-indigo-500 flex items-center justify-center flex-shrink-0 shadow-lg">
                     <MdAutoAwesome className="text-white text-xl" />
                   </div>
                   <div>
@@ -476,7 +441,7 @@ const StudentAskToAIPage = () => {
               }}
               className="pb-4 pt-2"
             >
-              {/* Load More Button - ALWAYS VISIBLE if messages exist */}
+              {/* Load More Button */}
               <div className="flex justify-center w-full py-4 min-h-[60px] items-center">
                   {isLoadingHistory ? (
                       <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
@@ -518,7 +483,6 @@ const StudentAskToAIPage = () => {
                    </div>
                 </motion.div>
               )}
-              {/* Invisible element to scroll to */}
               <div ref={messagesEndRef} />
             </motion.div>
           )}

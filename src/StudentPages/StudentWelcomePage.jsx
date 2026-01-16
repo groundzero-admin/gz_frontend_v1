@@ -5,8 +5,6 @@ import {
   Rocket, 
   CheckCircle2, 
   Sparkles, 
-  ChevronDown, 
-  ChevronUp, 
   ExternalLink, 
   MapPin, 
   Clock, 
@@ -14,45 +12,28 @@ import {
   CalendarPlus, 
   Star,
   BookOpen 
-
 } from 'lucide-react';
 import { BsStars } from "react-icons/bs"; 
-
 import { getMyLiveBatches, getstudentsbatchprogress } from '../api.js'; 
 
-// const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL  ; 
-
-
-
-// --- Animation Variants ---
+// --- Optimized Animation Variants ---
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: { 
     opacity: 1,
-    transition: { 
-      staggerChildren: 0.1,
-      delayChildren: 0.2
-    }
+    transition: { staggerChildren: 0.05 } 
   },
-  exit: { opacity: 0, transition: { duration: 0.2 } }
+  exit: { opacity: 0 }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    transition: { type: "spring", stiffness: 50, damping: 20 }
-  }
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0 }
 };
 
 const bannerVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: { 
-    opacity: 1, 
-    scale: 1, 
-    transition: { duration: 0.6, ease: "easeOut" }
-  }
+  hidden: { opacity: 0, scale: 0.98 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } }
 };
 
 // --- Component: Welcome Banner ---
@@ -86,19 +67,13 @@ const WelcomeBanner = ({ username }) => {
       variants={bannerVariants}
       initial="hidden"
       animate="visible"
-      className="relative w-full rounded-3xl overflow-hidden p-8 md:p-10 mb-8 shadow-2xl"
+      className="relative w-full rounded-3xl overflow-hidden p-8 md:p-10 mb-8 shadow-2xl transform-gpu"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81] z-0"></div>
-      <motion.div 
-        animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[-50%] left-[-20%] w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-[100px] pointer-events-none"
-      />
-      <motion.div 
-        animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
-        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-        className="absolute bottom-[-50%] right-[-20%] w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[100px] pointer-events-none"
-      />
+      
+      {/* Static Background Blobs for Performance */}
+      <div className="absolute top-[-50%] left-[-20%] w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-[80px] pointer-events-none opacity-40" />
+      <div className="absolute bottom-[-50%] right-[-20%] w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[80px] pointer-events-none opacity-30" />
       
       <div className="relative z-10 flex flex-col gap-4">
         <div className="self-start px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-950/30 backdrop-blur-md flex items-center gap-2">
@@ -121,11 +96,8 @@ const WelcomeBanner = ({ username }) => {
   );
 };
 
-
-
 // --- Component: Session Card ---
 const SessionCard = ({ session, status, isDark }) => {
-  // State to track if the user is hovering over the description
   const [isDescHovered, setIsDescHovered] = useState(false);
 
   const statusStyles = {
@@ -135,13 +107,9 @@ const SessionCard = ({ session, status, isDark }) => {
   };
 
   const getActionButton = () => {
-    // --- SCENARIO 1: UPCOMING ---
     if (status === 'upcoming') {
-      // FIX: If Offline, do not show any buttons (Location is purely informational)
       if (session.sessionType === 'OFFLINE') return null;
-
       return (
-        // CHANGED: Added flex-col for mobile/tablet/small laptop, xl:flex-row for big screens
         <div className="flex flex-col xl:flex-row gap-2 w-full">
           <a
             href={session.meetingLinkOrLocation || "#"}
@@ -164,10 +132,7 @@ const SessionCard = ({ session, status, isDark }) => {
             target={session.googleClassroomLink ? "_blank" : "_self"}
             rel="noopener noreferrer"
             className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold border
-              ${isDark 
-                ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white" 
-                : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black"
-              }
+              ${isDark ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black"}
               ${!session.googleClassroomLink ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
             `}
           >
@@ -178,11 +143,8 @@ const SessionCard = ({ session, status, isDark }) => {
       );
     }
 
-    // --- SCENARIO 2: COMPLETED ---
     if (status === 'completed') {
-       // FIX: If Offline, hide the Classroom button
        if (session.sessionType === 'OFFLINE') return null;
-
       return (
         <a
           href={session.googleClassroomLink || "#"}
@@ -198,10 +160,8 @@ const SessionCard = ({ session, status, isDark }) => {
       );
     }
 
-    // --- SCENARIO 3: MISSED ---
     if (status === 'missed') {
       return (
-        // CHANGED: Added flex-col for mobile/tablet/small laptop, xl:flex-row for big screens
         <div className="flex flex-col xl:flex-row gap-2 w-full">
           <a
             href={ `./dashboard/catchup-session` }
@@ -212,18 +172,13 @@ const SessionCard = ({ session, status, isDark }) => {
             <CalendarPlus className="w-4 h-4" />
             Catch Up
           </a>
-
-          {/* FIX: Only show Classroom button if NOT offline */}
           {session.sessionType !== 'OFFLINE' && (
             <a
               href={session.googleClassroomLink || "#"}
               target={session.googleClassroomLink ? "_blank" : "_self"}
               rel="noopener noreferrer"
               className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold border
-                  ${isDark 
-                    ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white" 
-                    : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black"
-                  }
+                  ${isDark ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black"}
                   ${!session.googleClassroomLink ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
               `}
             >
@@ -242,9 +197,9 @@ const SessionCard = ({ session, status, isDark }) => {
 
   return (
     <motion.div
-      layout // This ensures the whole card resizes smoothly when children resize
+      layout="position" 
       variants={itemVariants} 
-      className={`backdrop-blur-sm border-2 rounded-3xl p-5 transition-all duration-300 flex flex-col h-full
+      className={`backdrop-blur-sm border-2 rounded-3xl p-5 transition-all duration-300 flex flex-col h-full transform-gpu
         ${statusStyles[status]}
         ${isDark ? "bg-gray-900/40" : "bg-white/60"}
       `}
@@ -254,7 +209,7 @@ const SessionCard = ({ session, status, isDark }) => {
           {session.title}
         </h4>
         {status === 'completed' && <div className="flex items-center gap-1 text-emerald-500 shrink-0 ml-2"><Star className="w-5 h-5 fill-current" /></div>}
-        {status === 'upcoming' && <Sparkles className="w-5 h-5 text-cyan-400 animate-pulse shrink-0 ml-2" />}
+        {status === 'upcoming' && <Sparkles className="w-5 h-5 text-cyan-400 shrink-0 ml-2" />}
       </div>
 
       <div className="space-y-3 mb-6 flex-1">
@@ -265,7 +220,7 @@ const SessionCard = ({ session, status, isDark }) => {
 
         {session.sessionType === 'ONLINE' ? (
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse" />
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-500" />
             <span className="text-sm font-medium text-cyan-500">Online</span>
           </div>
         ) : (
@@ -276,59 +231,32 @@ const SessionCard = ({ session, status, isDark }) => {
           </div>
         )}
 
-        {/* --- NEW DESCRIPTION SECTION (With fix) --- */}
         {session.description && (
-          <motion.div 
-            layout
-            onHoverStart={() => setIsDescHovered(true)}
-            onHoverEnd={() => setIsDescHovered(false)}
+          <div 
+            onMouseEnter={() => setIsDescHovered(true)}
+            onMouseLeave={() => setIsDescHovered(false)}
             className={`relative rounded-xl p-3 mt-2 cursor-pointer border transition-colors duration-300
-              ${isDark 
-                ? "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20" 
-                : "bg-gray-50 border-gray-100 hover:bg-gray-100 hover:border-gray-200"
-              }
+              ${isDark ? "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/20" : "bg-gray-50 border-gray-100 hover:bg-gray-100 hover:border-gray-200"}
             `}
           >
-            {/* Simple Static Header */}
             <div className="flex items-center gap-2 mb-1 opacity-70">
-              <span className="text-[10px] font-bold uppercase tracking-wider">
-                Session Details
-              </span>
+              <span className="text-[10px] font-bold uppercase tracking-wider">Session Details</span>
             </div>
 
-            {/* Animating Text Container with min-h */}
-            <motion.div
-              initial={{ height: "2.5rem" }} 
-              animate={{ height: isDescHovered ? "auto" : "2.5rem" }}
-              transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}
-              className="overflow-hidden min-h-[2.5rem]" 
-            >
-              <p 
-                className={`text-xs leading-relaxed whitespace-pre-line
-                  ${isDark ? "text-gray-300" : "text-gray-600"}
-                `}
-              >
+            <div className={`overflow-hidden transition-[max-height] duration-500 ease-in-out relative ${isDescHovered ? 'max-h-60' : 'max-h-10'}`}>
+              <p className={`text-xs leading-relaxed whitespace-pre-line pb-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
                 {session.description}
               </p>
-            </motion.div>
-
-            {/* Visual Fade Indicator */}
-            <AnimatePresence>
-              {!isDescHovered && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className={`absolute bottom-0 left-0 right-0 h-6 rounded-b-xl bg-gradient-to-t pointer-events-none
-                    ${isDark ? "from-[#111827] to-transparent" : "from-white to-transparent"}
-                  `} 
-                />
-              )}
-            </AnimatePresence>
-          </motion.div>
+              
+              <div 
+                className={`absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t transition-opacity duration-300 pointer-events-none
+                ${isDark ? "from-[#111827] to-transparent" : "from-white to-transparent"}
+                ${isDescHovered ? "opacity-0" : "opacity-100"}
+                `} 
+              />
+            </div>
+          </div>
         )}
-        {/* --- END DESCRIPTION SECTION --- */}
-
       </div>
 
       <div className="mt-auto pt-2">
@@ -339,47 +267,42 @@ const SessionCard = ({ session, status, isDark }) => {
 };
 
 
-
-
-// --- Component: Session Section (Final Polish) ---
+// --- Component: Session Section (FIXED SHOW LESS) ---
 const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-
-  // 1. Logic Configuration
   const isUpcoming = type === "upcoming";
-  const INITIAL_COUNT = 3 ; 
+  const INITIAL_COUNT = 3; 
+  const headerRef = useRef(null); // Ref for the top of the section
 
-  // 2. State Management
-  const [visibleCount, setVisibleCount] = useState(
-    isUpcoming ? INITIAL_COUNT : sessions.length
-  );
-  
+  const [visibleCount, setVisibleCount] = useState(isUpcoming ? INITIAL_COUNT : sessions.length);
   const lastCardRef = useRef(null);
 
-  // Sync state if sessions data updates from backend
   useEffect(() => {
     setVisibleCount(isUpcoming ? INITIAL_COUNT : sessions.length);
   }, [sessions, isUpcoming]);
 
-  // 3. Derived State
   const visibleSessions = sessions.slice(0, visibleCount);
   const showLoadMore = isUpcoming && sessions.length > visibleCount;
-  const showShowLess = isUpcoming && visibleCount > INITIAL_COUNT;
 
   const handleLoadMore = () => {
     setVisibleCount(sessions.length);
   };
 
   const handleShowLess = () => {
+    // 1. Scroll back to the header smoothly so the user doesn't lose context
+    if (headerRef.current) {
+      headerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    // 2. Reset count
     setVisibleCount(INITIAL_COUNT);
   };
 
-  // Scroll to new items when expanded
+  // Scroll to new items ONLY when expanding (Show More)
   useEffect(() => {
     if (visibleCount > INITIAL_COUNT && lastCardRef.current) {
         setTimeout(() => {
             lastCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 400);
+        }, 300);
     }
   }, [visibleCount]);
 
@@ -410,25 +333,13 @@ const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark
   const config = sectionConfig[type];
   const Icon = config.icon;
 
-  // --- ANIMATION VARIANTS ---
   const accordionVariants = {
-    collapsed: { 
-      height: 0, 
-      opacity: 0,
-      overflow: "hidden", 
-      transition: { duration: 0.3, ease: "easeInOut" }
-    },
-    expanded: { 
-      height: "auto", 
-      opacity: 1,
-      transition: { duration: 0.4, ease: "easeInOut" },
-      transitionEnd: { overflow: "visible" } // Keeps overflow visible for "Show More"
-    }
+    collapsed: { height: 0, opacity: 0, overflow: "hidden" },
+    expanded: { height: "auto", opacity: 1, transitionEnd: { overflow: "visible" } }
   };
 
   return (
-    <motion.div layout className="mb-6">
-      {/* HEADER */}
+    <div className="mb-6" ref={headerRef}>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className={`w-full flex items-center justify-between p-5 rounded-2xl border-2 transition-all duration-300
@@ -439,98 +350,69 @@ const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark
         <div className="flex items-center gap-3">
           <Icon className={`w-6 h-6 ${config.color}`} />
           <span className={`text-lg font-bold ${config.color}`}>{title}</span>
-          <span className={` py-1 rounded-full text-xs font-bold 
-            ${isDark ? "bg-black/20 text-gray-300" : "bg-white/50 text-gray-600"}`}>
+          <span className={` py-1 rounded-full text-xs font-bold ${isDark ? "bg-black/20 text-gray-300" : "bg-white/50 text-gray-600"}`}>
             ( {sessions.length} )
           </span>
         </div>
-        {/* {isExpanded ? (
-          <ChevronUp className={`w-5 h-5 ${config.color}`} />
-        ) : (
-          <ChevronDown className={`w-5 h-5 ${config.color}`} />
-        )} */}
       </button>
 
-      {/* CONTENT WRAPPER */}
       <motion.div
         variants={accordionVariants}
         initial={defaultExpanded ? "expanded" : "collapsed"}
         animate={isExpanded ? "expanded" : "collapsed"}
+        transition={{ duration: 0.3, ease: "easeInOut" }} 
         className="border-2 border-t-0 rounded-b-2xl flex flex-col gap-6 origin-top"
         style={{ 
            borderColor: isDark ? 'rgba(6,182,212,0.1)' : 'rgba(6,182,212,0.2)',
            backgroundColor: isDark ? 'rgba(8,51,68,0.2)' : 'rgba(236,254,255,0.5)'
         }}
       >
-        {/* Inner Padding Wrapper */}
-        <motion.div 
-           layout 
-           // This Spring transition is the key to the smooth "Show Less" height reduction
-           transition={{ layout: { type: "spring", stiffness: 300, damping: 30 } }}
-           className={`p-5 ${config.borderColor} ${config.bgColor}`}
-        >
+        <div className={`p-5 ${config.borderColor} ${config.bgColor}`}>
           {sessions.length > 0 ? (
             <>
-              {/* GRID */}
+              {/* ✅ FIXED: Added layout prop to the GRID container and a spring transition 
+                 This ensures the box shrinks smoothly when items are removed 
+              */}
               <motion.div 
-                layout
+                layout 
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
               >
-                <AnimatePresence initial={false} mode="sync">
+                <AnimatePresence initial={false} mode="popLayout">
                   {visibleSessions.map((session, index) => {
                     const isLast = index === visibleSessions.length - 1;
                     return (
                       <motion.div 
                         key={session._id} 
-                        layout="position"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }} // Faster exit for snap
-                        transition={{ duration: 0.3 }}
+                        layout="position" 
+                        initial="hidden"
+                        animate="visible"
+                        // Faster exit animation so the container can shrink quickly
+                        exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                        variants={itemVariants}
                         ref={isLast ? lastCardRef : null}
                       >
-                        <SessionCard
-                          session={session}
-                          status={type}
-                          isDark={isDark}
-                        />
+                        <SessionCard session={session} status={type} isDark={isDark} />
                       </motion.div>
                     );
                   })}
                 </AnimatePresence>
               </motion.div>
 
-              {/* CONTROLS */}
               {isUpcoming && sessions.length > INITIAL_COUNT && (
-                <motion.div layout className="flex justify-center border-t border-dashed border-gray-500/30 pt-4 mt-4">
-                  {showLoadMore ? (
-                    <button
-                      onClick={handleLoadMore}
-                      className={`group flex items-center gap-2 px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 border
-                        ${isDark 
-                          ? "bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white hover:border-gray-500" 
-                          : "bg-white/80 border-gray-200 text-gray-500 hover:bg-white hover:text-black hover:border-gray-400 shadow-sm"
-                        }
-                      `}
-                    >
-                      <span>Show {sessions.length - visibleCount} More</span>
-                      {/* <ChevronDown className="w-4 h-4 transition-transform group-hover:translate-y-1" /> */}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleShowLess}
-                      className={`group flex items-center gap-2 px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 border
-                        ${isDark 
-                          ? "bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white hover:border-gray-500" 
-                          : "bg-white/80 border-gray-200 text-gray-500 hover:bg-white hover:text-black hover:border-gray-400 shadow-sm"
-                        }
-                      `}
-                    >
-                      <span>Show Less</span>
-                      {/* <ChevronUp className="w-4 h-4 transition-transform group-hover:-translate-y-1" /> */}
-                    </button>
-                  )}
-                </motion.div>
+                <div className="flex justify-center border-t border-dashed border-gray-500/30 pt-4 mt-4">
+                  <button
+                    onClick={showLoadMore ? handleLoadMore : handleShowLess}
+                    className={`group flex items-center gap-2 px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 border
+                      ${isDark 
+                        ? "bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white hover:border-gray-500" 
+                        : "bg-white/80 border-gray-200 text-gray-500 hover:bg-white hover:text-black hover:border-gray-400 shadow-sm"
+                      }
+                    `}
+                  >
+                    <span>{showLoadMore ? `Show ${sessions.length - visibleCount} More` : 'Show Less'}</span>
+                  </button>
+                </div>
               )}
             </>
           ) : (
@@ -538,15 +420,11 @@ const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark
               {config.emptyText}
             </p>
           )}
-        </motion.div>
+        </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 };
-
-
-
-
 
 // --- Main Page Component ---
 const StudentDashboardPage = () => {
@@ -556,11 +434,9 @@ const StudentDashboardPage = () => {
   const [liveBatches, setLiveBatches] = useState([]);
   const [selectedBatchId, setSelectedBatchId] = useState(null); 
   const [batchData, setBatchData] = useState(null); 
-  
   const [isLoadingBatches, setIsLoadingBatches] = useState(true);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
-  // Fetch Batches (Run once)
   useEffect(() => {
     const fetchBatches = async () => {
       setIsLoadingBatches(true);
@@ -581,21 +457,16 @@ const StudentDashboardPage = () => {
     fetchBatches();
   }, []);
 
-  // Fetch Batch Data (The Fix is Here)
   useEffect(() => {
     if (!selectedBatchId) return;
-
-    // 1. Create a flag to track if this specific effect is still active
     let active = true;
 
     const fetchBatchStatus = async () => {
       setIsLoadingData(true);
-      setBatchData(null); // Clear previous data immediately to prevent visual mismatch
+      setBatchData(null); 
 
       try {
         const response = await getstudentsbatchprogress({ batch_obj_id: selectedBatchId });
-        
-        // 2. Only update state if this effect is still active (User hasn't clicked away)
         if (active) {
             if (response.success) setBatchData(response.data);
             else setBatchData(null);
@@ -603,36 +474,21 @@ const StudentDashboardPage = () => {
       } catch (err) {
         console.error("Failed to fetch batch status", err);
       } finally {
-        // 3. Only turn off loader if we are still on this batch
-        if (active) {
-            setIsLoadingData(false);
-        }
+        if (active) setIsLoadingData(false);
       }
     };
 
     fetchBatchStatus();
-
-    // 4. Cleanup function: Runs if component unmounts OR if selectedBatchId changes
-    return () => {
-      active = false; // This effectively "cancels" the state update of the previous request
-    };
+    return () => { active = false; };
   }, [selectedBatchId]);
 
   return (
     <div className="relative flex flex-col pb-20 max-w-7xl mx-auto min-h-screen">
       
-      {/* Global Background Nebula Effect */}
+      {/* PERFORMANCE FIX: Static Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: -1 }}>
-          <motion.div 
-            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="absolute top-[-20%] left-[-20%] w-[800px] h-[800px] bg-cyan-500/10 rounded-full blur-[150px]"
-          />
-          <motion.div 
-            animate={{ scale: [1, 1.1, 1], opacity: [0.2, 0.4, 0.2] }}
-            transition={{ duration: 12, repeat: Infinity, ease: "linear", delay: 2 }}
-            className="absolute bottom-[-20%] right-[-20%] w-[800px] h-[800px] bg-purple-600/10 rounded-full blur-[150px]"
-          />
+          <div className="absolute top-[-20%] left-[-20%] w-[800px] h-[800px] bg-cyan-500/10 rounded-full blur-[100px] opacity-40 transform-gpu" />
+          <div className="absolute bottom-[-20%] right-[-20%] w-[800px] h-[800px] bg-purple-600/10 rounded-full blur-[100px] opacity-30 transform-gpu" />
       </div>
 
       <WelcomeBanner username={username} />
@@ -656,8 +512,6 @@ const StudentDashboardPage = () => {
               <button
                 key={batch.batch_obj_id}
                 onClick={() => setSelectedBatchId(batch.batch_obj_id)}
-                // Add disabled state during loading to prevent spam-clicking if desired
-                // disabled={isLoadingData && selectedBatchId === batch.batch_obj_id} 
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 border backdrop-blur-sm
                   ${selectedBatchId === batch.batch_obj_id 
                     ? 'bg-purple-600 border-purple-500 text-white shadow-[0_0_15px_rgba(147,51,234,0.3)]' 
@@ -674,51 +528,29 @@ const StudentDashboardPage = () => {
         )}
       </div>
 
-      {/* FIX FOR ANIMATION BUG:
-         1. Use mode="wait" to ensure exit finishes.
-         2. Ensure Keys are distinct (loader vs content).
-      */}
       <AnimatePresence mode='wait'>
         {isLoadingData ? (
           <motion.div 
             key="loader"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0, transition: { duration: 0.1 } }} // Fast exit for loader
+            exit={{ opacity: 0 }}
             className="flex items-center justify-center py-20 relative z-10"
           >
                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
           </motion.div>
         ) : batchData ? (
           <motion.div
-            key={`content-${selectedBatchId}`} // Unique key forces re-render of this block
+            key={`content-${selectedBatchId}`}
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
             className="relative z-10"
           >
-            <SessionSection 
-              title="Upcoming Missions" 
-              sessions={batchData.upcoming}
-              type="upcoming"
-              defaultExpanded={true}
-              isDark={isDark}
-            />
-             <SessionSection 
-              title="Completed Adventures" 
-              sessions={batchData.attended}
-              type="completed"
-              defaultExpanded={false}
-              isDark={isDark}
-            />
-            <SessionSection 
-              title="Catch Up" 
-              sessions={batchData.missed}
-              type="missed"
-              defaultExpanded={batchData.missed.length > 0}
-              isDark={isDark}
-            />
+            <SessionSection title="Upcoming Missions" sessions={batchData.upcoming} type="upcoming" defaultExpanded={true} isDark={isDark} />
+            <SessionSection title="Completed Adventures" sessions={batchData.attended} type="completed" defaultExpanded={false} isDark={isDark} />
+            <SessionSection title="Catch Up" sessions={batchData.missed} type="missed" defaultExpanded={batchData.missed.length > 0} isDark={isDark} />
           </motion.div>
         ) : (
           <motion.div 
@@ -735,6 +567,5 @@ const StudentDashboardPage = () => {
     </div>
   );
 };
-
 
 export default StudentDashboardPage;

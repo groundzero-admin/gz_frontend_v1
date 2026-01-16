@@ -1,41 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { Rocket, Compass, BookOpen, Linkedin, Twitter, Check, Sun, Moon, X, Loader2 , Sparkles , ArrowRight  } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion'; // 1. Import Framer Motion
+import { motion, AnimatePresence } from 'framer-motion'; 
 
 import logoFullBlack from './Logo/gz_logo_with_name_black.png';
- import logoFullWhite from './Logo/gz_logo_with_name_white.png';
+import logoFullWhite from './Logo/gz_logo_with_name_white.png';
 
-
-
-
-// --- CSS Styles for Animations & Smooth Scroll ---
-const animationStyles = `
-  @keyframes float-slow {
-    0% { transform: translate(0px, 0px) scale(1); }
-    33% { transform: translate(30px, -50px) scale(1.1); }
-    66% { transform: translate(-20px, 20px) scale(0.9); }
-    100% { transform: translate(0px, 0px) scale(1); }
-  }
-  @keyframes float-medium {
-    0% { transform: translate(0px, 0px) scale(1); }
-    33% { transform: translate(-50px, 50px) scale(1.2); }
-    66% { transform: translate(30px, -30px) scale(0.8); }
-    100% { transform: translate(0px, 0px) scale(1); }
-  }
-  .animate-float-slow { animation: float-slow 15s ease-in-out infinite; }
-  .animate-float-medium { animation: float-medium 12s ease-in-out infinite; }
-  
+const globalStyles = `
   html { scroll-behavior: smooth; }
 `;
 
-// --- Framer Motion Variants (Animation Rules) ---
+// --- ANIMATIONS ---
 const fadeInUp = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 20 },
   visible: { 
     opacity: 1, 
     y: 0, 
-    transition: { duration: 0.8, ease: "easeOut" } 
+    transition: { duration: 0.5 } 
   }
 };
 
@@ -43,23 +24,36 @@ const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.2 // Delay between each child animation
-    }
+    transition: { staggerChildren: 0.1 }
   }
 };
 
-// --- Internal Component: Animated Background Orbs ---
-const BackgroundOrbs = ({ isDark }) => (
-  <div className="fixed inset-0 overflow-hidden pointer-events-none select-none z-0 transition-opacity duration-500">
-    <div className={`absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] blur-[100px] rounded-full animate-float-slow transition-colors duration-500 ${isDark ? 'bg-cyan-500/10' : 'bg-cyan-400/20'}`} style={{ animationDelay: '0s' }} />
-    <div className={`absolute bottom-[-10%] right-[-10%] w-[35vw] h-[35vw] blur-[100px] rounded-full animate-float-medium transition-colors duration-500 ${isDark ? 'bg-blue-600/10' : 'bg-blue-400/20'}`} style={{ animationDelay: '-2s' }} />
-    <div className={`absolute top-[40%] left-[20%] w-[25vw] h-[25vw] blur-[80px] rounded-full animate-float-slow transition-colors duration-500 ${isDark ? 'bg-cyan-300/5' : 'bg-purple-300/20'}`} style={{ animationDelay: '-5s' }} />
+// --- OPTIMIZED BACKGROUND: GRADIENTS INSTEAD OF BLURS ---
+// This renders instantly because it's just a background-image, not a heavy filter.
+const BackgroundOrbs = memo(({ isDark }) => (
+  <div className="fixed inset-0 overflow-hidden pointer-events-none select-none z-0">
+     <div 
+       className="absolute inset-0 w-full h-full transition-colors duration-500"
+       style={{
+         background: isDark 
+           ? `
+             radial-gradient(circle at 15% 15%, rgba(6,182,212, 0.15) 0%, transparent 40%),
+             radial-gradient(circle at 85% 85%, rgba(37,99,235, 0.15) 0%, transparent 40%),
+             radial-gradient(circle at 50% 50%, rgba(168,85,247, 0.05) 0%, transparent 60%)
+             `
+           : `
+             radial-gradient(circle at 15% 15%, rgba(34,211,238, 0.4) 0%, transparent 40%),
+             radial-gradient(circle at 85% 85%, rgba(96,165,250, 0.4) 0%, transparent 40%),
+             radial-gradient(circle at 50% 50%, rgba(192,132,252, 0.15) 0%, transparent 60%)
+             `,
+         backgroundColor: isDark ? '#0B0C15' : '#f8fafc' // Base color
+       }}
+     />
   </div>
-);
+));
 
-// --- Internal Component: Text Flip Animation ---
-const FlipWords = ({ isDark }) => {
+// --- MEMOIZED COMPONENTS ---
+const FlipWords = memo(({ isDark }) => {
   const words = ["think", "build", "learn"];
   const [index, setIndex] = useState(0);
 
@@ -76,17 +70,11 @@ const FlipWords = ({ isDark }) => {
         <span
           key={i}
           className={`absolute top-0 left-5 block w-full transition-all duration-700 ease-in-out transform ${
-            i === index 
-              ? 'translate-y-0 opacity-100 filter blur-0' 
-              : i < index 
-                ? '-translate-y-full opacity-0 filter blur-sm' 
-                : 'translate-y-full opacity-0 filter blur-sm'
+            i === index ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
           }`}
         >
           <span className={`text-transparent bg-clip-text bg-gradient-to-r ${
-            isDark 
-            ? 'from-cyan-200 via-cyan-300 to-cyan-500 drop-shadow-[0_0_20px_rgba(34,211,238,0.5)]' 
-            : 'from-cyan-600 via-blue-600 to-blue-800'
+            isDark ? 'from-cyan-200 to-cyan-500' : 'from-cyan-600 to-blue-800'
           }`}>
             {word}
           </span>
@@ -95,10 +83,9 @@ const FlipWords = ({ isDark }) => {
       <span className="invisible font-bold">scale</span> 
     </div>
   );
-};
+});
 
-// --- Internal Component: Hero Heading Animation ---
-const HeroHeading = ({ isDark }) => {
+const HeroHeading = memo(({ isDark }) => {
   const phrases = [
     { first: "think", second: "build" },
     { first: "think better", second: "build better" },
@@ -118,20 +105,20 @@ const HeroHeading = ({ isDark }) => {
   }, []);
 
   const gradientClass = isDark
-    ? "bg-gradient-to-r from-cyan-200 via-cyan-300 to-cyan-400 drop-shadow-[0_0_25px_rgba(34,211,238,0.4)]"
-    : "bg-gradient-to-r from-cyan-600 via-blue-600 to-blue-800";
+    ? "bg-gradient-to-r from-cyan-200 to-cyan-400"
+    : "bg-gradient-to-r from-cyan-600 to-blue-800";
 
   return (
     <h1 className={`text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.15] max-w-5xl mx-auto z-10 min-h-[3em] md:min-h-[2.5em] transition-colors duration-300 ${isDark ? 'text-white' : 'text-slate-900'}`}>
       We help you{' '}
-      <span className={`inline-block transition-all duration-500 transform ${fade ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-4 blur-sm'}`}>
+      <span className={`inline-block transition-opacity duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}>
         <span className={`text-transparent bg-clip-text ${gradientClass}`}>
           {phrases[index].first}
         </span>
       </span>
       <br />
       and{' '}
-      <span className={`inline-block transition-all duration-500 delay-100 transform ${fade ? 'opacity-100 translate-y-0 blur-0' : 'opacity-0 translate-y-4 blur-sm'}`}>
+      <span className={`inline-block transition-opacity duration-500 delay-100 ${fade ? 'opacity-100' : 'opacity-0'}`}>
         <span className={`text-transparent bg-clip-text ${gradientClass}`}>
           {phrases[index].second}
         </span>
@@ -139,44 +126,29 @@ const HeroHeading = ({ isDark }) => {
       with AI
     </h1>
   );
-};
+});
 
-// --- Internal Component: Smart Loading Modal ---
 const FormModal = ({ isOpen, onClose, url, title, isDark }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (isOpen) {
-      setIsLoading(true);
-    }
+    if (isOpen) setIsLoading(true);
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Backdrop Animation */}
+      <div onClick={onClose} className="absolute inset-0 bg-black/80 cursor-pointer" />
       <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
-      />
-      {/* Modal Content Animation */}
-      <motion.div 
-        initial={{ scale: 0.9, opacity: 0 }}
+        initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className={`relative w-full max-w-3xl h-[85vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col ${isDark ? 'bg-[#13141F] border border-white/10' : 'bg-white border border-slate-200'}`}
+        className={`relative w-full max-w-3xl h-[85vh] rounded-2xl overflow-hidden shadow-2xl flex flex-col ${isDark ? 'bg-[#13141F] border border-gray-800' : 'bg-white border border-gray-200'}`}
       >
-        <div className={`flex justify-between items-center p-4 border-b ${isDark ? 'border-white/10 bg-[#13141F]' : 'border-slate-100 bg-white'}`}>
+        <div className={`flex justify-between items-center p-4 border-b ${isDark ? 'border-gray-800 bg-[#13141F]' : 'border-gray-100 bg-white'}`}>
           <h3 className={`font-bold text-lg ${isDark ? 'text-white' : 'text-slate-900'}`}>{title}</h3>
-          <button 
-            onClick={onClose}
-            className={`p-2 rounded-full transition-colors ${isDark ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-slate-100 text-slate-500 hover:text-slate-800'}`}
-          >
-            <X size={20} />
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100/10">
+            <X size={20} className={isDark ? "text-white" : "text-black"} />
           </button>
         </div>
         <div className={`flex-1 relative ${isDark ? 'bg-black' : 'bg-white'}`}>
@@ -188,6 +160,7 @@ const FormModal = ({ isOpen, onClose, url, title, isDark }) => {
            )}
            <iframe 
             src={url} 
+            loading="lazy"
             onLoad={() => setIsLoading(false)}
             className={`w-full h-full border-0 transition-opacity duration-500 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             title="Form"
@@ -195,9 +168,7 @@ const FormModal = ({ isOpen, onClose, url, title, isDark }) => {
               filter: isDark ? 'invert(1) hue-rotate(180deg) contrast(0.9)' : 'none',
               backgroundColor: isDark ? 'black' : 'white' 
             }}
-          >
-            Loading...
-          </iframe>
+          />
         </div>
       </motion.div>
     </div>
@@ -219,79 +190,72 @@ const LandingPageMain = () => {
     }
   };
 
-  const openWaitlist = (e) => {
-    e.preventDefault();
-    setActiveModal('waitlist');
-  };
-
-  const openWebinar = (e) => {
-    e.preventDefault();
-    setActiveModal('webinar');
-  };
-
+  const openWaitlist = (e) => { e.preventDefault(); setActiveModal('waitlist'); };
+  const openWebinar = (e) => { e.preventDefault(); setActiveModal('webinar'); };
   const closeModal = () => setActiveModal(null);
 
-  // --- Dynamic Style Classes ---
+  // --- STYLES: OPTIMIZED TRANSPARENCY ---
+  // We use slightly transparent backgrounds (e.g., bg-white/90) 
+  // This lets the background gradients shine through without needing backdrop-blur.
   const styles = {
-    bg: isDark ? "bg-[#0B0C15]" : "bg-slate-50",
+    // We let BackgroundOrbs handle the main background color/gradient
+    bg: "bg-transparent", 
+    
     text: isDark ? "text-gray-100" : "text-slate-900",
-    subtext: isDark ? "text-gray-300" : "text-slate-600",
+    subtext: isDark ? "text-gray-400" : "text-slate-600",
+    
+    // Navbar: 90% Opacity (No blur)
     navbar: isDark 
-      ? "bg-[#13141F]/80 border-white/10 shadow-black/20" 
-      : "bg-white/80 border-slate-200 shadow-slate-200/50",
+      ? "bg-[#13141F]/90 border-gray-800 shadow-md" 
+      : "bg-white/90 border-gray-200 shadow-sm",
     navText: isDark ? "text-gray-300 hover:text-cyan-400" : "text-slate-600 hover:text-cyan-600",
     
+    // Cards: 90% Opacity (No blur) - This creates a subtle "Glass" feel because you can see the color behind it
     card: isDark 
-      ? "bg-[#13141F]/80 border-white/5" 
-      : "bg-white border-slate-200 shadow-lg shadow-slate-200/40",
+      ? "bg-[#13141F]/90 border-gray-800" 
+      : "bg-white/90 border-gray-200 shadow-sm",
       
     cardHoverEffect: isDark
-      ? "hover:border-cyan-500/40 hover:shadow-[0_10px_30px_-10px_rgba(34,211,238,0.2)]"
-      : "hover:border-cyan-500/30 hover:shadow-2xl hover:shadow-cyan-500/10",
+      ? "hover:border-cyan-500 transition-colors" 
+      : "hover:border-cyan-500 hover:shadow-md transition-all",
 
-    iconBg: isDark ? "bg-slate-800/80" : "bg-slate-100",
+    iconBg: isDark ? "bg-slate-800" : "bg-slate-100",
     
     quoteBg: isDark 
-      ? "bg-[#13141F]/60 border-white/5" 
-      : "bg-white border-slate-200 shadow-xl shadow-slate-200/50",
+      ? "bg-[#13141F]/90 border-gray-800" 
+      : "bg-white/90 border-gray-200 shadow-md",
       
     footer: isDark 
-      ? "border-white/5 bg-gradient-to-b from-[#0B0C15]/80 to-[#090A11]" 
-      : "border-slate-200 bg-gradient-to-b from-slate-50 to-slate-100",
-    divider: isDark ? "border-white/10" : "border-slate-200",
+      ? "bg-[#0B0C15]/95 border-gray-800" 
+      : "bg-slate-50/95 border-gray-200",
+    divider: isDark ? "border-gray-800" : "border-gray-200",
   };
 
   return (
     <>
-      <div 
-        className={`min-h-screen font-sans selection:bg-cyan-500/50 selection:text-white overflow-hidden relative transition-colors duration-500 ${styles.bg} ${styles.text}`}
-      >
-        <style>{animationStyles}</style>
+      <div className={`min-h-screen font-sans selection:bg-cyan-500/50 selection:text-white relative transition-colors duration-300 ${styles.bg} ${styles.text}`}>
+        <style>{globalStyles}</style>
+
+        {/* The Gradients sit here, behind everything */}
         <BackgroundOrbs isDark={isDark} />
 
         <div className="relative z-10">
         
         {/* ================= NAVBAR ================= */}
         <motion.nav 
-            initial={{ y: -50, opacity: 0 }}
+            initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.5 }}
             className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center pt-6 px-4"
         >
-          <div className={`backdrop-blur-xl border rounded-[5px] px-6 py-3 flex items-center justify-between w-full max-w-5xl shadow-2xl transition-all duration-300 ${styles.navbar}`}>
-          <div className="flex items-center">
-                  <img
+          <div className={`border rounded-[5px] px-6 py-3 flex items-center justify-between w-full max-w-5xl transition-colors duration-300 ${styles.navbar}`}>
+            <div className="flex items-center">
+                <img
                     src={isDark ? logoFullWhite : logoFullBlack}
                     alt="Ground Zero"
-                    className="
-                      h-[20px]
-                      w-auto
-                      object-contain
-                      select-none
-                    "
-                  />
-          </div>
-
+                    className="h-[20px] w-auto object-contain select-none"
+                />
+            </div>
             
             <div className="hidden md:flex items-center gap-8 text-sm font-medium">
               {['What We Do', "Who It's For", 'Programs', 'About'].map((item) => (
@@ -309,7 +273,7 @@ const LandingPageMain = () => {
             <div className="flex items-center gap-4">
               <button 
                 onClick={toggleTheme}
-                className={`p-2 rounded-full transition-all duration-300 ${isDark ? 'bg-white/10 text-white-300 hover:bg-white/20' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                className={`p-2 rounded-full transition-colors duration-300 ${isDark ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                 aria-label="Toggle Theme"
               >
                 {isDark ? <Sun size={18} /> : <Moon size={18} />}
@@ -317,7 +281,7 @@ const LandingPageMain = () => {
 
               <button 
                 onClick={() => navigate('/book-discovery-call-builderos')}
-                className={`border text-xs md:text-sm font-bold px-5 py-2 rounded-[5px] transition-all duration-300 shadow-md ${isDark ? 'bg-slate-800/80 hover:bg-cyan-500 hover:text-black border-cyan-500/30 text-cyan-400 hover:shadow-cyan-500/30' : 'bg-slate-900 text-white hover:bg-cyan-600 border-transparent hover:shadow-lg hover:shadow-cyan-500/20'}`}
+                className={`border text-xs md:text-sm font-bold px-5 py-2 rounded-[5px] transition-all duration-300 ${isDark ? 'bg-slate-800 hover:bg-cyan-500 hover:text-black border-cyan-500/30 text-cyan-400' : 'bg-slate-900 text-white hover:bg-cyan-600 border-transparent'}`}
               >
                 Book a Call
               </button>
@@ -332,35 +296,23 @@ const LandingPageMain = () => {
           variants={fadeInUp}
           className="relative pt-44 pb-24 px-4 flex flex-col items-center justify-center text-center min-h-[85vh]"
         >
-          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[60%] w-[350px] h-[350px] blur-[120px] rounded-full pointer-events-none z-0 transition-colors duration-500 ${isDark ? 'bg-cyan-500/20' : 'bg-cyan-400/10'}`} />
-
-
-                  {/* NEW BUTTON ADDITION START */}
           <motion.button
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.1 }}
             onClick={() => navigate('/spark')}
             className={`
-              mb-8 px-5 py-2 rounded-full text-sm font-semibold border flex items-center gap-2 transition-all hover:scale-105 backdrop-blur-md z-10
+              mb-8 px-5 py-2 rounded-full text-sm font-semibold border flex items-center gap-2 transition-transform hover:scale-105 z-10
               ${isDark 
-                ? 'bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:border-purple-400 hover:shadow-[0_0_20px_rgba(168,85,247,0.3)]' 
-                : 'bg-white border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 shadow-sm hover:shadow-md'
+                ? 'bg-[#1A1033] border-purple-900 text-purple-300' 
+                : 'bg-white border-purple-200 text-purple-700 shadow-sm'
               }
             `}
           >
             <Sparkles size={16} className={isDark ? "text-purple-400" : "text-purple-600"} />
             Make your kid's future ready
-                 <ArrowRight
-                    size={16}
-                    className={`${isDark ? "text-purple-400" : "text-purple-600"} ml-1`}
-                  />
-
-
+            <ArrowRight size={16} className={`${isDark ? "text-purple-400" : "text-purple-600"} ml-1`} />
           </motion.button>
-          {/* NEW BUTTON ADDITION END */}
-
-
 
           <HeroHeading isDark={isDark} />
           
@@ -371,13 +323,13 @@ const LandingPageMain = () => {
           <motion.div variants={fadeInUp} className="mt-10 flex flex-col sm:flex-row gap-5 z-10">
             <button 
               onClick={() => navigate('/book-discovery-call-builderos')}
-              className={`font-bold px-8 py-3.5 rounded-lg transition-all transform hover:scale-105 ${isDark ? 'bg-gradient-to-r from-[#8EE6F6] to-[#6DD5E8] hover:to-[#5AC0D3] text-black hover:shadow-[0_0_25px_rgba(34,211,238,0.4)]' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-xl shadow-slate-400/50'}`}
+              className={`font-bold px-8 py-3.5 rounded-lg transition-transform hover:scale-105 ${isDark ? 'bg-gradient-to-r from-[#8EE6F6] to-[#6DD5E8] text-black' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-lg'}`}
             >
               Book a Discovery Call
             </button>
             <button 
               onClick={(e) => handleScroll(e, 'programs')}
-              className={`font-bold px-8 py-3.5 rounded-lg transition-all hover:shadow-xl hover:-translate-y-0.5 cursor-pointer backdrop-blur-md border ${isDark ? 'bg-[#13141F]/50 border-gray-600 hover:border-cyan-400 hover:text-cyan-400 text-white' : 'bg-white border-slate-300 text-slate-700 hover:border-cyan-600 hover:text-cyan-600 hover:bg-slate-50'}`}
+              className={`font-bold px-8 py-3.5 rounded-lg transition-transform cursor-pointer border ${isDark ? 'bg-[#13141F]/80 border-gray-600 hover:border-cyan-400 hover:text-cyan-400 text-white' : 'bg-white border-slate-300 text-slate-700 hover:border-cyan-600 hover:text-cyan-600'}`}
             >
               Explore Programs
             </button>
@@ -389,7 +341,7 @@ const LandingPageMain = () => {
           id="what-we-do" 
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
+          viewport={{ once: true }} 
           variants={fadeInUp}
           className="pt-32 pb-24 text-center relative z-10 scroll-mt-20"
         >
@@ -415,7 +367,7 @@ const LandingPageMain = () => {
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
+            viewport={{ once: true }}
             className="grid grid-cols-1 md:grid-cols-3 gap-6"
           >
             {[
@@ -423,8 +375,8 @@ const LandingPageMain = () => {
               { Icon: Compass, title: "Explorers & Builders", desc: "Whether you're breaking into a new domain or figuring out what to build next, we help you narrow your direction, break down problems, get early answers fast, and learn to build effectively with AI." },
               { Icon: BookOpen, title: "Learners", desc: "For anyone wanting to master AI-powered building and sharpen the core thinking pillars - creativity, critical thinking, systems thinking, and communication." }
             ].map((card, idx) => (
-              <motion.div variants={fadeInUp} key={idx} className={`backdrop-blur-lg border rounded-2xl p-8 text-center transition-all duration-300 group hover:-translate-y-1 ${styles.card} ${styles.cardHoverEffect}`}>
-                <div className={`w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-6 transition-all shadow-lg ${styles.iconBg} ${isDark ? 'group-hover:text-cyan-300 group-hover:shadow-cyan-500/20' : 'text-slate-700 group-hover:text-cyan-600 group-hover:shadow-cyan-500/10'} group-hover:scale-110`}>
+              <motion.div variants={fadeInUp} key={idx} className={`border rounded-2xl p-8 text-center transition-transform duration-300 group hover:-translate-y-1 ${styles.card} ${styles.cardHoverEffect}`}>
+                <div className={`w-14 h-14 mx-auto rounded-xl flex items-center justify-center mb-6 transition-transform shadow-sm ${styles.iconBg} ${isDark ? 'group-hover:text-cyan-300' : 'text-slate-700 group-hover:text-cyan-600'} group-hover:scale-110`}>
                   <card.Icon size={28} />
                 </div>
                 <h3 className={`text-xl font-bold mb-3 ${isDark ? 'text-white group-hover:text-cyan-100' : 'text-slate-900 group-hover:text-cyan-700'}`}>{card.title}</h3>
@@ -445,15 +397,15 @@ const LandingPageMain = () => {
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
+            viewport={{ once: true }}
             className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch"
           >
             {/* Solo Card */}
-            <motion.div variants={fadeInUp} className={`backdrop-blur-lg border rounded-2xl p-7 flex flex-col h-full transition-all duration-300 hover:-translate-y-1 ${styles.card} ${styles.cardHoverEffect}`}>
+            <motion.div variants={fadeInUp} className={`border rounded-2xl p-7 flex flex-col h-full transition-transform duration-300 hover:-translate-y-1 ${styles.card} ${styles.cardHoverEffect}`}>
               <h3 className="text-2xl font-bold mb-1">Solo</h3>
               <p className={`text-xs font-bold mb-4 uppercase tracking-wider ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>Personalised Sessions</p>
               <p className={`text-sm mb-6 leading-relaxed font-medium ${styles.subtext}`}>For individuals who want rapid, specific acceleration and private guidance.</p>
-              <div className={`mb-6 p-4 rounded-xl border ${isDark ? 'bg-slate-800/50 border-white/5' : 'bg-slate-50 border-slate-100'}`}>
+              <div className={`mb-6 p-4 rounded-xl border ${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-slate-50 border-slate-100'}`}>
                 <span className="text-3xl font-bold">₹3,000</span>
                 <span className={`text-xs font-semibold ml-2 ${styles.subtext}`}>/ Session</span>
               </div>
@@ -466,18 +418,18 @@ const LandingPageMain = () => {
               </ul>
               <button 
                 onClick={() => navigate('/book-one-on-one-session-builderos')}
-                className={`w-full font-bold py-3 rounded-lg transition-all shadow-lg hover:scale-[1.02] ${isDark ? 'bg-gradient-to-r from-[#8EE6F6] to-[#6DD5E8] hover:to-[#5AC0D3] text-black hover:shadow-cyan-400/30' : 'bg-slate-900 text-white hover:bg-slate-800 hover:shadow-xl'}`}
+                className={`w-full font-bold py-3 rounded-lg transition-transform hover:scale-[1.02] ${isDark ? 'bg-gradient-to-r from-[#8EE6F6] to-[#6DD5E8] text-black' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-md'}`}
               >
                 Book your session
               </button>
             </motion.div>
 
             {/* Squad Card */}
-            <motion.div variants={fadeInUp} className={`backdrop-blur-lg border rounded-2xl p-7 flex flex-col h-full transition-all duration-300 hover:-translate-y-1 ${styles.card} ${isDark ? 'hover:border-blue-400/40 hover:shadow-[0_10px_30px_-10px_rgba(59,130,246,0.2)]' : 'hover:border-blue-400/30 hover:shadow-2xl hover:shadow-blue-500/10'}`}>
+            <motion.div variants={fadeInUp} className={`border rounded-2xl p-7 flex flex-col h-full transition-transform duration-300 hover:-translate-y-1 ${styles.card} ${isDark ? 'hover:border-blue-400' : 'hover:border-blue-400 hover:shadow-lg'}`}>
               <h3 className="text-2xl font-bold mb-1">Squad</h3>
               <p className={`text-xs font-bold mb-4 uppercase tracking-wider ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>Group Sessions</p>
               <p className={`text-sm mb-6 leading-relaxed font-medium ${styles.subtext}`}>For peers who want to learn and build together using AI in a cohort.</p>
-              <div className={`mb-6 p-4 rounded-xl border ${isDark ? 'bg-slate-800/50 border-white/5' : 'bg-slate-50 border-slate-100'}`}>
+              <div className={`mb-6 p-4 rounded-xl border ${isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-slate-50 border-slate-100'}`}>
                 <span className="text-3xl font-bold">₹1,500</span>
                 <span className={`text-xs font-semibold ml-2 ${styles.subtext}`}>/ Person / Session</span>
               </div>
@@ -494,7 +446,7 @@ const LandingPageMain = () => {
                  </p>
                  <button 
                     onClick={() => navigate('/form-a-squad-builderos')} 
-                    className={`w-full border-2 font-bold py-3 rounded-lg transition-all shadow-md hover:shadow-lg hover:scale-[1.02] ${isDark ? 'bg-slate-800/80 border-blue-500 text-blue-300 hover:bg-blue-500 hover:text-white hover:border-blue-400' : 'bg-white border-blue-600 text-blue-700 hover:bg-blue-50'}`}
+                    className={`w-full border-2 font-bold py-3 rounded-lg transition-transform hover:scale-[1.02] ${isDark ? 'bg-slate-800 border-blue-500 text-blue-300 hover:bg-blue-500 hover:text-white' : 'bg-white border-blue-600 text-blue-700 hover:bg-blue-50'}`}
                  >
                     Form a Squad
                  </button>
@@ -502,10 +454,7 @@ const LandingPageMain = () => {
             </motion.div>
 
             {/* Sync Card */}
-            <motion.div variants={fadeInUp} className={`backdrop-blur-lg border rounded-2xl p-7 flex flex-col h-full transition-all duration-300 hover:-translate-y-1 ${styles.card} ${styles.cardHoverEffect} relative overflow-hidden`}>
-              <div className={`absolute -top-20 -right-20 w-40 h-40 blur-[50px] rounded-full pointer-events-none ${isDark ? 'bg-cyan-500/10' : 'bg-cyan-200/40'}`}></div>
-              
-              {/* Top Section */}
+            <motion.div variants={fadeInUp} className={`border rounded-2xl p-7 flex flex-col h-full transition-transform duration-300 hover:-translate-y-1 ${styles.card} ${styles.cardHoverEffect} relative overflow-hidden`}>
               <div className="flex-1">
                 <h3 className="text-2xl font-bold mb-1">Sync</h3>
                 <p className={`text-xs font-bold mb-4 uppercase tracking-wider ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>Find out if it's for you</p>
@@ -521,20 +470,19 @@ const LandingPageMain = () => {
                 </ul>
                 <button 
                     onClick={() => navigate('/book-discovery-call-builderos')}
-                    className={`w-full border font-bold py-3 rounded-lg transition-all shadow-md hover:shadow-lg hover:scale-[1.02] ${isDark ? 'bg-slate-700/50 hover:bg-cyan-500/10 hover:text-cyan-300 border-cyan-500/30 text-white hover:shadow-cyan-400/20' : 'bg-slate-50 hover:bg-white text-slate-900 border-slate-300 hover:border-cyan-600 hover:text-cyan-700'}`}
+                    className={`w-full border font-bold py-3 rounded-lg transition-transform hover:scale-[1.02] ${isDark ? 'bg-slate-800 hover:bg-cyan-900 hover:text-cyan-300 border-cyan-500/30 text-white' : 'bg-slate-50 hover:bg-white text-slate-900 border-slate-300 hover:border-cyan-600 hover:text-cyan-700'}`}
                 >
                     Book a Discovery Call
                 </button>
               </div>
 
-              {/* Bottom Section - Pushed down with separator */}
               <div className={`mt-auto pt-6 border-t ${styles.divider} z-10`}>
                   <p className={`text-base mb-3 font-semibold ${isDark ? 'text-gray-200' : 'text-slate-800'}`}>Curious about building in the age of AI?</p>
                   <div className="flex items-center justify-between">
                      <button onClick={openWebinar} className={`text-sm font-bold hover:underline flex items-center gap-1 transition-colors ${isDark ? 'text-cyan-400 hover:text-cyan-300' : 'text-cyan-700 hover:text-cyan-900'}`}>
                        Join our next webinar <span aria-hidden="true">&rarr;</span>
                      </button>
-                     <span className={`border text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${isDark ? 'bg-cyan-500/20 border-cyan-500/30 text-cyan-300' : 'bg-cyan-100 border-cyan-200 text-cyan-800'}`}>Free</span>
+                     <span className={`border text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${isDark ? 'bg-cyan-900/30 border-cyan-500/30 text-cyan-300' : 'bg-cyan-100 border-cyan-200 text-cyan-800'}`}>Free</span>
                   </div>
               </div>
             </motion.div>
@@ -551,27 +499,25 @@ const LandingPageMain = () => {
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
+            viewport={{ once: true }}
             className="grid grid-cols-1 gap-8"
           >
             {/* Quote Card */}
-            <motion.div variants={fadeInUp} className={`backdrop-blur-md rounded-2xl p-10 md:p-12 relative overflow-hidden transition-all duration-300 ${styles.quoteBg}`}>
+            <motion.div variants={fadeInUp} className={`rounded-2xl p-10 md:p-12 relative overflow-hidden transition-colors duration-300 ${styles.quoteBg}`}>
               <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent to-transparent opacity-50 ${isDark ? 'via-cyan-500/50' : 'via-cyan-500'}`}></div>
-              <div className={`text-7xl absolute top-6 left-6 font-serif leading-none select-none ${isDark ? 'text-slate-800/50' : 'text-slate-200'}`}>"</div>
-              {/* REMOVED ITALIC, ADDED FONT-MEDIUM */}
+              <div className={`text-7xl absolute top-6 left-6 font-serif leading-none select-none ${isDark ? 'text-slate-800' : 'text-slate-200'}`}>"</div>
               <p className={`text-lg md:text-xl leading-relaxed relative z-10 font-medium ${isDark ? 'text-gray-200' : 'text-slate-700'}`}>
                 Whether you want to build a company, accelerate your career or simply navigate a noisy world with clarity, <span className={`font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>you need a system.</span>
                 <br /><br />
                 Ground Zero helps you build your own system and helps you stick to it! while integrating a set of meta skills that act as a lever for everything else you do.
               </p>
-              <div className={`text-7xl absolute bottom-6 right-10 font-serif leading-none select-none font-medium ${isDark ? 'text-slate-800/50' : 'text-slate-200'}`}>"</div>
+              <div className={`text-7xl absolute bottom-6 right-10 font-serif leading-none select-none font-medium ${isDark ? 'text-slate-800' : 'text-slate-200'}`}>"</div>
             </motion.div>
 
             {/* Founder Profile */}
-            <motion.div variants={fadeInUp} className={`backdrop-blur-md border rounded-2xl p-8 flex flex-col md:flex-row items-center md:items-start gap-8 shadow-lg transition-all ${isDark ? 'bg-[#13141F]/80 border-white/5 hover:border-white/10' : 'bg-white border-slate-200 hover:border-cyan-400 hover:shadow-xl'}`}>
+            <motion.div variants={fadeInUp} className={`border rounded-2xl p-8 flex flex-col md:flex-row items-center md:items-start gap-8 shadow-sm transition-all ${isDark ? 'bg-[#13141F]/90 border-gray-800' : 'bg-white/90 border-slate-200 hover:border-cyan-400 hover:shadow-md'}`}>
               <div className="flex-shrink-0 relative group">
-                  <div className={`absolute inset-0 rounded-full blur-md group-hover:blur-xl transition-all opacity-70 ${isDark ? 'bg-cyan-500/20' : 'bg-cyan-500/30'}`}></div>
-                <div className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-extrabold border-2 relative z-10 shadow-lg ${isDark ? 'bg-gradient-to-br from-slate-700 to-slate-900 text-cyan-200 border-cyan-500/40' : 'bg-gradient-to-br from-white to-slate-100 text-cyan-600 border-cyan-200'}`}>
+                <div className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-extrabold border-2 relative z-10 ${isDark ? 'bg-slate-800 text-cyan-200 border-cyan-500/40' : 'bg-slate-50 text-cyan-600 border-cyan-200'}`}>
                   SS
                 </div>
               </div>
@@ -585,39 +531,12 @@ const LandingPageMain = () => {
                   <p>Building tech and consumer business for 10+ years | Ex AVP New Initiatives, Swiggy | Ex CTO and Co-Founder at Tazzo | BTech (CSE) IIT Guwahati</p>
                 </div>
                 <div className="flex gap-4 mt-5 justify-center md:justify-start">
-                                      <a
-                                                href="https://x.com/shivangi_sriv"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className={`p-2.5 rounded-xl transition-all shadow-md group ${
-                                                  isDark
-                                                    ? 'bg-slate-800/50 hover:bg-cyan-500/20 hover:text-cyan-400 hover:shadow-cyan-500/10'
-                                                    : 'bg-slate-100 hover:bg-cyan-100 hover:text-cyan-600'
-                                                }`}
-                                              >
-                                                <Twitter
-                                                  size={18}
-                                                  className={`${isDark ? 'text-gray-400' : 'text-slate-400'} group-hover:text-current transition-colors`}
-                                                />
-                                              </a>
-
-                                              <a
-                                                href="https://www.linkedin.com/in/shivangi-srivastava-36bb1323/"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className={`p-2.5 rounded-xl transition-all shadow-md group ${
-                                                  isDark
-                                                    ? 'bg-slate-800/50 hover:bg-blue-500/20 hover:text-blue-400 hover:shadow-blue-500/10'
-                                                    : 'bg-slate-100 hover:bg-blue-100 hover:text-blue-600'
-                                                }`}
-                                              >
-                                                <Linkedin
-                                                  size={18}
-                                                  className={`${isDark ? 'text-gray-400' : 'text-slate-400'} group-hover:text-current transition-colors`}
-                                                />
-                                              </a>
-
-
+                   <a href="https://x.com/shivangi_sriv" target="_blank" rel="noopener noreferrer" className={`p-2.5 rounded-xl transition-all shadow-sm ${isDark ? 'bg-slate-800 hover:text-cyan-400' : 'bg-slate-100 hover:text-cyan-600'}`}>
+                      <Twitter size={18} className={`${isDark ? 'text-gray-400' : 'text-slate-400'} hover:text-current`} />
+                   </a>
+                   <a href="https://www.linkedin.com/in/shivangi-srivastava-36bb1323/" target="_blank" rel="noopener noreferrer" className={`p-2.5 rounded-xl transition-all shadow-sm ${isDark ? 'bg-slate-800 hover:text-blue-400' : 'bg-slate-100 hover:text-blue-600'}`}>
+                      <Linkedin size={18} className={`${isDark ? 'text-gray-400' : 'text-slate-400'} hover:text-current`} />
+                   </a>
                  </div>
               </div>
             </motion.div>
@@ -625,7 +544,7 @@ const LandingPageMain = () => {
         </section>
 
         {/* ================= FOOTER ================= */}
-        <footer className={`py-24 px-4 text-center border-t backdrop-blur-lg relative z-10 transition-colors duration-300 ${styles.footer}`}>
+        <footer className={`py-24 px-4 text-center border-t relative z-10 transition-colors duration-300 ${styles.footer}`}>
           <motion.h2 
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
             className={`text-2xl md:text-3xl font-bold mb-8 max-w-3xl mx-auto leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}
@@ -639,20 +558,19 @@ const LandingPageMain = () => {
           >
             <button 
               onClick={() => navigate('/book-discovery-call-builderos')}
-              className={`font-bold px-8 py-3.5 rounded-lg transition-all transform hover:scale-105 shadow-lg ${isDark ? 'bg-gradient-to-r from-[#8EE6F6] to-[#6DD5E8] hover:to-[#5AC0D3] text-black hover:shadow-cyan-400/30' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-400/50'}`}
+              className={`font-bold px-8 py-3.5 rounded-lg transition-transform hover:scale-105 shadow-md ${isDark ? 'bg-gradient-to-r from-[#8EE6F6] to-[#6DD5E8] text-black' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
             >
               Book a discovery session
             </button>
-            {/* Webinar Button - Footer */}
             <button 
               onClick={openWebinar}
-              className={`border-2 font-bold px-8 py-3.5 rounded-lg transition-all hover:shadow-lg ${isDark ? 'bg-transparent border-gray-600 hover:border-cyan-400 text-white hover:text-cyan-400 hover:shadow-cyan-500/10' : 'bg-white border-slate-300 text-slate-700 hover:border-cyan-600 hover:text-cyan-600'}`}
+              className={`border-2 font-bold px-8 py-3.5 rounded-lg transition-transform hover:shadow-md ${isDark ? 'bg-transparent border-gray-600 hover:border-cyan-400 text-white hover:text-cyan-400' : 'bg-white border-slate-300 text-slate-700 hover:border-cyan-600 hover:text-cyan-600'}`}
             >
               Join our next webinar
             </button>
           </motion.div>
 
-          <div className={`flex flex-col md:flex-row justify-between items-center max-w-6xl mx-auto text-xs pt-8 border-t font-medium ${isDark ? 'text-gray-500 border-white/10' : 'text-slate-400 border-slate-200'}`}>
+          <div className={`flex flex-col md:flex-row justify-between items-center max-w-6xl mx-auto text-xs pt-8 border-t font-medium ${isDark ? 'text-gray-500 border-gray-800' : 'text-slate-400 border-slate-200'}`}>
             <p>© 2025 Ground Zero. All rights reserved.</p>
             <div className="flex gap-6 mt-6 md:mt-0">
               <a href="#" className="hover:text-cyan-400 transition-colors">Privacy Policy</a>
@@ -664,28 +582,10 @@ const LandingPageMain = () => {
 
       </div>
 
-      {/* --- Modals (Rendered conditionally) --- */}
+      {/* --- Modals --- */}
       <AnimatePresence>
-        {activeModal === 'waitlist' && (
-          <FormModal 
-            key="waitlist-modal"
-            isOpen={true} 
-            onClose={closeModal} 
-            isDark={isDark}
-            title="Join the Waitlist"
-            url="https://docs.google.com/forms/d/1skdo6WtstPQxztiyc8xo6sa0tELuvhDuhdjbvS1PR1E/viewform?embedded=true"
-          />
-        )}
-        {activeModal === 'webinar' && (
-          <FormModal 
-            key="webinar-modal"
-            isOpen={true} 
-            onClose={closeModal} 
-            isDark={isDark}
-            title="Register for Webinar"
-            url="https://docs.google.com/forms/d/1VeV7fbUFDnJkcwMNJOnDg0O1I8ibA3kMQtdSV7wy8J4/viewform?embedded=true"
-          />
-        )}
+        {activeModal === 'waitlist' && <FormModal key="waitlist-modal" isOpen={true} onClose={closeModal} isDark={isDark} title="Join the Waitlist" url="https://docs.google.com/forms/d/1skdo6WtstPQxztiyc8xo6sa0tELuvhDuhdjbvS1PR1E/viewform?embedded=true" />}
+        {activeModal === 'webinar' && <FormModal key="webinar-modal" isOpen={true} onClose={closeModal} isDark={isDark} title="Register for Webinar" url="https://docs.google.com/forms/d/1VeV7fbUFDnJkcwMNJOnDg0O1I8ibA3kMQtdSV7wy8J4/viewform?embedded=true" />}
       </AnimatePresence>
     </>
   );
