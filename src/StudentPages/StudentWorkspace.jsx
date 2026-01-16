@@ -4,15 +4,26 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FaPencilAlt,
   FaStar, 
-  FaGlobeAmericas,
   FaTimes
 } from 'react-icons/fa';
 import { MdOutlineRocketLaunch } from "react-icons/md"; 
-import { MessageCircle, Sparkles, Star } from 'lucide-react';
+import { MessageCircle, Sparkles } from 'lucide-react';
 import { updateStudentProfile } from '../api.js'; 
 
-// --- Animation Variants ---
-const cardVariants = {
+// --- ANIMATION VARIANTS ---
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { 
+    opacity: 1,
+    transition: { 
+      staggerChildren: 0.1, // This now works because the children are direct descendants
+      delayChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { 
     opacity: 1, 
@@ -21,70 +32,29 @@ const cardVariants = {
   }
 };
 
-// --- COMPONENT: Fixed Space Background ---
+// --- COMPONENT: Optimized Space Background ---
 const SpaceBackground = ({ isDark }) => {
-  const stars = useMemo(() => {
-    return Array.from({ length: 15 }).map((_, i) => ({
-      id: i,
-      left: Math.random() * 100,
-      top: Math.random() * 100,
-      size: Math.random() * 10 + 8,
-      delay: Math.random() * 5,
-      duration: Math.random() * 4 + 3 
-    }));
-  }, []);
+  const bgStyle = isDark ? {
+    backgroundColor: '#0f172a', 
+    backgroundImage: `
+      radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.25), transparent 25%),
+      radial-gradient(circle at 85% 30%, rgba(14, 165, 233, 0.15), transparent 25%)
+    `
+  } : {
+    backgroundColor: '#f8fafc',
+    backgroundImage: `
+      radial-gradient(circle at 15% 50%, rgba(167, 139, 250, 0.4), transparent 30%),
+      radial-gradient(circle at 85% 30%, rgba(125, 211, 252, 0.4), transparent 30%)
+    `
+  };
 
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
-      {/* Nebula Clouds */}
-      <motion.div 
-        animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.4, 0.3] }}
-        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }} 
-        className={`absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full blur-[120px] 
-          ${isDark ? "bg-indigo-900/40" : "bg-sky-200/60"}
-      `}></motion.div>
-      <motion.div 
-        animate={{ scale: [1, 1.15, 1], opacity: [0.2, 0.4, 0.2] }}
-        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut", delay: 2 }} 
-        className={`absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full blur-[120px] 
-          ${isDark ? "bg-purple-900/40" : "bg-violet-200/60"}
-      `}></motion.div>
-
-      {/* Twinkling Stars */}
-      {stars.map((star) => (
-        <motion.div
-          key={star.id}
-          initial={{ opacity: 0.3, scale: 0.8 }}
-          animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
-          transition={{ duration: star.duration, repeat: Infinity, delay: star.delay }}
-          className={`absolute ${isDark ? "text-white" : "text-slate-400"}`}
-          style={{ left: `${star.left}%`, top: `${star.top}%` }}
-        >
-          <Star size={star.size} fill="currentColor" strokeWidth={0} />
-        </motion.div>
-      ))}
-
-      {/* Floating Rocket */}
-      <motion.div
-        initial={{ x: -100, y: "100vh", opacity: 0 }}
-        animate={{ x: "120vw", y: "-20vh", opacity: [0, 1, 1, 0] }}
-        transition={{ duration: 100, repeat: Infinity, ease: "linear", delay: 1 }}
-        className={`absolute top-0 left-0 ${isDark ? "text-gray-200" : "text-slate-600"}`}
-        style={{ zIndex: 10 }}
-      >
-        <MdOutlineRocketLaunch size={60} style={{ transform: "rotate(0deg)", filter: "drop-shadow(0 0 10px rgba(255,255,255,0.3))" }} />
-      </motion.div>
-
-      {/* Floating Earth */}
-      <motion.div
-        initial={{ x: "110vw", y: 100, rotate: 0, opacity: 0 }}
-        animate={{ x: -200, y: 300, rotate: -45, opacity: isDark ? 0.4 : 0.2 }}
-        transition={{ duration: 60, repeat: Infinity, ease: "linear", delay: 0 }}
-        className={`absolute top-20 left-0 ${isDark ? "text-purple-300" : "text-indigo-400"}`}
-        style={{ zIndex: 5 }}
-      >
-        <FaGlobeAmericas size={120} />
-      </motion.div>
+    <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0, ...bgStyle }}>
+      <div className={`absolute top-[10%] left-[20%] w-1 h-1 rounded-full ${isDark ? "bg-white/40" : "bg-slate-400/40"}`}></div>
+      <div className={`absolute top-[40%] left-[80%] w-1.5 h-1.5 rounded-full ${isDark ? "bg-white/30" : "bg-slate-400/30"}`}></div>
+      <div className={`absolute top-[80%] left-[10%] w-1 h-1 rounded-full ${isDark ? "bg-white/20" : "bg-slate-400/20"}`}></div>
+      <div className={`absolute top-[15%] left-[90%] w-1 h-1 rounded-full ${isDark ? "bg-white/50" : "bg-slate-400/50"}`}></div>
+      <div className={`absolute top-[70%] left-[50%] w-1 h-1 rounded-full ${isDark ? "bg-white/30" : "bg-slate-400/30"}`}></div>
     </div>
   );
 };
@@ -95,11 +65,11 @@ const ProfileCard = ({ userData, isDark, onProfileUpdate }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({ name: userData?.username || "", grade: userData?.class || "" });
     const [isSaving, setIsSaving] = useState(false);
-  
+   
     useEffect(() => {
       setFormData({ name: userData?.username || "", grade: userData?.class || "" });
     }, [userData]);
-  
+   
     const handleSave = async () => {
       setIsSaving(true);
       const response = await updateStudentProfile({ name: formData.name, class: formData.grade });
@@ -116,10 +86,10 @@ const ProfileCard = ({ userData, isDark, onProfileUpdate }) => {
       }
       setIsSaving(false);
     };
-  
+   
     return (
       <motion.div 
-        variants={cardVariants} 
+        variants={itemVariants}
         whileHover={{ scale: 1.01 }} 
         className="relative col-span-1 md:col-span-2 mb-6 z-10"
       >
@@ -132,13 +102,13 @@ const ProfileCard = ({ userData, isDark, onProfileUpdate }) => {
            {!isEditing ? (
                <button 
                 onClick={() => setIsEditing(true)} 
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500 hover:bg-cyan-400 hover:scale-105 active:scale-95 text-white font-bold text-xs transition-all shadow-lg shadow-cyan-500/30"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs transition-all shadow-lg shadow-cyan-500/30"
                >
                   <FaPencilAlt /> Customize
                </button>
            ) : (
                <div className="flex gap-2">
-                  <button onClick={handleSave} disabled={isSaving} className="px-4 py-2 rounded-full bg-emerald-500 hover:bg-emerald-400 hover:scale-105 active:scale-95 text-white text-xs font-bold shadow-lg transition-transform">
+                  <button onClick={handleSave} disabled={isSaving} className="px-4 py-2 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold shadow-lg transition-transform">
                      {isSaving ? "Saving..." : "Save"}
                   </button>
                   <button onClick={() => setIsEditing(false)} className={`px-4 py-2 rounded-full text-xs font-bold border hover:scale-105 active:scale-95 transition-transform ${isDark ? "bg-white/10 text-white border-transparent" : "bg-white text-gray-700 border-gray-200"}`}>
@@ -147,14 +117,13 @@ const ProfileCard = ({ userData, isDark, onProfileUpdate }) => {
                </div>
            )}
         </div>
-  
-        {/* Removed backdrop-blur-md to fix hover blur issue */}
-        <div className={`relative p-8 rounded-3xl border overflow-hidden transition-all duration-300
+   
+        <div className={`relative p-8 rounded-3xl border overflow-hidden transition-all duration-300 transform-gpu
           ${isDark ? "bg-[#13111C]/80 border-yellow-500/20" : "bg-white/60 border-yellow-400/50 shadow-xl"}
         `}>
           <MdOutlineRocketLaunch 
             className={`absolute -right-6 -bottom-6 text-9xl opacity-[0.07] rotate-[-45deg] pointer-events-none
-                ${isDark ? "text-white" : "text-slate-900"}
+              ${isDark ? "text-white" : "text-slate-900"}
             `} 
           />
 
@@ -169,7 +138,7 @@ const ProfileCard = ({ userData, isDark, onProfileUpdate }) => {
                       {formData.name.charAt(0).toUpperCase()}
                   </div>
               </div>
-  
+   
               <div className="flex-1 text-center md:text-left w-full">
                   <div className="flex justify-center md:justify-start mb-3">
                       <span className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shadow-sm
@@ -183,7 +152,7 @@ const ProfileCard = ({ userData, isDark, onProfileUpdate }) => {
                           <FaStar className="text-yellow-400 text-xs" />
                       </span>
                   </div>
-  
+   
                   {isEditing ? (
                       <div className="flex flex-col gap-3 max-w-md animate-in fade-in slide-in-from-bottom-2">
                           <div className="flex items-center gap-3">
@@ -248,10 +217,10 @@ const CompanionCard = ({ isDark, userData }) => {
 
     return (
         <motion.div 
-          variants={cardVariants} 
+          variants={itemVariants}
           whileHover={{ scale: 1.02 }}
-          // Removed backdrop-blur-md
-          className={`p-6 rounded-3xl border flex flex-col h-full shadow-lg relative overflow-hidden group transition-all duration-300 z-10
+          // ADDED H-64 HERE
+          className={`h-64 p-6 rounded-3xl border flex flex-col shadow-lg relative overflow-hidden group transition-all duration-300 z-10 transform-gpu
           ${isDark ? "bg-[#13111C]/80 border-white/5" : "bg-white/60 border-blue-100 shadow-blue-500/5"}
         `}>
           <div className="flex items-center justify-between mb-2">
@@ -263,7 +232,7 @@ const CompanionCard = ({ isDark, userData }) => {
                 </div>
             </div>
           </div>
-          
+           
           <div className="flex flex-col gap-1 flex-1">
               <div className="relative flex items-center gap-2 mt-2">
                  {isEditing ? (
@@ -328,15 +297,18 @@ const MissionCard = ({ isDark, userData }) => {
 
     const handleChange = (e) => {
         setMission(e.target.value);
-        localStorage.setItem(storageKey, e.target.value);
+    };
+
+    const handleBlur = () => {
+        localStorage.setItem(storageKey, mission);
     };
 
     return (
         <motion.div 
-            variants={cardVariants} 
+            variants={itemVariants}
             whileHover={{ scale: 1.02 }}
-            // Removed backdrop-blur-md
-            className={`p-6 rounded-3xl border flex flex-col h-full shadow-lg relative overflow-hidden z-10 ${isDark ? "bg-[#13111C]/80 border-white/5" : "bg-white/60 border-purple-100"}`}
+            // ADDED H-64 HERE
+            className={`h-64 p-6 rounded-3xl border flex flex-col shadow-lg relative overflow-hidden z-10 transform-gpu ${isDark ? "bg-[#13111C]/80 border-white/5" : "bg-white/60 border-purple-100"}`}
         >
             <div className={`absolute bottom-0 right-0 w-32 h-32 blur-[50px] rounded-full pointer-events-none opacity-50 ${isDark ? "bg-purple-500/20" : "bg-purple-300/30"}`}></div>
             
@@ -359,7 +331,8 @@ const MissionCard = ({ isDark, userData }) => {
             <textarea 
                 ref={inputRef}
                 value={mission} 
-                onChange={handleChange} 
+                onChange={handleChange}
+                onBlur={handleBlur}
                 className={`w-full h-full bg-transparent resize-none outline-none text-2xl font-bold leading-tight 
                     ${isDark ? "text-white placeholder:text-white/20" : "text-slate-900 placeholder:text-gray-300"}
                 `} 
@@ -382,15 +355,18 @@ const QuickFactsCard = ({ userData, isDark }) => {
 
     const handleChange = (e) => {
         setCoolThing(e.target.value);
-        localStorage.setItem(storageKey, e.target.value);
+    };
+
+    const handleBlur = () => {
+        localStorage.setItem(storageKey, coolThing);
     };
 
     return (
         <motion.div 
-            variants={cardVariants} 
+            variants={itemVariants}
             whileHover={{ scale: 1.02 }}
-            // Removed backdrop-blur-md
-            className={`p-6 rounded-3xl border flex flex-col shadow-lg h-full z-10 ${isDark ? "bg-[#13111C]/80 border-white/5" : "bg-white/60 border-orange-100"}`}
+            // ADDED H-64 HERE
+            className={`h-64 p-6 rounded-3xl border flex flex-col shadow-lg z-10 transform-gpu ${isDark ? "bg-[#13111C]/80 border-white/5" : "bg-white/60 border-orange-100"}`}
         >
             <div className="flex items-center gap-2 mb-6"><FaStar size={18} className="text-yellow-400" /><h3 className={`text-sm font-bold ${isDark ? "text-white" : "text-slate-800"}`}>Quick Facts</h3></div>
             <div className="flex gap-12 mb-6">
@@ -412,6 +388,7 @@ const QuickFactsCard = ({ userData, isDark }) => {
                     type="text" 
                     value={coolThing} 
                     onChange={handleChange} 
+                    onBlur={handleBlur}
                     placeholder="Tell us one more cool thing..."
                     className={`w-full bg-transparent border-b py-1 text-sm outline-none focus:border-yellow-500 transition-colors font-medium 
                         ${isDark 
@@ -424,7 +401,7 @@ const QuickFactsCard = ({ userData, isDark }) => {
     );
 };
 
-// --- UPDATED INTERESTS CARD ---
+// --- INTERESTS CARD ---
 const InterestsCard = ({ isDark, userData }) => {
     const [tags, setTags] = useState([]);
     const [newInterest, setNewInterest] = useState("");
@@ -467,9 +444,10 @@ const InterestsCard = ({ isDark, userData }) => {
     
     return (
         <motion.div 
-            variants={cardVariants} 
+            variants={itemVariants}
             whileHover={{ scale: 1.02 }}
-            className={`p-6 rounded-3xl border flex flex-col shadow-lg h-full z-10 
+            // ADDED H-64 HERE
+            className={`h-64 p-6 rounded-3xl border flex flex-col shadow-lg z-10 
             ${isDark 
                 ? "bg-[#13111C]/80 border-white/5" 
                 : "bg-white/60 border-violet-100 shadow-violet-500/5"
@@ -516,8 +494,8 @@ const InterestsCard = ({ isDark, userData }) => {
                             ${isSelected 
                                 ? "bg-cyan-500 border-cyan-400 text-white shadow-lg shadow-cyan-500/20" 
                                 : isDark 
-                                    ? "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10" 
-                                    : "bg-white border-violet-200 text-slate-600 hover:bg-violet-50 hover:border-violet-300"
+                                  ? "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10" 
+                                  : "bg-white border-violet-200 text-slate-600 hover:bg-violet-50 hover:border-violet-300"
                             }
                         `}
                     >
@@ -560,20 +538,28 @@ const StudentMySpacePage = () => {
   const handleProfileUpdate = (updatedData) => { setUserData(prev => ({ ...prev, ...updatedData })); };
 
   return (
-    <motion.div initial="hidden" animate="visible" className="relative min-h-[85vh] max-w-5xl mx-auto">
+    <div className="relative min-h-[85vh] max-w-5xl mx-auto">
       <SpaceBackground isDark={isDark} />
-      <motion.div variants={cardVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-10">
-        
-        {/* Pass userData to all cards so they can create unique storage keys */}
+      
+      {/* FIXED: 
+         1. This grid is now the motion.div
+         2. Wrapper divs removed from children
+      */}
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-10"
+      >
         <ProfileCard userData={userData} isDark={isDark} onProfileUpdate={handleProfileUpdate} />
         
-        <div className="h-64"><CompanionCard isDark={isDark} userData={userData} /></div>
-        <div className="h-64"><MissionCard isDark={isDark} userData={userData} /></div>
-        <div className="h-64"><QuickFactsCard userData={userData} isDark={isDark} /></div>
-        <div className="h-64"><InterestsCard isDark={isDark} userData={userData} /></div>
-
+        {/* These components now have "h-64" inside them, no wrapper needed */}
+        <CompanionCard isDark={isDark} userData={userData} />
+        <MissionCard isDark={isDark} userData={userData} />
+        <QuickFactsCard userData={userData} isDark={isDark} />
+        <InterestsCard isDark={isDark} userData={userData} />
       </motion.div>
-    </motion.div>
+    </div>
   );
 };
 
