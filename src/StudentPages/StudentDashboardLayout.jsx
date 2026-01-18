@@ -6,8 +6,15 @@ import {
   FaCommentDots,
   FaCompass,
   FaSun,
-  FaMoon
-} from "react-icons/fa"
+  FaMoon,
+  
+} from "react-icons/fa" 
+
+import { BsClipboard2Pulse } from "react-icons/bs";
+
+
+import { GoGoal } from "react-icons/go";
+
 import { MdOutlineRocketLaunch } from "react-icons/md"; 
 import { BsStars } from "react-icons/bs"
 import { HiOutlineLogout } from "react-icons/hi";
@@ -173,6 +180,26 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
             label={`Ask ${companionName}`} 
             subLabel="Your Companion" 
             isActive={isActive("/student/dashboard/asktoai")} 
+            isDark={isDark} 
+        />
+
+        {/* --- Assignments --- */}
+        <SidebarItem 
+            to="/student/dashboard/my-assignments" 
+            icon={<GoGoal />} 
+            label="Assignments" 
+            subLabel="Your Goal" 
+            isActive={isActive("/student/dashboard/my-assignments")} 
+            isDark={isDark} 
+        />
+
+        {/* --- NEW ENTRY: White Board --- */}
+        <SidebarItem 
+            to="/student/dashboard/whiteboard" 
+            icon={<BsClipboard2Pulse />} 
+            label="White Board" 
+            subLabel="Your Board" 
+            isActive={isActive("/student/dashboard/whiteboard")} 
             isDark={isDark} 
         />
         
