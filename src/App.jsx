@@ -51,7 +51,7 @@ import NotFoundPage from './NotFound404Page.jsx'
 import StudentAssignments from './StudentPages/StudentAssignment.jsx'
 import ActiveBatchesPageForBoard from './AdminPages/AdminActiveBatchPageForWhiteBoard.jsx'
 import AdminAllBoardsForABatch from './AdminPages/AdminListAllBoardsForABstch.jsx'
-import StudentWhiteboardPage from './StudentPages/StudentWhiteBoard.jsx'
+// import StudentWhiteboardPage from './StudentPages/StudentWhiteBoard.jsx'
 
 
 
@@ -146,7 +146,7 @@ function App() {
               <Route path="catchup-session" element={< SparkBookCatchUpSession />} />
               <Route path="my-assignments" element={<  StudentAssignments />} />
 
-              <Route path="whiteboard" element={<  StudentWhiteboardPage />} />
+              {/* <Route path="whiteboard" element={<  StudentWhiteboardPage />} /> */}
 
 
 

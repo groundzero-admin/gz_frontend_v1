@@ -10,7 +10,7 @@ import {
   
 } from "react-icons/fa" 
 
-import { BsClipboard2Pulse } from "react-icons/bs";
+// import { BsClipboard2Pulse } from "react-icons/bs";
 
 
 import { GoGoal } from "react-icons/go";
@@ -194,14 +194,14 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
         />
 
         {/* --- NEW ENTRY: White Board --- */}
-        <SidebarItem 
+        {/* <SidebarItem 
             to="/student/dashboard/whiteboard" 
             icon={<BsClipboard2Pulse />} 
             label="White Board" 
             subLabel="Your Board" 
             isActive={isActive("/student/dashboard/whiteboard")} 
             isDark={isDark} 
-        />
+        /> */}
         
         <SidebarItem 
             to="/student/dashboard/workspace" 
