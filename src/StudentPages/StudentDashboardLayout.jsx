@@ -188,7 +188,7 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
             to="/student/dashboard/my-assignments" 
             icon={<GoGoal />} 
             label="Assignments" 
-            subLabel="Your Goal" 
+            subLabel="Your Goals" 
             isActive={isActive("/student/dashboard/my-assignments")} 
             isDark={isDark} 
         />
