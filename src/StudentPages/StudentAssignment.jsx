@@ -54,13 +54,13 @@ const SpaceBackground = ({ isDark }) => {
 };
 
 // --- UPDATED: Assignment Card ---
+// --- UPDATED: Assignment Card (Allows more text) ---
 const AssignmentCard = ({ data, isDark, onClick }) => (
   <motion.div
     variants={cardVariants}
     whileHover={{ y: -5, scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
     onClick={() => onClick(data)}
-    // OPTIMIZATION: Added 'transform-gpu' to ensure hover effects use the graphics card
     className={`
       cursor-pointer relative overflow-hidden rounded-3xl p-5 border shadow-lg transition-all flex flex-col h-full transform-gpu
       ${isDark 
@@ -94,8 +94,9 @@ const AssignmentCard = ({ data, isDark, onClick }) => (
         </span>
       </div>
       
-      {/* --- ROW 2: Description --- */}
-      <p className={`text-sm mb-4 line-clamp-2 flex-grow ${isDark ? "text-gray-400" : "text-slate-600"}`}>
+      {/* --- ROW 2: Description (UPDATED HERE) --- */}
+      {/* Changed 'line-clamp-2' to 'line-clamp-5' to allow ~50 words before truncating */}
+      <p className={`text-sm mb-4 line-clamp-5 flex-grow ${isDark ? "text-gray-400" : "text-slate-600"}`}>
         {data.assignment_description}
       </p>
 
