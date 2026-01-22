@@ -48,6 +48,10 @@ import StudentMySpacePage from './StudentPages/StudentWorkspace.jsx'
 import Admin_GetAllLinksOtp from './AdminPages/Admin_get_all_link_otp_for_mail.jsx'
 import SparkBookCatchUpSession from './StudentPages/StudentZohoCatchUpPage.jsx'
 import NotFoundPage from './NotFound404Page.jsx'
+import StudentAssignments from './StudentPages/StudentAssignment.jsx'
+import ActiveBatchesPageForBoard from './AdminPages/AdminActiveBatchPageForWhiteBoard.jsx'
+import AdminAllBoardsForABatch from './AdminPages/AdminListAllBoardsForABstch.jsx'
+// import StudentWhiteboardPage from './StudentPages/StudentWhiteBoard.jsx'
 
 
 
@@ -117,6 +121,11 @@ function App() {
 
               <Route path="email-otp"   element={   <Admin_GetAllLinksOtp/>   }  />
 
+
+              <Route path="collaborativeboard/batches"   element={   < ActiveBatchesPageForBoard />   }  />
+              <Route path="collaborativeboard/batches/:batchId"   element={   <  AdminAllBoardsForABatch />   }  />
+
+
       </Route>
 
 
@@ -135,6 +144,10 @@ function App() {
               <Route path="workspace" element={< StudentMySpacePage />} />
 
               <Route path="catchup-session" element={< SparkBookCatchUpSession />} />
+              <Route path="my-assignments" element={<  StudentAssignments />} />
+
+              {/* <Route path="whiteboard" element={<  StudentWhiteboardPage />} /> */}
+
 
 
 

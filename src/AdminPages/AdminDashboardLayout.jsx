@@ -13,7 +13,8 @@ import {
   FaBars, // Hamburger
   FaTimes, // Close
   FaSun,
-  FaMoon
+  FaMoon ,
+  FaChalkboard
 } from "react-icons/fa"
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom"
 import "../color.css" // Your color.css file
@@ -35,6 +36,8 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
 
     // ✅ NEW ATTENDANCE ROUTE ADDED
     { to: "/admin/dashboard/attendance", icon: <FaUserGraduate />, label: "Mark Attendance" },
+
+    { to: "/admin/dashboard/collaborativeboard/batches", icon: <FaChalkboard />, label: "Student Boards" } 
   ]
 
 

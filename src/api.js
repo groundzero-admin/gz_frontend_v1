@@ -1951,3 +1951,205 @@ export const getAllLinksAndOtp = async () => {
     return { success: false, message: "Network error" };
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///admin crud fior astudnt assignment links 
+// --- Assignment Management API ---
+const assignmentBase = `${BASE_URL}/admin/assignment`;
+
+// 1. GET: Fetch all assignments for a student
+export const getStudentAssignments = async (studentId) => {
+  try {
+    const response = await fetch(`${assignmentBase}/list/${studentId}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Fetch Assignments error:", error);
+    return { success: false, message: "Network error fetching assignments." };
+  }
+};
+
+// 2. POST: Create a new assignment
+export const createAssignmentLink = async (data) => {
+  // data = { student_obj_id, assignment_title, assignment_description, link }
+  try {
+    const response = await fetch(`${assignmentBase}/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data)
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Create Assignment error:", error);
+    return { success: false, message: "Network error creating assignment." };
+  }
+};
+
+// 3. PUT: Update an existing assignment
+export const updateAssignmentLink = async (data) => {
+  // data = { assignment_id, student_obj_id, assignment_title, assignment_description, link }
+  try {
+    const response = await fetch(`${assignmentBase}/update`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data)
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Update Assignment error:", error);
+    return { success: false, message: "Network error updating assignment." };
+  }
+};
+
+// 4. DELETE: Remove an assignment
+export const deleteAssignmentLink = async (data) => {
+  // data = { assignment_id, student_obj_id }
+  try {
+    const response = await fetch(`${assignmentBase}/delete`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data)
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Delete Assignment error:", error);
+    return { success: false, message: "Network error deleting assignment." };
+  }
+};
+
+
+
+
+
+////// student fetching its assigmnets 
+// In ../api.js
+export const fetchMyAssignments = async () => {
+  try {
+    // Adjust route if needed based on your backend
+    const response = await fetch(`${BASE_URL}/student/my-assignments`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Fetch Assignments Error:", error);
+    return { success: false, message: "Network error" };
+  }
+};
+
+
+
+
+
+
+
+
+// Fetch all students and their board links for a specific batch (Admin)
+export const getBatchStudentsBoardLinks = async (batchId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch/students-board-links`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Important: Sends the admin auth cookie
+      body: JSON.stringify({ 
+        batch_obj_id: batchId 
+      })
+    });
+
+    return await response.json();
+  } catch (error) {
+    console.error("Get Batch Students Board Links error:", error);
+    return { success: false, message: "Network error fetching student links." };
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+///////////// admin read oute for a soefic student board link so that theycan see and edit it if they want 
+export const getStudentBoardLink = async (studentId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/specific-student-board-link`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ student_obj_id: studentId })
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Fetch Board Link error:", error);
+    return { success: false, message: "Network error fetching board link." };
+  }
+};
+
+export const upsertStudentBoardLink = async (studentId, link) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/board-link/upsert`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ student_obj_id: studentId, board_link: link })
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Upsert Board Link error:", error);
+    return { success: false, message: "Network error saving board link." };
+  }
+};
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////////   called by a student to fetch its board link 
+export const getMyBoardLink = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/student/my-board-link`, {
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      credentials: 'include', // Important: Sends the student auth cookie
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Get My Board Link error:", error);
+    return { success: false, message: "Network error fetching board." };
+  }
+};
