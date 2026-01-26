@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /spark
+
+Disallow: /login
+Disallow: /admin
+Disallow: /student
+Disallow: /teacher
+Disallow: /parent
+Disallow: /book-
+Disallow: /buycourse
+Disallow: /api
+
+Sitemap: https://groundzero.world/sitemap.xml

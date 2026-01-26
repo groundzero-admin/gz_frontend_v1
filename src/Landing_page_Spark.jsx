@@ -10,6 +10,12 @@ import { whoami } from './api.js';
 import logoFullBlack from './Logo/gz_logo_with_name_black.png';
 import logoFullWhite from './Logo/gz_logo_with_name_white.png';
 
+import { Helmet } from "react-helmet-async";
+
+
+
+
+
 // --- Global CSS: Smooth Scroll & Text Optimization ---
 const globalStyles = `
   html { scroll-behavior: smooth; }
@@ -201,6 +207,51 @@ const GroundZeroSpark = () => {
   
   return (
     <>
+
+
+          <Helmet>
+            {/* Primary */}
+            <title>Ground Zero Spark — Make Your Child Future Ready</title>
+            <meta
+              name="description"
+              content="Ground Zero Spark helps children develop critical thinking, creativity, communication, and responsible AI skills through real-world problem solving."
+            />
+            <link rel="canonical" href="https://www.groundzero.world/spark" />
+
+            {/* Open Graph */}
+            <meta property="og:type" content="website" />
+            <meta property="og:title" content="Ground Zero Spark — Make Your Child Future Ready" />
+            <meta
+              property="og:description"
+              content="Thinking skills and responsible AI education for kids through hands-on learning."
+            />
+            <meta property="og:url" content="https://www.groundzero.world/spark" />
+            <meta
+              property="og:image"
+              content="https://www.groundzero.world/assets/gz_logo_with_name_black-72a6nTtR.png"
+            />
+
+            {/* Twitter */}
+            <meta name="twitter:card" content="summary_large_image" />
+            <meta name="twitter:title" content="Ground Zero Spark — AI & Thinking Skills for Kids" />
+            <meta
+              name="twitter:description"
+              content="Helping kids become future-ready with thinking skills and responsible AI."
+            />
+            <meta
+              name="twitter:image"
+              content="https://www.groundzero.world/assets/gz_logo_with_name_black-72a6nTtR.png"
+            />
+
+            {/* Indexing */}
+            <meta name="robots" content="index, follow" />
+          </Helmet>
+
+
+
+
+
+
     <div className={`min-h-screen font-sans selection:bg-cyan-500/50 selection:text-white relative transition-colors duration-300 ${styles.bg} ${styles.text}`}>
       <style>{globalStyles}</style>
       

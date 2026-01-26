@@ -6,6 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import logoFullBlack from './Logo/gz_logo_with_name_black.png';
 import logoFullWhite from './Logo/gz_logo_with_name_white.png';
 
+import { Helmet } from "react-helmet-async";
+
+
+
+
+
 const globalStyles = `
   html { scroll-behavior: smooth; }
 `;
@@ -233,6 +239,49 @@ const LandingPageMain = () => {
 
   return (
     <>
+
+
+         <Helmet>
+                {/* Primary */}
+                <title>Ground Zero — Think Better, Build Better with AI</title>
+                <meta
+                  name="description"
+                  content="Ground Zero helps founders, builders, learners, and parents think better and build better with AI through structured programs, mentorship, and systems thinking."
+                />
+                <link rel="canonical" href="https://www.groundzero.world/" />
+
+                {/* Open Graph */}
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content="Ground Zero — Think Better, Build Better with AI" />
+                <meta
+                  property="og:description"
+                  content="Structured AI-first learning and mentorship for modern thinkers and builders."
+                />
+                <meta property="og:url" content="https://www.groundzero.world/" />
+                <meta
+                  property="og:image"
+                  content="https://www.groundzero.world/assets/gz_logo_with_name_black-72a6nTtR.png"
+                />
+
+                {/* Twitter */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Ground Zero — Think Better, Build Better with AI" />
+                <meta
+                  name="twitter:description"
+                  content="Learn how to think, build, and grow in the age of AI."
+                />
+                <meta
+                  name="twitter:image"
+                  content="https://www.groundzero.world/assets/gz_logo_with_name_black-72a6nTtR.png"
+                />
+
+                {/* Indexing */}
+                <meta name="robots" content="index, follow" />
+      </Helmet>
+
+
+
+
       <div className={`min-h-screen font-sans selection:bg-cyan-500/50 selection:text-white relative transition-colors duration-300 ${styles.bg} ${styles.text}`}>
         <style>{globalStyles}</style>
 
