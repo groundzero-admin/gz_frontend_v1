@@ -60,7 +60,12 @@ const AssignmentCard = ({ data, isDark, onClick }) => (
     variants={cardVariants}
     whileHover={{ y: -5, scale: 1.02 }}
     whileTap={{ scale: 0.98 }}
-    onClick={() => onClick(data)}
+    // onClick={() => onClick(data)}    temporary fix , disabling hte iframe modal opener here 
+
+    onClick={() => window.open(data.link, "_blank", "noopener,noreferrer")}
+
+
+
     className={`
       cursor-pointer relative overflow-hidden rounded-3xl p-5 border shadow-lg transition-all flex flex-col h-full transform-gpu
       ${isDark 
