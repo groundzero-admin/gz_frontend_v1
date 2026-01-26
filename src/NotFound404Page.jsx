@@ -3,45 +3,30 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Sun, Moon, Home, Zap } from 'lucide-react';
 
-// --- Static Constants (Calculated once outside component) ---
-const STAR_COORDINATES = [...Array(10)].map((_, i) => ({
-  top: `${(i * 13) % 100}%`,
-  left: `${(i * 17) % 100}%`,
-}));
-
+// 1. Static CSS outside component
 const ANIMATION_STYLES = `
-  .gpu-layer { transform: translateZ(0); backface-visibility: hidden; will-change: transform; }
-  
+  .gpu-accelerated { transform: translateZ(0); backface-visibility: hidden; }
   @keyframes float-slow {
-    0% { transform: translate3d(0, 0, 0) scale(1); }
-    33% { transform: translate3d(30px, -50px, 0) scale(1.05); }
-    66% { transform: translate3d(-20px, 20px, 0) scale(0.95); }
-    100% { transform: translate3d(0, 0, 0) scale(1); }
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(20px, -30px, 0); }
   }
-  
-  .animate-float-slow { animation: float-slow 15s ease-in-out infinite; }
+  .animate-float { animation: float-slow 18s ease-in-out infinite; }
 `;
 
-// --- Memoized Background Components ---
-
-const BackgroundOrbs = memo(({ isDark }) => (
-  <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 gpu-layer">
-    <div className={`absolute top-[-10%] left-[-10%] w-[40vw] h-[40vw] blur-[120px] rounded-full animate-float-slow transition-colors duration-700 ${isDark ? 'bg-cyan-500/10' : 'bg-cyan-400/20'}`} />
-    <div className={`absolute bottom-[-10%] right-[-10%] w-[35vw] h-[35vw] blur-[100px] rounded-full animate-float-slow transition-colors duration-700 ${isDark ? 'bg-blue-600/10' : 'bg-blue-400/20'}`} style={{ animationDelay: '-2s' }} />
-  </div>
-));
-
-const SpaceElements = memo(({ isDark }) => (
-  <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-    {STAR_COORDINATES.map((pos, i) => (
+// 2. Memoized Background (Prevents lag across tabs)
+const VisualBackground = memo(({ isDark }) => (
+  <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 gpu-accelerated">
+    <div className={`absolute top-[-5%] left-[-5%] w-[45vw] h-[45vw] blur-[80px] rounded-full animate-float transition-colors duration-1000 ${isDark ? 'bg-cyan-900/20' : 'bg-cyan-200/40'}`} />
+    <div className={`absolute bottom-[-5%] right-[-5%] w-[40vw] h-[40vw] blur-[80px] rounded-full animate-float transition-colors duration-1000 ${isDark ? 'bg-blue-900/20' : 'bg-blue-200/40'}`} style={{ animationDelay: '-3s' }} />
+    
+    {[...Array(8)].map((_, i) => (
       <div 
         key={i}
-        className={`absolute rounded-full gpu-layer ${isDark ? 'bg-white/20' : 'bg-slate-400/20'}`}
+        className={`absolute rounded-full ${isDark ? 'bg-white/20' : 'bg-slate-400/30'}`}
         style={{ 
-          top: pos.top, 
-          left: pos.left, 
-          width: '2px',
-          height: '2px',
+          top: `${(i * 17) % 100}%`, 
+          left: `${(i * 23) % 100}%`, 
+          width: '2px', height: '2px' 
         }}
       />
     ))}
@@ -49,100 +34,82 @@ const SpaceElements = memo(({ isDark }) => (
 ));
 
 const NotFoundPage = () => {
-  const [isDark, setIsDark] = useState(false);
-  const [countdown, setCountdown] = useState(10);
+  const [isDark, setIsDark] = useState(false); 
   const navigate = useNavigate();
 
-  // Optimized Timer Logic
+  // --- INTERNAL TIMER LOGIC ---
+  // Navigates to /spark after 5 seconds without updating any state
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          navigate('/spark');
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    const timer = setTimeout(() => {
+      navigate('/spark');
+    }, 5000);
 
-    return () => clearInterval(timer);
+    return () => clearTimeout(timer); // Cleanup if component unmounts
   }, [navigate]);
 
-  // Memoize styles to avoid object recreation on every render (timer tick)
-  const styles = useMemo(() => ({
-    bg: isDark ? "bg-[#0B0C15]" : "bg-slate-50",
-    text: isDark ? "text-gray-100" : "text-slate-900",
-    subtext: isDark ? "text-gray-400" : "text-slate-600",
-    navbar: isDark ? "bg-[#13141F]/80 border-white/10" : "bg-white/80 border-slate-200",
-    buttonPrimary: "bg-cyan-400 hover:bg-cyan-300 text-black font-bold shadow-lg shadow-cyan-500/20",
-    buttonSecondary: isDark ? "border-white/20 hover:bg-white/10 text-white" : "border-slate-300 hover:bg-slate-100 text-slate-800"
+  const theme = useMemo(() => ({
+    container: isDark ? "bg-[#0B0C15] text-gray-100" : "bg-slate-50 text-slate-900",
+    navbar: isDark ? "bg-[#13141F]/60 border-white/5" : "bg-white/70 border-slate-200",
+    subtext: isDark ? "text-gray-400" : "text-slate-500",
+    secondaryBtn: isDark ? "border-white/10 hover:bg-white/5 text-white" : "border-slate-300 hover:bg-slate-100 text-slate-800"
   }), [isDark]);
 
   return (
-    <div className={`min-h-screen font-sans selection:bg-cyan-500/50 overflow-hidden relative transition-colors duration-500 flex flex-col ${styles.bg} ${styles.text}`}>
+    <div className={`min-h-screen w-full font-sans selection:bg-cyan-500/30 overflow-hidden relative flex flex-col transition-colors duration-700 ${theme.container}`}>
       <style>{ANIMATION_STYLES}</style>
       
-      {/* These will NOT re-render when countdown updates */}
-      <BackgroundOrbs isDark={isDark} />
-      <SpaceElements isDark={isDark} />
+      <VisualBackground isDark={isDark} />
 
       <div className="relative z-10 flex flex-col h-screen">
-        <nav className="flex items-center justify-center pt-6 px-4">
-          <div className={`backdrop-blur-xl border rounded-lg px-6 py-3 flex items-center justify-between w-full max-w-5xl transition-all ${styles.navbar}`}>
+        <nav className="flex items-center justify-center pt-8 px-6">
+          <div className={`backdrop-blur-md border rounded-2xl px-6 py-3 flex items-center justify-between w-full max-w-4xl transition-all ${theme.navbar}`}>
             <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded flex items-center justify-center text-xs font-extrabold border ${isDark ? 'bg-slate-800 text-cyan-400 border-cyan-500/20' : 'bg-cyan-500 text-white border-transparent'}`}>
-                404
-              </div>
-              <span className="font-bold text-lg tracking-tight">Seems you are <span className="text-cyan-400">Confused!</span></span>
+              <div className="px-2 py-0.5 rounded bg-cyan-500 text-black text-xs font-black">404</div>
+              <span className="font-bold tracking-tight">System <span className="text-cyan-400">Error</span></span>
             </div>
             
             <button 
               onClick={() => setIsDark(!isDark)} 
-              className={`p-2 rounded-full transition-colors ${isDark ? 'bg-white/10 text-yellow-300' : 'bg-slate-200 text-slate-600'}`}
+              className={`p-2 rounded-xl transition-all active:scale-95 ${isDark ? 'bg-white/5 text-yellow-300' : 'bg-slate-200 text-slate-600'}`}
             >
-              {isDark ? <Sun size={18} /> : <Moon size={18} />}
+              {isDark ? <Sun size={20} /> : <Moon size={20} />}
             </button>
           </div>
         </nav>
 
-        <main className="flex-1 flex flex-col items-center justify-center text-center px-4">
-          <div className="mb-8 relative">
-            <h1 className="text-9xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-cyan-300 to-blue-600 opacity-20 select-none">
-              404
-            </h1>
-          </div>
+        <main className="flex-1 flex flex-col items-center justify-center text-center px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-8xl md:text-9xl font-black mb-2 tracking-tighter opacity-10 select-none">LOST</h1>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">Houston, we have a problem.</h2>
+            <p className={`text-lg max-w-md mb-10 mx-auto ${theme.subtext}`}>
+              The page you are looking for has drifted out of orbit. Select your destination to return.
+            </p>
 
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">Houston, we have a problem.</h2>
-          
-          <p className={`text-lg md:text-xl max-w-lg mb-8 ${styles.subtext}`}>
-            The page you are looking for seems to be lost in deep space.
-            <br />
-            Returning to base in <span className="text-cyan-400 font-bold font-mono text-2xl mx-1">{countdown}</span> seconds...
-          </p>
+            <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md mx-auto">
+              <button 
+                onClick={() => navigate('/')} 
+                className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold border transition-all active:scale-95 ${theme.secondaryBtn}`}
+              >
+                <Home size={18} /> Home Builders OS
+              </button>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md">
-            <button onClick={() => navigate('/')} className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-bold border transition-all ${styles.buttonSecondary}`}>
-              <Home size={18} /> Home Builders OS
-            </button>
-
-            <button onClick={() => navigate('/spark')} className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-bold transition-all ${styles.buttonPrimary}`}>
-              <Zap size={18} /> Home Spark OS
-            </button>
-          </div>
-
-          {/* Optimized Progress Bar: Uses scaleX instead of width for GPU compositing */}
-          <div className="mt-12 w-64 h-1 bg-white/10 rounded-full overflow-hidden">
-             <motion.div 
-               initial={{ scaleX: 0 }}
-               animate={{ scaleX: 1 }}
-               style={{ originX: 0 }}
-               transition={{ duration: 10, ease: "linear" }}
-               className="h-full bg-cyan-400 w-full"
-             />
-          </div>
-          <p className={`text-xs mt-2 ${styles.subtext}`}>Auto-redirecting...</p>
+              <button 
+                onClick={() => navigate('/spark')} 
+                className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold bg-cyan-400 hover:bg-cyan-300 text-black shadow-lg shadow-cyan-500/20 transition-all active:scale-95"
+              >
+                <Zap size={18} /> Home Spark OS
+              </button>
+            </div>
+          </motion.div>
         </main>
+
+        <footer className={`pb-8 text-center text-xs font-medium tracking-widest uppercase opacity-40 ${theme.subtext}`}>
+          Deep Space Protocol // 404
+        </footer>
       </div>
     </div>
   );

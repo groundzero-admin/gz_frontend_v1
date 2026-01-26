@@ -147,29 +147,29 @@ const BuyCourse = () => {
 
   // --- BACKGROUND EFFECTS SETUP ---
   // Generate stars only once
-  const stars = useMemo(() => {
-    return Array.from({ length: 30 }).map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      top: `${Math.random() * 100}%`,
-      size: Math.random() * 3 + 1 + 'px', // 1px to 4px
-      delay: `${Math.random() * 5}s`,
-      duration: `${Math.random() * 3 + 2}s`,
-    }));
-  }, []);
+  // const stars = useMemo(() => {
+  //   return Array.from({ length: 30 }).map((_, i) => ({
+  //     id: i,
+  //     left: `${Math.random() * 100}%`,
+  //     top: `${Math.random() * 100}%`,
+  //     size: Math.random() * 3 + 1 + 'px', // 1px to 4px
+  //     delay: `${Math.random() * 5}s`,
+  //     duration: `${Math.random() * 3 + 2}s`,
+  //   }));
+  // }, []);
 
-  const rocketVariants = {
-    animate: {
-      x: ["-10vw", "110vw"],
-      y: ["110vh", "-10vh"],
-      rotate: 0 ,
-      transition: {
-        duration: 35,
-        ease: "linear",
-        repeat: Infinity,
-      }
-    }
-  };
+  // const rocketVariants = {
+  //   animate: {
+  //     x: ["-10vw", "110vw"],
+  //     y: ["110vh", "-10vh"],
+  //     rotate: 0 ,
+  //     transition: {
+  //       duration: 35,
+  //       ease: "linear",
+  //       repeat: Infinity,
+  //     }
+  //   }
+  // };
 
   // Animation Variants
   const containerVariants = {
@@ -200,7 +200,7 @@ const BuyCourse = () => {
     <div className={`min-h-screen font-sans ${theme.bg} ${theme.text} selection:bg-cyan-500/30 overflow-hidden relative transition-colors duration-500`}>
       
       {/* --- CSS Styles for Animations --- */}
-      <style>{`
+      {/* <style>{`
         @keyframes twinkle {
           0%, 100% { opacity: 0.2; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.5); }
@@ -211,13 +211,13 @@ const BuyCourse = () => {
           100% { transform: translate(0, 0); }
         }
         .bg-drift { animation: drift 20s linear infinite; }
-      `}</style>
+      `}</style> */}
 
       {/* --- Background Ambience & Effects --- */}
       <div className="fixed inset-0 pointer-events-none transition-opacity duration-500 overflow-hidden">
         
         {/* Stars */}
-        <div className="absolute inset-0 bg-drift">
+        {/* <div className="absolute inset-0 bg-drift">
             {stars.map(star => (
               <div
                 key={star.id}
@@ -232,17 +232,17 @@ const BuyCourse = () => {
                 }}
               />
             ))}
-        </div>
+        </div> */}
 
         {/* Rocket */}
-        <motion.div
+        {/* <motion.div
           variants={rocketVariants}
           animate="animate"
           initial={{ x: "-10vw", y: "110vh", rotate: 45 }}
           className={`absolute z-0 opacity-40 ${isDarkMode ? 'text-cyan-500' : 'text-slate-400'}`}
         >
           <Rocket size={48} />
-        </motion.div>
+        </motion.div> */}
 
         {/* Glowing Orbs */}
         <div className={`absolute top-0 left-1/4 w-[500px] h-[500px] blur-[120px] rounded-full opacity-20 mix-blend-screen ${isDarkMode ? "bg-cyan-600/30" : "bg-cyan-300/50"}`} />

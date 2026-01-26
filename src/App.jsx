@@ -78,6 +78,8 @@ function App() {
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/payment-failed" element={< PaymentFailure />} />
 
+
+
       <Route path="/register-student" element={<StudentRegistration />} />
       <Route path="/teacher-signup" element={<TeacherSignupPage />} />
 

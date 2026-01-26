@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, memo, useMemo } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -11,138 +11,105 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-
 import { gsap } from "gsap";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 
 // Register GSAP Plugin
 gsap.registerPlugin(ScrollToPlugin);
 
+// 1. HOISTED CONSTANTS (Created once, prevents memory leaks)
+const CONTAINER_VARIANTS = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05, delayChildren: 0.1 },
+  },
+};
+
+const ITEM_VARIANTS = {
+  hidden: { opacity: 0, y: 15 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" },
+  },
+};
+
+// 2. MEMOIZED BACKGROUND (Optimized for multiple open tabs)
+const PageBackground = memo(({ isDark }) => (
+  <div className="fixed inset-0 pointer-events-none z-0">
+    <div className={`absolute top-0 left-1/4 w-[500px] h-[500px] blur-[110px] rounded-full opacity-30 transition-colors duration-1000 ${isDark ? "bg-indigo-900" : "bg-indigo-300"}`} />
+    <div className={`absolute bottom-0 right-1/4 w-[400px] h-[400px] blur-[100px] rounded-full opacity-20 transition-colors duration-1000 ${isDark ? "bg-blue-900" : "bg-blue-300"}`} />
+  </div>
+));
+
 const BookOneOnOneSession_Spark = () => {
-  const [isDark, setIsDark] = useState(false ); // Default to light for Spark theme
+  const [isDark, setIsDark] = useState(false);
   const [iframeLoading, setIframeLoading] = useState(true);
   const navigate = useNavigate();
-
   const widgetRef = useRef(null);
-  const hasAutoScrolled = useRef(false);
-  const lastScrollY = useRef(0);
 
-  // --- ZOHO LINK (Specific to Spark/Code 1) ---
   const ZOHO_SRC = "https://groundzero2.zohobookings.in/portal-embed#/406562000000051550";
 
-  const toggleTheme = () => setIsDark(!isDark);
-
   /* -------------------------------------------------
-     GSAP AUTO SCROLL LOGIC
+     READING-WINDOW AUTO-SCROLL
+     Waits 4 seconds after mount to scroll, ensuring
+     users read the symmetrical info cards first.
   ------------------------------------------------- */
   useEffect(() => {
-    const handleScroll = () => {
-      const currentY = window.scrollY;
-      const scrollingDown = currentY > lastScrollY.current;
-      lastScrollY.current = currentY;
-
-      // Reset logic when user is near top
-      if (currentY < 40) {
-        hasAutoScrolled.current = false;
-        return;
-      }
-
-      // Trigger scroll only once when scrolling down
-      if (scrollingDown && !hasAutoScrolled.current && widgetRef.current) {
-        hasAutoScrolled.current = true;
-
+    const scrollTimer = setTimeout(() => {
+      if (widgetRef.current) {
         gsap.to(window, {
-          duration: 1.1,
-          ease: "power3.out",
+          duration: 1.6,
+          ease: "power3.inOut",
           scrollTo: {
             y: widgetRef.current,
-            offsetY: window.innerHeight / 2 - widgetRef.current.offsetHeight / 2,
+            offsetY: 70,
           },
         });
       }
-    };
+    }, 4000); // 4-Second Reading Window
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => clearTimeout(scrollTimer);
   }, []);
 
-  // --- ANIMATION VARIANTS ---
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.1 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.5, ease: "easeOut" },
-    },
-  };
-
-  // --- STYLES (Adapted to Spark Blue/Indigo Theme) ---
-  const styles = {
-    sectionHeader: `text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2 ${
-      isDark ? "text-indigo-300" : "text-indigo-900"
-    }`,
-    bodyText: `text-sm font-medium leading-snug ${
-      isDark ? "text-gray-300" : "text-slate-600"
-    }`,
-    cardBase: `rounded-2xl border shadow-xl p-5 flex flex-col gap-2 transition-colors duration-300
-      ${
-        isDark
-          ? "bg-[#13141F]/80 border-white/10"
-          : "bg-white border-slate-200 shadow-slate-200/60"
-      }`,
-  };
+  // 3. MEMOIZED THEME STYLES
+  const themeStyles = useMemo(() => ({
+    sectionHeader: `text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-3 ${isDark ? "text-indigo-300" : "text-indigo-900"}`,
+    bodyText: `text-sm font-medium leading-snug ${isDark ? "text-gray-300" : "text-slate-600"}`,
+    cardBase: `flex-1 rounded-2xl border shadow-xl p-6 flex flex-col gap-3 transition-all duration-500 ${isDark ? "bg-[#13141F]/80 border-white/10" : "bg-white border-slate-200 shadow-slate-200/60"}`,
+  }), [isDark]);
 
   return (
-    <div
-      className={`min-h-screen w-full font-sans transition-colors duration-500 relative
-        ${isDark ? "bg-[#0B0C15] text-gray-100" : "bg-slate-50 text-slate-900"}
-      `}
-    >
-      {/* BACKGROUND GLOWS (Indigo/Blue for Spark) */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className={`absolute top-0 left-1/4 w-[500px] h-[500px] blur-[120px] rounded-full opacity-30 ${isDark ? "bg-indigo-600" : "bg-indigo-300"}`} />
-        <div className={`absolute bottom-0 right-1/4 w-[400px] h-[400px] blur-[100px] rounded-full opacity-20 ${isDark ? "bg-blue-600" : "bg-blue-300"}`} />
-      </div>
+    <div className={`min-h-screen w-full font-sans transition-colors duration-700 relative ${isDark ? "bg-[#0B0C15] text-gray-100" : "bg-slate-50 text-slate-900"}`}>
+      
+      <PageBackground isDark={isDark} />
 
       <motion.div
         className="relative z-10 max-w-5xl mx-auto px-4 md:px-6 pt-4 pb-10"
-        variants={containerVariants}
+        variants={CONTAINER_VARIANTS}
         initial="hidden"
         animate="visible"
       >
         {/* HEADER */}
-        <motion.div variants={itemVariants} className="flex justify-between mb-3">
+        <motion.div variants={ITEM_VARIANTS} className="flex justify-between mb-3">
           <button
             onClick={() => navigate("/spark")}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border transition-all
-              ${isDark 
-                ? "border-white/10 text-gray-400 hover:bg-white/5 hover:text-white" 
-                : "bg-white border-slate-200 text-slate-600 shadow-sm hover:text-slate-900"}`}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${isDark ? "border-white/10 text-gray-400 hover:bg-white/5" : "bg-white border-slate-200 text-slate-600 shadow-sm hover:bg-slate-50"}`}
           >
             <ArrowLeft size={14} /> Back to Spark
           </button>
 
           <button
-            onClick={toggleTheme}
-            className={`p-2 rounded-full border transition-all
-              ${isDark 
-                ? "bg-white/5 border-white/10 text-yellow-400 hover:bg-white/10" 
-                : "bg-white border-slate-200 text-slate-600 shadow-sm hover:text-indigo-600"}`}
+            onClick={() => setIsDark(!isDark)}
+            className={`p-2 rounded-full border transition-all ${isDark ? "bg-white/5 border-white/10 text-yellow-400" : "bg-white border-slate-200 text-slate-600 shadow-sm"}`}
           >
             {isDark ? <Sun size={14} /> : <Moon size={14} />}
           </button>
         </motion.div>
 
         {/* HERO SECTION */}
-        <motion.div variants={itemVariants} className="text-center mb-6">
+        <motion.div variants={ITEM_VARIANTS} className="text-center mb-6">
           <h1 className="text-2xl md:text-3xl font-extrabold mb-1">
             Book Your{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-500 to-violet-600">
@@ -154,17 +121,17 @@ const BookOneOnOneSession_Spark = () => {
           </p>
         </motion.div>
 
-        {/* --- INFO CARDS SECTION --- */}
-        <motion.div variants={itemVariants} className="mb-6 flex flex-col md:flex-row gap-4">
+        {/* SYMMETRICAL INFO CARDS */}
+        <motion.div variants={ITEM_VARIANTS} className="mb-6 flex flex-col md:flex-row gap-5 items-stretch">
           
-          {/* Card 1: What's Included (Benefits) */}
-          <div className={`flex-1 ${styles.cardBase}`}>
-            <div className={styles.sectionHeader}>
+          {/* Card 1: What's Included */}
+          <div className={themeStyles.cardBase}>
+            <div className={themeStyles.sectionHeader}>
               <Zap size={16} className={isDark ? "text-indigo-400" : "text-indigo-600"} />
               What's included
             </div>
             
-            <div className="flex flex-col gap-3 mt-1">
+            <div className="flex flex-col gap-3">
               {[
                 "1:1 Live Strategy Sessions",
                 "Unblocking specific hurdles",
@@ -175,15 +142,15 @@ const BookOneOnOneSession_Spark = () => {
                   <div className={`mt-0.5 shrink-0 ${isDark ? "text-indigo-400" : "text-indigo-600"}`}>
                      <CheckCircle2 size={14} />
                   </div>
-                  <span className={styles.bodyText}>{item}</span>
+                  <span className={themeStyles.bodyText}>{item}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Card 2: Fee & Security */}
-          <div className={`md:w-[40%] ${styles.cardBase}`}>
-            <div className={styles.sectionHeader}>
+          <div className={themeStyles.cardBase}>
+            <div className={themeStyles.sectionHeader}>
               <CreditCard size={16} className={isDark ? "text-blue-400" : "text-blue-600"} />
               Session Fee
             </div>
@@ -207,31 +174,19 @@ const BookOneOnOneSession_Spark = () => {
           </div>
         </motion.div>
 
-        {/* --- ZOHO WIDGET CONTAINER --- */}
-        <motion.div ref={widgetRef} variants={itemVariants} className="relative">
-          {/* Back Chevron (Absolute positioned) */}
+        {/* ZOHO WIDGET */}
+        <motion.div ref={widgetRef} variants={ITEM_VARIANTS} className="relative">
           <button
             onClick={() => navigate(-1)}
-            className={`absolute -left-4 top-6 z-20 p-2 rounded-full border shadow transition-all
-              ${isDark 
-                ? "bg-[#13141F] border-white/10 text-gray-400 hover:text-white" 
-                : "bg-white border-slate-200 text-slate-400 hover:text-slate-900"}`}
+            className={`absolute -left-2 md:-left-4 top-6 z-20 p-2 rounded-full border shadow active:scale-90 transition-transform ${isDark ? "bg-[#13141F] border-white/10 text-gray-400" : "bg-white border-slate-200 text-slate-400"}`}
           >
             <ChevronLeft size={18} />
           </button>
 
-          <div
-            className={`w-full h-[90vh] min-h-[600px] rounded-xl border overflow-hidden shadow-2xl relative
-              ${isDark 
-                ? "bg-[#13141F] border-white/10 shadow-indigo-900/10" 
-                : "bg-white border-slate-200 shadow-slate-200/50"}`}
-          >
-            {/* Loading Spinner */}
+          <div className={`w-full h-[85vh] min-h-[600px] rounded-xl border overflow-hidden shadow-2xl relative transition-all ${isDark ? "bg-[#13141F] border-white/10 shadow-indigo-900/10" : "bg-white border-slate-200 shadow-slate-200/50"}`}>
             {iframeLoading && (
-              <div className="absolute inset-0 flex items-center justify-center z-10">
-                <div className={`w-8 h-8 border-2 border-t-transparent rounded-full animate-spin 
-                  ${isDark ? "border-indigo-500" : "border-indigo-600"}`} 
-                />
+              <div className="absolute inset-0 flex items-center justify-center bg-inherit z-10">
+                <div className={`w-8 h-8 border-2 border-t-transparent rounded-full animate-spin ${isDark ? "border-indigo-500" : "border-indigo-600"}`} />
               </div>
             )}
 
@@ -243,16 +198,13 @@ const BookOneOnOneSession_Spark = () => {
               allow="camera; microphone"
               title="Zoho Spark Booking"
               onLoad={() => setIframeLoading(false)}
-              className={`w-full h-full transition-opacity duration-700 ${
-                iframeLoading ? "opacity-0" : "opacity-100"
-              }`}
+              className={`w-full h-full transition-opacity duration-1000 ${iframeLoading ? "opacity-0" : "opacity-100"}`}
             />
           </div>
         </motion.div>
 
-        {/* Footer */}
-        <motion.div variants={itemVariants} className="mt-4 text-center text-[10px] opacity-40 font-medium">
-          © 2025 Ground Zero · Secure booking powered by Zoho
+        <motion.div variants={ITEM_VARIANTS} className="mt-6 text-center text-[10px] opacity-40 font-bold uppercase tracking-widest">
+          © 2026 Ground Zero · Secure booking powered by Zoho
         </motion.div>
 
       </motion.div>
