@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { 
-  CreditCard, User, Sparkles, Wifi, MapPin, 
+import {
+  CreditCard, User, Sparkles, Wifi, MapPin,
   AlertTriangle, CheckCircle2, Loader2, ArrowLeft,
   Mail, Phone, GraduationCap, School, Layers, Sun, Moon, Rocket
 } from "lucide-react";
@@ -37,7 +37,7 @@ export const createCheckoutSession = async (parentDetails, studentDetails, batch
 const BuyCourse = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  
+
   // --- TYPE VALIDATION ---
   const rawCourseType = params.get("coursetype");
   const normalizedType = rawCourseType?.toUpperCase();
@@ -46,7 +46,7 @@ const BuyCourse = () => {
 
   // --- STATE ---
   const [isDarkMode, setIsDarkMode] = useState(false); // DEFAULT: LIGHT MODE
-  const [purchaseType, setPurchaseType] = useState("FULL_BUNDLE"); 
+  const [purchaseType, setPurchaseType] = useState("FULL_BUNDLE");
   const [isProcessing, setIsProcessing] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
@@ -67,15 +67,15 @@ const BuyCourse = () => {
 
   // --- PRICING CALCULATION ---
   const pricePerSession = BATCH_TYPE === "OFFLINE" ? PRICE_OFFLINE_SESSION : PRICE_ONLINE_SESSION;
-  const totalPrice = purchaseType === "FULL_BUNDLE" 
-    ? pricePerSession * FULL_BATCH_SESSIONS 
+  const totalPrice = purchaseType === "FULL_BUNDLE"
+    ? pricePerSession * FULL_BATCH_SESSIONS
     : pricePerSession;
 
   // --- REDIRECT INVALID URL ---
   useEffect(() => {
     if (!isValidType) {
       setRedirecting(true);
-      const timer = setTimeout(() => navigate("/spark"), 3000);
+      const timer = setTimeout(() => navigate("/"), 3000);
       return () => clearTimeout(timer);
     }
   }, [isValidType, navigate]);
@@ -83,13 +83,13 @@ const BuyCourse = () => {
   // --- PAYMENT HANDLER ---
   const handlePaymentSubmit = async (e) => {
     e.preventDefault();
-    if (isProcessing) return; 
-    setIsProcessing(true);   
+    if (isProcessing) return;
+    setIsProcessing(true);
 
     const result = await createCheckoutSession(
-      parentDetails, 
-      studentDetails, 
-      BATCH_TYPE, 
+      parentDetails,
+      studentDetails,
+      BATCH_TYPE,
       purchaseType
     );
 
@@ -116,7 +116,7 @@ const BuyCourse = () => {
       },
       theme: { color: "#06b6d4" }, // Cyan-500
       modal: {
-        ondismiss: function() {
+        ondismiss: function () {
           setIsProcessing(false);
         }
       }
@@ -185,20 +185,20 @@ const BuyCourse = () => {
   if (redirecting || !isValidType) {
     return (
       <div className={`min-h-screen ${theme.bg} flex items-center justify-center p-6 transition-colors duration-500`}>
-         <div className={`max-w-md w-full p-8 rounded-2xl border border-red-500/20 ${theme.cardBg} text-center space-y-4`}>
-            <div className="mx-auto w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
-              <AlertTriangle size={32} />
-            </div>
-            <h2 className={`text-xl font-bold ${theme.text}`}>Invalid Course Type</h2>
-            <p className={`${theme.textMuted} text-sm`}>Redirecting you to the home page...</p>
-         </div>
+        <div className={`max-w-md w-full p-8 rounded-2xl border border-red-500/20 ${theme.cardBg} text-center space-y-4`}>
+          <div className="mx-auto w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
+            <AlertTriangle size={32} />
+          </div>
+          <h2 className={`text-xl font-bold ${theme.text}`}>Invalid Course Type</h2>
+          <p className={`${theme.textMuted} text-sm`}>Redirecting you to the home page...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className={`min-h-screen font-sans ${theme.bg} ${theme.text} selection:bg-cyan-500/30 overflow-hidden relative transition-colors duration-500`}>
-      
+
       {/* --- CSS Styles for Animations --- */}
       {/* <style>{`
         @keyframes twinkle {
@@ -215,7 +215,7 @@ const BuyCourse = () => {
 
       {/* --- Background Ambience & Effects --- */}
       <div className="fixed inset-0 pointer-events-none transition-opacity duration-500 overflow-hidden">
-        
+
         {/* Stars */}
         {/* <div className="absolute inset-0 bg-drift">
             {stars.map(star => (
@@ -249,16 +249,16 @@ const BuyCourse = () => {
         <div className={`absolute bottom-0 right-1/4 w-[500px] h-[500px] blur-[100px] rounded-full opacity-20 mix-blend-screen ${isDarkMode ? "bg-purple-600/30" : "bg-blue-300/50"}`} />
       </div>
 
-      <motion.div 
+      <motion.div
         className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-6"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        
+
         {/* --- Header --- */}
         <motion.div variants={itemVariants} className="flex items-center justify-between mb-8">
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className={`flex items-center gap-2 transition-colors ${theme.textMuted} hover:${theme.text}`}
           >
@@ -267,11 +267,11 @@ const BuyCourse = () => {
 
           <div className="flex items-center gap-3">
             <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-bold tracking-wider uppercase transition-colors
-              ${BATCH_TYPE === 'ONLINE' 
+              ${BATCH_TYPE === 'ONLINE'
                 ? (isDarkMode ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400' : 'bg-cyan-50 border-cyan-200 text-cyan-700')
                 : (isDarkMode ? 'bg-purple-500/10 border-purple-500/20 text-purple-400' : 'bg-purple-50 border-purple-200 text-purple-700')}`}
             >
-              {BATCH_TYPE === 'ONLINE' ? <Wifi size={12} /> : <MapPin size={12} />} 
+              {BATCH_TYPE === 'ONLINE' ? <Wifi size={12} /> : <MapPin size={12} />}
               {BATCH_TYPE} SPARK BATCH
             </div>
 
@@ -300,24 +300,24 @@ const BuyCourse = () => {
 
         <form onSubmit={handlePaymentSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
+
             {/* --- LEFT COLUMN: DETAILS FORM --- */}
             <motion.div variants={itemVariants} className="lg:col-span-7 space-y-8">
-              
+
               {/* Parent Section */}
               <div className={`${theme.cardBg} border ${theme.cardBorder} rounded-2xl p-6 md:p-8 transition-colors duration-300`}>
                 <div className={`flex items-center gap-3 mb-6 pb-4 border-b ${theme.sectionHeaderBorder}`}>
                   <div className={`p-2 rounded-lg ${isDarkMode ? "bg-cyan-500/10 text-cyan-400" : "bg-cyan-50 text-cyan-600"}`}><User size={20} /></div>
                   <h3 className={`text-lg font-bold ${theme.text}`}>Parent Details</h3>
                 </div>
-                
+
                 <div className="space-y-5">
                   <div>
                     <label className={labelStyle}>Full Name</label>
                     <div className="relative">
                       <User size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
-                      <input required type="text" placeholder="Enter parent's name" className={inputStyle} 
-                        value={parentDetails.parentName} onChange={(e) => setParentDetails({ ...parentDetails, parentName: e.target.value })} 
+                      <input required type="text" placeholder="Enter parent's name" className={inputStyle}
+                        value={parentDetails.parentName} onChange={(e) => setParentDetails({ ...parentDetails, parentName: e.target.value })}
                       />
                     </div>
                   </div>
@@ -327,8 +327,8 @@ const BuyCourse = () => {
                       <label className={labelStyle}>Phone Number</label>
                       <div className="relative">
                         <Phone size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
-                        <input required type="text" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} placeholder="10-digit number" className={inputStyle} 
-                          value={parentDetails.parentPhone} onChange={(e) => setParentDetails({ ...parentDetails, parentPhone: e.target.value.replace(/\D/g, '') })} 
+                        <input required type="text" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} placeholder="10-digit number" className={inputStyle}
+                          value={parentDetails.parentPhone} onChange={(e) => setParentDetails({ ...parentDetails, parentPhone: e.target.value.replace(/\D/g, '') })}
                         />
                       </div>
                     </div>
@@ -336,8 +336,8 @@ const BuyCourse = () => {
                       <label className={labelStyle}>Email Address</label>
                       <div className="relative">
                         <Mail size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
-                        <input required type="email" placeholder="parent@example.com" className={inputStyle} 
-                          value={parentDetails.parentEmail} onChange={(e) => setParentDetails({ ...parentDetails, parentEmail: e.target.value })} 
+                        <input required type="email" placeholder="parent@example.com" className={inputStyle}
+                          value={parentDetails.parentEmail} onChange={(e) => setParentDetails({ ...parentDetails, parentEmail: e.target.value })}
                         />
                       </div>
                     </div>
@@ -353,57 +353,57 @@ const BuyCourse = () => {
                 </div>
 
                 <div className="space-y-5">
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div>
-                        <label className={labelStyle}>Student Name</label>
-                        <div className="relative">
-                          <User size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
-                          <input required type="text" placeholder="Enter student's name" className={inputStyle} 
-                            value={studentDetails.studentName} onChange={(e) => setStudentDetails({ ...studentDetails, studentName: e.target.value })} 
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className={labelStyle}>Student Email</label>
-                        <div className="relative">
-                          <Mail size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
-                          <input required type="email" placeholder="student@example.com" className={inputStyle} 
-                            value={studentDetails.studentEmail} onChange={(e) => setStudentDetails({ ...studentDetails, studentEmail: e.target.value })} 
-                          />
-                        </div>
-                      </div>
-                   </div>
-
-                   <div className="grid grid-cols-2 gap-5">
-                      <div>
-                        <label className={labelStyle}>Board</label>
-                        <div className="relative">
-                          <Layers size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
-                          <input required type="text" placeholder="CBSE/ICSE" className={inputStyle} 
-                            value={studentDetails.board} onChange={(e) => setStudentDetails({ ...studentDetails, board: e.target.value })} 
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className={labelStyle}>Grade</label>
-                        <div className="relative">
-                          <Sparkles size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
-                          <input required type="text" inputMode="numeric" placeholder="Class (e.g. 8)" className={inputStyle} 
-                            value={studentDetails.classGrade} onChange={(e) => setStudentDetails({ ...studentDetails, classGrade: e.target.value.replace(/\D/g, '') })} 
-                          />
-                        </div>
-                      </div>
-                   </div>
-
-                   <div>
-                      <label className={labelStyle}>School Name</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className={labelStyle}>Student Name</label>
                       <div className="relative">
-                        <School size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
-                        <input required type="text" placeholder="Enter school name" className={inputStyle} 
-                          value={studentDetails.schoolName} onChange={(e) => setStudentDetails({ ...studentDetails, schoolName: e.target.value })} 
+                        <User size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
+                        <input required type="text" placeholder="Enter student's name" className={inputStyle}
+                          value={studentDetails.studentName} onChange={(e) => setStudentDetails({ ...studentDetails, studentName: e.target.value })}
                         />
                       </div>
-                   </div>
+                    </div>
+                    <div>
+                      <label className={labelStyle}>Student Email</label>
+                      <div className="relative">
+                        <Mail size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
+                        <input required type="email" placeholder="student@example.com" className={inputStyle}
+                          value={studentDetails.studentEmail} onChange={(e) => setStudentDetails({ ...studentDetails, studentEmail: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-5">
+                    <div>
+                      <label className={labelStyle}>Board</label>
+                      <div className="relative">
+                        <Layers size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
+                        <input required type="text" placeholder="CBSE/ICSE" className={inputStyle}
+                          value={studentDetails.board} onChange={(e) => setStudentDetails({ ...studentDetails, board: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className={labelStyle}>Grade</label>
+                      <div className="relative">
+                        <Sparkles size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
+                        <input required type="text" inputMode="numeric" placeholder="Class (e.g. 8)" className={inputStyle}
+                          value={studentDetails.classGrade} onChange={(e) => setStudentDetails({ ...studentDetails, classGrade: e.target.value.replace(/\D/g, '') })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={labelStyle}>School Name</label>
+                    <div className="relative">
+                      <School size={16} className={`absolute left-4 top-3.5 ${theme.textMuted}`} />
+                      <input required type="text" placeholder="Enter school name" className={inputStyle}
+                        value={studentDetails.schoolName} onChange={(e) => setStudentDetails({ ...studentDetails, schoolName: e.target.value })}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -411,29 +411,29 @@ const BuyCourse = () => {
 
             {/* --- RIGHT COLUMN: PRICING & SUMMARY --- */}
             <motion.div variants={itemVariants} className="lg:col-span-5 space-y-6 lg:sticky lg:top-8">
-              
+
               {/* Plan Selection */}
               <div className="grid gap-4">
                 {/* Full Bundle Option */}
-                <div 
+                <div
                   onClick={() => setPurchaseType("FULL_BUNDLE")}
                   className={`relative group cursor-pointer p-6 rounded-2xl border transition-all duration-300
-                    ${purchaseType === "FULL_BUNDLE" 
-                      ? `${theme.highlightBg} border-cyan-500 ${theme.highlightShadow}` 
+                    ${purchaseType === "FULL_BUNDLE"
+                      ? `${theme.highlightBg} border-cyan-500 ${theme.highlightShadow}`
                       : `${theme.cardBg} ${theme.cardBorder} hover:border-slate-300`}`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-3">
-                       <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${purchaseType === "FULL_BUNDLE" ? "border-cyan-500 bg-cyan-500" : "border-gray-400"}`}>
-                          {purchaseType === "FULL_BUNDLE" && <CheckCircle2 size={14} className="text-white" />}
-                       </div>
-                       <span className={`font-bold text-lg ${purchaseType === "FULL_BUNDLE" ? theme.text : theme.textMuted}`}>Complete Batch</span>
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${purchaseType === "FULL_BUNDLE" ? "border-cyan-500 bg-cyan-500" : "border-gray-400"}`}>
+                        {purchaseType === "FULL_BUNDLE" && <CheckCircle2 size={14} className="text-white" />}
+                      </div>
+                      <span className={`font-bold text-lg ${purchaseType === "FULL_BUNDLE" ? theme.text : theme.textMuted}`}>Complete Batch</span>
                     </div>
                     {purchaseType === "FULL_BUNDLE" && (
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded ${isDarkMode ? "bg-cyan-500/10 text-cyan-400" : "bg-cyan-100 text-cyan-700"}`}>Best Value</span>
                     )}
                   </div>
-                  
+
                   <div className="pl-8">
                     <div className="flex items-baseline gap-2 mb-2">
                       <span className={`text-3xl font-bold ${theme.text}`}>₹{pricePerSession * FULL_BATCH_SESSIONS}</span>
@@ -444,22 +444,22 @@ const BuyCourse = () => {
                 </div>
 
                 {/* Single Session Option */}
-                <div 
+                <div
                   onClick={() => setPurchaseType("SINGLE_SESSION")}
                   className={`relative group cursor-pointer p-6 rounded-2xl border transition-all duration-300
-                    ${purchaseType === "SINGLE_SESSION" 
-                      ? `${theme.highlightBg} border-cyan-500 ${theme.highlightShadow}` 
+                    ${purchaseType === "SINGLE_SESSION"
+                      ? `${theme.highlightBg} border-cyan-500 ${theme.highlightShadow}`
                       : `${theme.cardBg} ${theme.cardBorder} hover:border-slate-300`}`}
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-3">
-                       <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${purchaseType === "SINGLE_SESSION" ? "border-cyan-500 bg-cyan-500" : "border-gray-400"}`}>
-                          {purchaseType === "SINGLE_SESSION" && <CheckCircle2 size={14} className="text-white" />}
-                       </div>
-                       <span className={`font-bold text-lg ${purchaseType === "SINGLE_SESSION" ? theme.text : theme.textMuted}`}>Pay As You Go</span>
+                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${purchaseType === "SINGLE_SESSION" ? "border-cyan-500 bg-cyan-500" : "border-gray-400"}`}>
+                        {purchaseType === "SINGLE_SESSION" && <CheckCircle2 size={14} className="text-white" />}
+                      </div>
+                      <span className={`font-bold text-lg ${purchaseType === "SINGLE_SESSION" ? theme.text : theme.textMuted}`}>Pay As You Go</span>
                     </div>
                   </div>
-                  
+
                   <div className="pl-8">
                     <div className="flex items-baseline gap-2 mb-2">
                       <span className={`text-3xl font-bold ${theme.text}`}>₹{pricePerSession}</span>
@@ -506,8 +506,8 @@ const BuyCourse = () => {
                     type="submit"
                     disabled={isProcessing}
                     className={`w-full py-4 rounded-xl font-bold text-base shadow-lg transition-all duration-300 flex items-center justify-center gap-2
-                      ${isProcessing 
-                        ? 'bg-gray-400 cursor-not-allowed text-white' 
+                      ${isProcessing
+                        ? 'bg-gray-400 cursor-not-allowed text-white'
                         : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-cyan-500/30 hover:-translate-y-0.5'}`}
                   >
                     {isProcessing ? (
@@ -522,9 +522,9 @@ const BuyCourse = () => {
                       </>
                     )}
                   </button>
-                  
+
                   <div className={`mt-4 flex justify-center gap-4 opacity-40 grayscale hover:grayscale-0 transition-all duration-500 ${theme.textMuted}`}>
-                     <p className="text-[10px]">Secured by Razorpay · UPI / Cards / NetBanking</p>
+                    <p className="text-[10px]">Secured by Razorpay · UPI / Cards / NetBanking</p>
                   </div>
                 </div>
               </div>

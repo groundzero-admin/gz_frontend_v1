@@ -18,15 +18,15 @@ const VisualBackground = memo(({ isDark }) => (
   <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 gpu-accelerated">
     <div className={`absolute top-[-5%] left-[-5%] w-[45vw] h-[45vw] blur-[80px] rounded-full animate-float transition-colors duration-1000 ${isDark ? 'bg-cyan-900/20' : 'bg-cyan-200/40'}`} />
     <div className={`absolute bottom-[-5%] right-[-5%] w-[40vw] h-[40vw] blur-[80px] rounded-full animate-float transition-colors duration-1000 ${isDark ? 'bg-blue-900/20' : 'bg-blue-200/40'}`} style={{ animationDelay: '-3s' }} />
-    
+
     {[...Array(8)].map((_, i) => (
-      <div 
+      <div
         key={i}
         className={`absolute rounded-full ${isDark ? 'bg-white/20' : 'bg-slate-400/30'}`}
-        style={{ 
-          top: `${(i * 17) % 100}%`, 
-          left: `${(i * 23) % 100}%`, 
-          width: '2px', height: '2px' 
+        style={{
+          top: `${(i * 17) % 100}%`,
+          left: `${(i * 23) % 100}%`,
+          width: '2px', height: '2px'
         }}
       />
     ))}
@@ -34,14 +34,14 @@ const VisualBackground = memo(({ isDark }) => (
 ));
 
 const NotFoundPage = () => {
-  const [isDark, setIsDark] = useState(false); 
+  const [isDark, setIsDark] = useState(false);
   const navigate = useNavigate();
 
   // --- INTERNAL TIMER LOGIC ---
   // Navigates to /spark after 5 seconds without updating any state
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate('/spark');
+      navigate('/');
     }, 5000);
 
     return () => clearTimeout(timer); // Cleanup if component unmounts
@@ -57,7 +57,7 @@ const NotFoundPage = () => {
   return (
     <div className={`min-h-screen w-full font-sans selection:bg-cyan-500/30 overflow-hidden relative flex flex-col transition-colors duration-700 ${theme.container}`}>
       <style>{ANIMATION_STYLES}</style>
-      
+
       <VisualBackground isDark={isDark} />
 
       <div className="relative z-10 flex flex-col h-screen">
@@ -67,9 +67,9 @@ const NotFoundPage = () => {
               <div className="px-2 py-0.5 rounded bg-cyan-500 text-black text-xs font-black">404</div>
               <span className="font-bold tracking-tight">System <span className="text-cyan-400">Error</span></span>
             </div>
-            
-            <button 
-              onClick={() => setIsDark(!isDark)} 
+
+            <button
+              onClick={() => setIsDark(!isDark)}
               className={`p-2 rounded-xl transition-all active:scale-95 ${isDark ? 'bg-white/5 text-yellow-300' : 'bg-slate-200 text-slate-600'}`}
             >
               {isDark ? <Sun size={20} /> : <Moon size={20} />}
@@ -90,15 +90,15 @@ const NotFoundPage = () => {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md mx-auto">
-              <button 
-                onClick={() => navigate('/')} 
+              <button
+                onClick={() => navigate('/builderos')}
                 className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold border transition-all active:scale-95 ${theme.secondaryBtn}`}
               >
                 <Home size={18} /> Home Builders OS
               </button>
 
-              <button 
-                onClick={() => navigate('/spark')} 
+              <button
+                onClick={() => navigate('/')}
                 className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl font-bold bg-cyan-400 hover:bg-cyan-300 text-black shadow-lg shadow-cyan-500/20 transition-all active:scale-95"
               >
                 <Zap size={18} /> Home Spark OS

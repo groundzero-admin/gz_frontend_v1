@@ -1,5 +1,5 @@
 // (Or update this to your backend URL)
-const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL  ; 
+const BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
 
 // console.log("API BASE_URL is:", BASE_URL);
 
@@ -75,14 +75,14 @@ export const getSessionsForBatchStudentPath = `${BASE_URL}/student/getsessionfor
 // export const getAllBatchesForStudentPath = `${BASE_URL}/student/getallbatches`;
 
 export const getLiveBatchInfoTeacherPath = `${BASE_URL}/teacher/getlivebatchinfo`;
-export const getTodaysLiveBatchesForTeacherPath = `${BASE_URL}/teacher/todayslivebatchinfo`  ;
+export const getTodaysLiveBatchesForTeacherPath = `${BASE_URL}/teacher/todayslivebatchinfo`;
 
 
 export const getBatchDetailsForTeacherPath = `${BASE_URL}/teacher/batchdetails`;
 
 
 export const raiseDoubtPath = `${BASE_URL}/student/raisedoubt`;
-export const getMyDoubtsPath = `${BASE_URL}/student/mydoubts`  ;
+export const getMyDoubtsPath = `${BASE_URL}/student/mydoubts`;
 
 
 
@@ -161,7 +161,7 @@ export const validateInvite = async (token, role) => {
     return await response.json();
   } catch (error) {
     console.error("Validate Invite error:", error);
-    return { success: false, message: "Network error or server is down."};
+    return { success: false, message: "Network error or server is down." };
   }
 };
 
@@ -196,8 +196,8 @@ export const checkRole = async (expectedRole) => {
     return { ...data, status: response.status }; // Return data + HTTP status
   } catch (error) {
     console.error("Check Role error:", error);
-    return { 
-      success: false, 
+    return {
+      success: false,
       message: "Network error or server is down.",
       status: 500
     };
@@ -216,7 +216,7 @@ export const logout = async (navigate) => {
   } catch (error) {
     console.error("Logout error:", error);
   }
-  navigate("/spark"); // Always redirect to login
+  navigate("/"); // Always redirect to home
 };
 
 /**
@@ -302,12 +302,12 @@ export const getMyChildrenDetails = async () => {
   try {
     const response = await fetch(getMyChildrenDetailsPath, {
       method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json' 
+      headers: {
+        'Content-Type': 'application/json'
       },
       // This is CRITICAL. It sends your 'auth_token' cookie
       // to the backend so you can pass 'requireAuthCookie'.
-      credentials: 'include', 
+      credentials: 'include',
     });
 
     // Get the JSON response from the server
@@ -323,13 +323,13 @@ export const getMyChildrenDetails = async () => {
     // If successful (status 200), the 'data' object is
     // { success: true, message: "...", data: [...] }
     return data;
-    
+
   } catch (error) {
     // This catches network errors (e.g., server is down)
     console.error("Get My Children Details error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not fetch children's details." 
+    return {
+      success: false,
+      message: "Network error: Could not fetch children's details."
     };
   }
 };
@@ -347,25 +347,25 @@ export const listAllTeachers = async () => {
   try {
     const response = await fetch(listAllTeachersPath, {
       method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json' 
+      headers: {
+        'Content-Type': 'application/json'
       },
       // This sends the admin's auth_token cookie
-      credentials: 'include', 
+      credentials: 'include',
     });
 
     const data = await response.json();
-    
+
     // The AdminLayout already handles 401/403 auth errors,
     // but we still pass the full response for data handling.
-    return data; 
-    
+    return data;
+
   } catch (error) {
     // This catches network errors (e.g., server is down)
     console.error("List All Teachers error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not fetch teachers." 
+    return {
+      success: false,
+      message: "Network error: Could not fetch teachers."
     };
   }
 };
@@ -449,8 +449,8 @@ export const getStudentFullHistory = async (studentId) => {
     // We send the studentId as a query parameter, as your backend requires
     const response = await fetch(`${getStudentHistoryPath}?studentId=${studentId}`, {
       method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json' 
+      headers: {
+        'Content-Type': 'application/json'
       },
       credentials: 'include', // Sends admin/teacher auth cookie
     });
@@ -460,15 +460,15 @@ export const getStudentFullHistory = async (studentId) => {
       // Handles 401, 403, 500 errors
       return { success: false, message: data.message || "Failed to fetch history." };
     }
-    
+
     // Returns { success: true, message: "...", data: [...] }
     return data;
-    
+
   } catch (error) {
     console.error("Get Student Full History error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not fetch history." 
+    return {
+      success: false,
+      message: "Network error: Could not fetch history."
     };
   }
 };
@@ -481,8 +481,8 @@ export const getMyChildHistory = async (childEmail) => {
     // We send the childEmail as a query parameter, as your backend requires
     const response = await fetch(`${getMyChildHistoryPath}?childEmail=${childEmail}`, {
       method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json' 
+      headers: {
+        'Content-Type': 'application/json'
       },
       credentials: 'include', // Sends parent's auth cookie
     });
@@ -492,15 +492,15 @@ export const getMyChildHistory = async (childEmail) => {
       // Handles 401, 403, 500 errors
       return { success: false, message: data.message || "Failed to fetch history." };
     }
-    
+
     // Returns { success: true, message: "...", data: [...] }
     return data;
-    
+
   } catch (error) {
     console.error("Get My Child History error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not fetch history." 
+    return {
+      success: false,
+      message: "Network error: Could not fetch history."
     };
   }
 };
@@ -793,8 +793,8 @@ export const getTodaysLiveBatchInfo = async (batch_obj_id) => {
 export const getstudentsbatchprogress = async (input) => {
   try {
     // FIX: specific check to handle if input is passed as { batch_obj_id: "..." } or just "..."
-    const batch_obj_id = typeof input === 'object' && input.batch_obj_id 
-      ? input.batch_obj_id 
+    const batch_obj_id = typeof input === 'object' && input.batch_obj_id
+      ? input.batch_obj_id
       : input;
 
     const response = await fetch(getstudentsbatchprogressPath, {
@@ -803,8 +803,8 @@ export const getstudentsbatchprogress = async (input) => {
       credentials: 'include',
       body: JSON.stringify({ batch_obj_id }), // Now batch_obj_id is guaranteed to be a string
     });
-    
-    return await response.json(); 
+
+    return await response.json();
   } catch (error) {
     console.error("Get Today's Batch Info error:", error);
     return { success: false, message: "Network error fetching batch info." };
@@ -842,7 +842,7 @@ export const getstudentsbatchprogress = async (input) => {
 //  * (STUDENT) Fetches the weeks/schedule for a specific batch.
 //  * @param {string} batch_obj_id - The MongoDB _id of the batch
 //  */
-export const getSessiosnForBatchStudent  = async (batch_obj_id) => {
+export const getSessiosnForBatchStudent = async (batch_obj_id) => {
   try {
     const response = await fetch(`${getSessionsForBatchStudentPath}?batch_obj_id=${batch_obj_id}`, {
       method: 'GET',
@@ -980,7 +980,7 @@ export const raiseDoubt = async (batch_obj_id, doubt_content) => {
       credentials: 'include',
       body: JSON.stringify({ batch_obj_id, doubt_content }),
     });
-    return await response.json(); 
+    return await response.json();
   } catch (error) {
     console.error("Raise Doubt error:", error);
     return { success: false, message: "Network error raising doubt." };
@@ -996,7 +996,7 @@ export const getMyDoubts = async () => {
       method: 'GET',
       credentials: 'include',
     });
-    return await response.json(); 
+    return await response.json();
   } catch (error) {
     console.error("Get My Doubts error:", error);
     return { success: false, message: "Network error fetching doubts." };
@@ -1010,8 +1010,8 @@ export const getMyDoubts = async () => {
 
 export const getUnresolvedDoubts = async (batch_obj_id = "") => {
   try {
-    const url = batch_obj_id 
-      ? `${getUnresolvedDoubtsPath}?batch_obj_id=${batch_obj_id}` 
+    const url = batch_obj_id
+      ? `${getUnresolvedDoubtsPath}?batch_obj_id=${batch_obj_id}`
       : getUnresolvedDoubtsPath;
 
     const response = await fetch(url, {
@@ -1110,7 +1110,7 @@ export const getStudentsInBatch = async (batch_obj_id) => {
 };
 
 export const linkStudentToBatch = async (batch_obj_id, student_number) => {
-  try { return await (await fetch(linkStudentToBatchPath, { method: 'POST', headers: {'Content-Type': 'application/json'}, credentials: 'include', body: JSON.stringify({ batch_obj_id, student_number }) })).json(); } catch (e) { return { success: false }; }
+  try { return await (await fetch(linkStudentToBatchPath, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ batch_obj_id, student_number }) })).json(); } catch (e) { return { success: false }; }
 };
 
 
@@ -1190,7 +1190,7 @@ export const listAllActiveBatches = async () => {
 export const updateBatchStatus = async (batch_obj_id, status) => {
   try {
     const response = await fetch(`${BASE_URL}/admin/updatebatchstatus`, {
-      method: 'POST', 
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -1216,9 +1216,9 @@ export const updateStudentPassword = async (studentId, newPassword) => {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ 
-        student_obj_id: studentId, 
-        new_password: newPassword 
+      body: JSON.stringify({
+        student_obj_id: studentId,
+        new_password: newPassword
       }),
     });
     return await handleResponse(response);
@@ -1306,7 +1306,7 @@ export const sendCredentials = async (orderId, selectedBatches = []) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         course_order_id: orderId,
         // ✅ only send IDs
         assigned_batches: selectedBatches.map(b => b.batch_obj_id)
@@ -1378,8 +1378,8 @@ export const updateStudentCreditWallet = async (studentId, studentNumber, online
   try {
     const response = await fetch(updateStudentCreditsPath, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json' 
+      headers: {
+        'Content-Type': 'application/json'
       },
       credentials: 'include', // Sends admin/teacher auth cookie
       body: JSON.stringify({
@@ -1395,15 +1395,15 @@ export const updateStudentCreditWallet = async (studentId, studentNumber, online
     if (!response.ok) {
       return { success: false, message: data.message || "Failed to update credits." };
     }
-    
+
     // Returns { success: true, message: "Credits updated successfully.", data: { ... } }
     return data;
 
   } catch (error) {
     console.error("Update Student Credits error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not update credits." 
+    return {
+      success: false,
+      message: "Network error: Could not update credits."
     };
   }
 };
@@ -1417,31 +1417,31 @@ export const updateStudentCreditWallet = async (studentId, studentNumber, online
 // Add this to your api.js file
 
 // Assuming the route is /api/student/remaining-session-info
-const remainingSessionInfoPath = `${BASE_URL}/student/remaining-session-info`; 
+const remainingSessionInfoPath = `${BASE_URL}/student/remaining-session-info`;
 
 export const remainingSessionInfoBatchForStudent = async () => {
   try {
     const response = await fetch(remainingSessionInfoPath, {
       method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json' 
+      headers: {
+        'Content-Type': 'application/json'
       },
       credentials: 'include', // Sends auth cookie
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       return { success: false, message: data.message || "Failed to fetch session info." };
     }
-    
+
     return data;
-    
+
   } catch (error) {
     console.error("Remaining Session Info error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not fetch session info." 
+    return {
+      success: false,
+      message: "Network error: Could not fetch session info."
     };
   }
 };
@@ -1449,7 +1449,7 @@ export const remainingSessionInfoBatchForStudent = async () => {
 
 
 // Path to the top-up session creation
-const createTopUpSessionPath = `${BASE_URL}/student/create-credit-topup-session`  ;
+const createTopUpSessionPath = `${BASE_URL}/student/create-credit-topup-session`;
 
 
 
@@ -1457,8 +1457,8 @@ export const createCreditTopUpSession = async (batchId, batchType, noOfClasses, 
   try {
     const response = await fetch(createTopUpSessionPath, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json' 
+      headers: {
+        'Content-Type': 'application/json'
       },
       credentials: 'include', // Important: Sends the student auth cookie
       body: JSON.stringify({
@@ -1470,19 +1470,19 @@ export const createCreditTopUpSession = async (batchId, batchType, noOfClasses, 
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       return { success: false, message: data.message || "Failed to initiate payment." };
     }
-    
+
     // Returns { success: true, data: { url: "...", amount: ... } }
     return data;
-    
+
   } catch (error) {
     console.error("Create TopUp Session error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not connect to payment gateway." 
+    return {
+      success: false,
+      message: "Network error: Could not connect to payment gateway."
     };
   }
 };
@@ -1510,16 +1510,16 @@ export const inviteTeacher = async (email) => {
         'Content-Type': 'application/json',
       },
       // Assuming you use cookies for auth, otherwise add Authorization header
-      credentials: 'include', 
+      credentials: 'include',
       body: JSON.stringify({ email }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      return { 
-        success: false, 
-        message: data.message || "Failed to invite teacher." 
+      return {
+        success: false,
+        message: data.message || "Failed to invite teacher."
       };
     }
 
@@ -1555,11 +1555,11 @@ export const validateTeacherInvite = async (token) => {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       return { success: false, message: data.message || "Invalid invitation link." };
     }
-    
+
     // Returns { success: true, data: { email: "..." } }
     return data;
 
@@ -1578,11 +1578,11 @@ export const completeTeacherOnboarding = async (payload) => {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       return { success: false, message: data.message || "Registration failed." };
     }
-    
+
     return data; // { success: true, ... }
 
   } catch (error) {
@@ -1644,10 +1644,10 @@ export const inviteStudentAndParent = async (studentEmail, parentEmail, onlineCr
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ 
-        studentEmail, 
-        parentEmail, 
-        onlineCredit: Number(onlineCredit), 
+      body: JSON.stringify({
+        studentEmail,
+        parentEmail,
+        onlineCredit: Number(onlineCredit),
         offlineCredit: Number(offlineCredit),
         batches // Passing array of { batch_obj_id, batchName }
       }),
@@ -1690,11 +1690,11 @@ export const validateParentInvite = async (token) => {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       return { success: false, message: data.message || "Invalid invitation link." };
     }
-    
+
     // Returns { success: true, data: { email: "parent@...", ... } }
     return data;
 
@@ -1713,11 +1713,11 @@ export const completeParentOnboarding = async (payload) => {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       return { success: false, message: data.message || "Registration failed." };
     }
-    
+
     return data;
 
   } catch (error) {
@@ -1749,11 +1749,11 @@ export const validateDirectStudentInvite = async (token) => {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       return { success: false, message: data.message || "Invalid invitation link." };
     }
-    
+
     // Returns { success: true, data: { email: "...", parentEmail: "..." } }
     return data;
 
@@ -1772,11 +1772,11 @@ export const completeDirectStudentOnboarding = async (payload) => {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       return { success: false, message: data.message || "Registration failed." };
     }
-    
+
     return data;
 
   } catch (error) {
@@ -1817,8 +1817,8 @@ export const createCheckoutSession = async (parentDetails, studentDetails, batch
   try {
     const response = await fetch(createCheckoutPath, {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json" 
+      headers: {
+        "Content-Type": "application/json"
       },
       // credentials: 'include', // Uncomment if you need cookies/session passed
       body: JSON.stringify({
@@ -1832,9 +1832,9 @@ export const createCheckoutSession = async (parentDetails, studentDetails, batch
     const data = await response.json();
 
     if (!response.ok || !data.success || !data.order) {
-      return { 
-        success: false, 
-        message: data.message || "Failed to generate payment order." 
+      return {
+        success: false,
+        message: data.message || "Failed to generate payment order."
       };
     }
 
@@ -1843,9 +1843,9 @@ export const createCheckoutSession = async (parentDetails, studentDetails, batch
 
   } catch (error) {
     console.error("Create Checkout Session error:", error);
-    return { 
-      success: false, 
-      message: "Network error: Could not connect to payment gateway." 
+    return {
+      success: false,
+      message: "Network error: Could not connect to payment gateway."
     };
   }
 };
@@ -1904,18 +1904,18 @@ export const updateStudentProfile = async (updates) => {
 
 
 // Add this path definition if not already present
-const unlinkStudentFromBatchPath = `${BASE_URL}/admin/unlinkstudentfrombatch`; 
+const unlinkStudentFromBatchPath = `${BASE_URL}/admin/unlinkstudentfrombatch`;
 
 export const unlinkStudentFromBatch = async (batch_obj_id, student_number) => {
-  try { 
-    return await (await fetch(unlinkStudentFromBatchPath, { 
-      method: 'POST', 
-      headers: {'Content-Type': 'application/json'}, 
-      credentials: 'include', 
-      body: JSON.stringify({ batch_obj_id, student_number }) 
-    })).json(); 
-  } catch (e) { 
-    return { success: false, message: "Network error" }; 
+  try {
+    return await (await fetch(unlinkStudentFromBatchPath, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ batch_obj_id, student_number })
+    })).json();
+  } catch (e) {
+    return { success: false, message: "Network error" };
   }
 };
 
@@ -2072,12 +2072,12 @@ export const getBatchStudentsBoardLinks = async (batchId) => {
   try {
     const response = await fetch(`${BASE_URL}/admin/batch/students-board-links`, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json' 
+      headers: {
+        'Content-Type': 'application/json'
       },
       credentials: 'include', // Important: Sends the admin auth cookie
-      body: JSON.stringify({ 
-        batch_obj_id: batchId 
+      body: JSON.stringify({
+        batch_obj_id: batchId
       })
     });
 
@@ -2142,8 +2142,8 @@ export const getMyBoardLink = async () => {
   try {
     const response = await fetch(`${BASE_URL}/student/my-board-link`, {
       method: 'GET',
-      headers: { 
-        'Content-Type': 'application/json' 
+      headers: {
+        'Content-Type': 'application/json'
       },
       credentials: 'include', // Important: Sends the student auth cookie
     });

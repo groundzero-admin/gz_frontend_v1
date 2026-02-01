@@ -55,7 +55,7 @@ const BookingPage_Builder_OS = () => {
           ease: "power3.inOut",
           scrollTo: {
             y: widgetRef.current,
-            offsetY: 70, 
+            offsetY: 70,
           },
         });
       }
@@ -73,7 +73,7 @@ const BookingPage_Builder_OS = () => {
 
   return (
     <div className={`min-h-screen w-full font-sans transition-colors duration-700 relative ${isDark ? "bg-[#0B0C15] text-gray-100" : "bg-slate-50 text-slate-900"}`}>
-      
+
       <PageBackground isDark={isDark} />
 
       <motion.div
@@ -85,10 +85,10 @@ const BookingPage_Builder_OS = () => {
         {/* HEADER */}
         <motion.div variants={ITEM_VARIANTS} className="flex justify-between mb-3">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/builderos")}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${isDark ? "border-white/10 text-gray-400 hover:bg-white/5" : "bg-white border-slate-200 text-slate-600 shadow-sm hover:bg-slate-50"}`}
           >
-            <ArrowLeft size={14} /> Back to Home
+            <ArrowLeft size={14} /> Back to BuilderOs
           </button>
 
           <button
@@ -126,7 +126,7 @@ const BookingPage_Builder_OS = () => {
             ].map((t, i) => (
               <div key={i} className="flex items-start gap-2">
                 <div className={`mt-1 shrink-0 ${isDark ? "text-green-400" : "text-green-500"}`}>
-                   <Check size={14} strokeWidth={3} />
+                  <Check size={14} strokeWidth={3} />
                 </div>
                 <span className={styles.bodyText}>{t}</span>
               </div>
@@ -175,9 +175,8 @@ const BookingPage_Builder_OS = () => {
               scrolling="no"
               title="Zoho Booking"
               onLoad={() => setIframeLoading(false)}
-              className={`w-full h-full transition-opacity duration-1000 ${
-                iframeLoading ? "opacity-0" : "opacity-100"
-              }`}
+              className={`w-full h-full transition-opacity duration-1000 ${iframeLoading ? "opacity-0" : "opacity-100"
+                }`}
             />
           </div>
         </motion.div>

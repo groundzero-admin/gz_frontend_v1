@@ -66,14 +66,14 @@ function App() {
       <Route path="*" element={<NotFoundPage />} />
 
 
-      <Route path="/" element={< LandingPageMain />} />
+      <Route path="/builderos" element={< LandingPageMain />} />
       <Route path="/book-discovery-call-builderos" element={< BookingPage_BuilderOs />} />
       <Route path="/book-discovery-call-spark" element={< BookingPage_Spark />} />
       <Route path="/book-one-on-one-session-builderos" element={< BookOneOnOneSession_BuilderOS />} />
       <Route path="/book-one-on-one-session-spark" element={< BookOneOnOneSession_Spark />} />
       <Route path="/form-a-squad-builderos" element={< FormSquad_BuilderOS />} />
 
-      <Route path="/spark" element={<Landing_Page_spark />} />
+      <Route path="/" element={<Landing_Page_spark />} />
       <Route path="/buycourse" element={<BuyCourse />} />
       <Route path="/payment-success" element={<PaymentSuccess />} />
       <Route path="/payment-failed" element={< PaymentFailure />} />
@@ -90,7 +90,7 @@ function App() {
 
 
 
-      
+
       {/* Route for the Login/Auth Page */}
       <Route path="/login" element={<AuthPage />} />
       <Route path="/invite/onboard" element={<InviteOnboardPage />} />
@@ -100,32 +100,32 @@ function App() {
 
 
       <Route path="/admin/dashboard" element={<AdminDashBoardLayout />}>
-              {/* Default page at /admin/dashboard */}
-              <Route index element={<AdminWelcomePage />} /> 
-              
-              {/* Page at /admin/dashboard/request */}
-              <Route path="request" element={<AdminRequestPage />} />
-            
-              <Route path="invitation" element={<AdminNewInvitationsPage />} />
+        {/* Default page at /admin/dashboard */}
+        <Route index element={<AdminWelcomePage />} />
+
+        {/* Page at /admin/dashboard/request */}
+        <Route path="request" element={<AdminRequestPage />} />
+
+        <Route path="invitation" element={<AdminNewInvitationsPage />} />
 
 
-              <Route path="batches" element={<  AdminBatchesPage  />} />
+        <Route path="batches" element={<  AdminBatchesPage />} />
 
-              <Route path="batches/:batchId" element={<  AdminBatchWeekPage  />} />
-
-
-
-              <Route path="teacher" element={<AdminListAllTeacherPage />} />
-              <Route path="student" element={<AdminStudentPage />} />
-              <Route path="student/:studentId" element={< AdminStudentPromptHistory />    } />
-
-              <Route path="attendance" element={< AttendancePage />} />
-
-              <Route path="email-otp"   element={   <Admin_GetAllLinksOtp/>   }  />
+        <Route path="batches/:batchId" element={<  AdminBatchWeekPage />} />
 
 
-              <Route path="collaborativeboard/batches"   element={   < ActiveBatchesPageForBoard />   }  />
-              <Route path="collaborativeboard/batches/:batchId"   element={   <  AdminAllBoardsForABatch />   }  />
+
+        <Route path="teacher" element={<AdminListAllTeacherPage />} />
+        <Route path="student" element={<AdminStudentPage />} />
+        <Route path="student/:studentId" element={< AdminStudentPromptHistory />} />
+
+        <Route path="attendance" element={< AttendancePage />} />
+
+        <Route path="email-otp" element={<Admin_GetAllLinksOtp />} />
+
+
+        <Route path="collaborativeboard/batches" element={< ActiveBatchesPageForBoard />} />
+        <Route path="collaborativeboard/batches/:batchId" element={<  AdminAllBoardsForABatch />} />
 
 
       </Route>
@@ -134,49 +134,49 @@ function App() {
 
 
 
-       <Route path="/student/dashboard" element={< StudentLayout />}>
-              {/* Default page at /admin/dashboard */}
-              <Route index element={< StudentWelcomePage />} /> 
-              <Route path="asktoai" element={< StudentAskToAIPage />} />
-              {/* <Route path = "mybatches" element={ <StudentMyBatches/>     } /> */}
-              {/* <Route path = "allbatches" element={ <StudentAllBatchesPage/>     } /> */}
-              {/* <Route path = "doubts" element={ <StudentDoubtsPage/>     } /> */}
-              {/* <Route path = "remaingsessionpurchase" element={ <StudentRemainingSessionPurchase/>     } /> */}
-              {/* <Route path = "payment-result" element={ < StudentPaymentStatusHandler/>     } /> */}
-              <Route path="workspace" element={< StudentMySpacePage />} />
+      <Route path="/student/dashboard" element={< StudentLayout />}>
+        {/* Default page at /admin/dashboard */}
+        <Route index element={< StudentWelcomePage />} />
+        <Route path="asktoai" element={< StudentAskToAIPage />} />
+        {/* <Route path = "mybatches" element={ <StudentMyBatches/>     } /> */}
+        {/* <Route path = "allbatches" element={ <StudentAllBatchesPage/>     } /> */}
+        {/* <Route path = "doubts" element={ <StudentDoubtsPage/>     } /> */}
+        {/* <Route path = "remaingsessionpurchase" element={ <StudentRemainingSessionPurchase/>     } /> */}
+        {/* <Route path = "payment-result" element={ < StudentPaymentStatusHandler/>     } /> */}
+        <Route path="workspace" element={< StudentMySpacePage />} />
 
-              <Route path="catchup-session" element={< SparkBookCatchUpSession />} />
-              <Route path="my-assignments" element={<  StudentAssignments />} />
+        <Route path="catchup-session" element={< SparkBookCatchUpSession />} />
+        <Route path="my-assignments" element={<  StudentAssignments />} />
 
-              {/* <Route path="whiteboard" element={<  StudentWhiteboardPage />} /> */}
-
-
+        {/* <Route path="whiteboard" element={<  StudentWhiteboardPage />} /> */}
 
 
 
 
-    </Route>
+
+
+      </Route>
 
 
 
 
-         <Route path="/teacher/dashboard" element={< TeacherLayout />}>
-              {/* Default page at /admin/dashboard */}
-              <Route index element={< TeacherWelcome />} /> 
-              
-              <Route path="batches" element={<  TeacherAllLiveBatchesPage />} />
-              <Route path="batches/:batchId" element={<  TeacherSpecificBatchDetailPage  />} />
-              <Route path="doubts" element={<  TeacherDoubtsPage  />} />
+      <Route path="/teacher/dashboard" element={< TeacherLayout />}>
+        {/* Default page at /admin/dashboard */}
+        <Route index element={< TeacherWelcome />} />
 
-           
-
-              
-    </Route>
+        <Route path="batches" element={<  TeacherAllLiveBatchesPage />} />
+        <Route path="batches/:batchId" element={<  TeacherSpecificBatchDetailPage />} />
+        <Route path="doubts" element={<  TeacherDoubtsPage />} />
 
 
 
 
-    <Route path="/parent/dashboard" element={<ParentDashboardPage />} />
+      </Route>
+
+
+
+
+      <Route path="/parent/dashboard" element={<ParentDashboardPage />} />
 
     </Routes>
   )

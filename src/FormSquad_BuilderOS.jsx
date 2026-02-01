@@ -70,7 +70,7 @@ const FormSquad_BuilderOS = () => {
 
   return (
     <div className={`min-h-screen w-full font-sans transition-colors duration-700 relative ${isDark ? "bg-[#0B0C15] text-gray-100" : "bg-slate-50 text-slate-900"}`}>
-      
+
       <PageBackground isDark={isDark} />
 
       <motion.div
@@ -82,10 +82,10 @@ const FormSquad_BuilderOS = () => {
         {/* HEADER */}
         <motion.div variants={ITEM_VARIANTS} className="flex justify-between mb-4">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/builderos")}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${isDark ? "border-white/10 text-gray-400 hover:bg-white/5" : "bg-white border-slate-200 text-slate-600 shadow-sm hover:bg-slate-50"}`}
           >
-            <ArrowLeft size={14} /> Back to Home
+            <ArrowLeft size={14} /> Back to BuilderOs
           </button>
 
           <button
@@ -102,13 +102,13 @@ const FormSquad_BuilderOS = () => {
             Form a <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600">Squad</span>
           </h1>
           <p className={`text-xs md:text-sm max-w-lg mx-auto ${isDark ? "text-gray-400" : "text-slate-600"}`}>
-           Bring your people and begin your journey together in a focused cohort.
+            Bring your people and begin your journey together in a focused cohort.
           </p>
         </motion.div>
 
         {/* SYMMETRICAL INFO CARDS */}
         <motion.div variants={ITEM_VARIANTS} className="mb-8 flex flex-col md:flex-row gap-5 items-stretch">
-          
+
           {/* Card 1: What You Get */}
           <div className={themeStyles.cardBase}>
             <div className={themeStyles.sectionHeader}>
@@ -137,12 +137,12 @@ const FormSquad_BuilderOS = () => {
               <CreditCard size={16} className={themeStyles.iconColor} />
               Session Fee: ₹200
             </div>
-            
+
             <div className="flex gap-3 items-start h-full">
-                <Info size={18} className={`mt-0.5 shrink-0 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
-                <p className={themeStyles.bodyText}>
-                    This small fee ensures sincerity and attendance. It's <strong className={isDark ? "text-green-400" : "text-green-600"}>fully adjusted</strong> if you continue, or <strong className={isDark ? "text-green-400" : "text-green-600"}>refundable</strong> on request.
-                </p>
+              <Info size={18} className={`mt-0.5 shrink-0 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
+              <p className={themeStyles.bodyText}>
+                This small fee ensures sincerity and attendance. It's <strong className={isDark ? "text-green-400" : "text-green-600"}>fully adjusted</strong> if you continue, or <strong className={isDark ? "text-green-400" : "text-green-600"}>refundable</strong> on request.
+              </p>
             </div>
           </div>
         </motion.div>

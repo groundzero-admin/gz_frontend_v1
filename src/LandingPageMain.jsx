@@ -349,7 +349,7 @@ const LandingPageMain = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            onClick={() => navigate('/spark')}
+            onClick={() => navigate('/')}
             className={`
               mb-8 px-5 py-2 rounded-full text-sm font-semibold border flex items-center gap-2 transition-transform hover:scale-105 z-10
               ${isDark 

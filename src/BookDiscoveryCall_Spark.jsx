@@ -82,7 +82,7 @@ const BookingPage_Spark = () => {
 
   return (
     <div className={`min-h-screen w-full font-sans transition-colors duration-700 relative ${isDark ? "bg-[#0B0C15] text-gray-100" : "bg-slate-50 text-slate-900"}`}>
-      
+
       <PageBackground isDark={isDark} />
 
       <motion.div
@@ -94,10 +94,10 @@ const BookingPage_Spark = () => {
         {/* HEADER */}
         <motion.div variants={ITEM_VARIANTS} className="flex justify-between mb-3">
           <button
-            onClick={() => navigate("/spark")}
+            onClick={() => navigate("/")}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${isDark ? "border-white/10 text-gray-400 hover:bg-white/5" : "bg-white border-slate-200 text-slate-600 shadow-sm hover:bg-slate-50"}`}
           >
-            <ArrowLeft size={14} /> Back to Spark
+            <ArrowLeft size={14} /> Back to Home
           </button>
 
           <button
@@ -136,7 +136,7 @@ const BookingPage_Spark = () => {
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2.5">
                   <div className={`mt-0.5 shrink-0 ${isDark ? "text-cyan-400" : "text-cyan-600"}`}>
-                     <CheckCircle2 size={14} />
+                    <CheckCircle2 size={14} />
                   </div>
                   <span className={themeStyles.bodyText}>{item}</span>
                 </div>
@@ -153,7 +153,7 @@ const BookingPage_Spark = () => {
               <div className="flex gap-2 items-start">
                 <Info size={16} className={`mt-0.5 shrink-0 ${isDark ? "text-blue-400" : "text-blue-600"}`} />
                 <p className={themeStyles.bodyText}>
-                   To ensure sincerity. <strong className={isDark ? "text-green-400" : "text-green-600"}>Fully adjusted</strong> if you continue, or <strong className={isDark ? "text-green-400" : "text-green-600"}>refundable</strong> on request.
+                  To ensure sincerity. <strong className={isDark ? "text-green-400" : "text-green-600"}>Fully adjusted</strong> if you continue, or <strong className={isDark ? "text-green-400" : "text-green-600"}>refundable</strong> on request.
                 </p>
               </div>
               <div className={`mt-auto pt-3 border-t flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider ${isDark ? "border-white/5 text-green-400" : "border-slate-100 text-green-600"}`}>

@@ -9,7 +9,7 @@ import {
   FaArrowLeft,
   FaEye,
   FaEyeSlash,
-  FaSpinner, 
+  FaSpinner,
 } from "react-icons/fa"
 import { useNavigate } from "react-router-dom"
 import "./color.css"
@@ -17,7 +17,7 @@ import { login } from "./api.js"
 
 // --- REUSABLE INPUT COMPONENT (Unchanged) ---
 
-const InputField = ({ 
+const InputField = ({
   icon,
   type,
   placeholder,
@@ -43,9 +43,8 @@ const InputField = ({
       className="w-full pl-12 pr-12 py-3 rounded-lg border bg-transparent transition relative z-0 focus:outline-none focus:ring-2 focus:ring-[var(--accent-teal)] disabled:opacity-50 disabled:cursor-not-allowed"
       style={{
         borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
-        color: `var(${
-          isDark ? "--text-dark-primary" : "--text-light-primary"
-        })`,
+        color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"
+          })`,
       }}
       required
     />
@@ -54,7 +53,7 @@ const InputField = ({
         onClick={!disabled ? onEndIconClick : undefined}
         className={`absolute right-4 top-1/2 -translate-y-1/2 z-10 transition ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-80'}`}
         style={{
-          color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` 
+          color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`
         }}
       >
         {endIcon}
@@ -118,32 +117,32 @@ const AuthPage = () => {
     >
       {/* --- Optimized Background --- */}
       <div className="absolute inset-0 pointer-events-none z-0">
-          {/* Simple static grid pattern */}
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.05)_1px,transparent_0)] bg-[size:20px_20px] opacity-50"></div>
-          
-          {/* Static Gradient Blob (Removed Animation & Reduced Blur) */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[500px] bg-gradient-to-b from-purple-500/10 to-teal-500/10 rounded-full blur-3xl opacity-30"></div>
+        {/* Simple static grid pattern */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.05)_1px,transparent_0)] bg-[size:20px_20px] opacity-50"></div>
 
-          {/* Static Stars (No Twinkle Animation) */}
-          {stars.map((star, index) => (
-            <div
-              key={index}
-              className="absolute rounded-full bg-white"
-              style={{
-                left: star.left,
-                top: star.top,
-                width: star.size,
-                height: star.size,
-                backgroundColor: isDark ? '#ffffff' : 'var(--accent-purple)',
-                opacity: 0.4
-              }}
-            ></div>
-          ))}
+        {/* Static Gradient Blob (Removed Animation & Reduced Blur) */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[500px] bg-gradient-to-b from-purple-500/10 to-teal-500/10 rounded-full blur-3xl opacity-30"></div>
+
+        {/* Static Stars (No Twinkle Animation) */}
+        {stars.map((star, index) => (
+          <div
+            key={index}
+            className="absolute rounded-full bg-white"
+            style={{
+              left: star.left,
+              top: star.top,
+              width: star.size,
+              height: star.size,
+              backgroundColor: isDark ? '#ffffff' : 'var(--accent-purple)',
+              opacity: 0.4
+            }}
+          ></div>
+        ))}
       </div>
 
       {/* Back Button */}
       <button
-        onClick={() => !isLoading && navigate("/spark")}
+        onClick={() => !isLoading && navigate("/")}
         disabled={isLoading}
         className={`absolute top-6 left-6 z-30 p-3 rounded-full transition shadow-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'}`}
         style={{
@@ -200,13 +199,13 @@ const AuthPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             isDark={isDark}
-            disabled={isLoading} 
+            disabled={isLoading}
           />
 
           <InputField
             id="password"
             icon={<FaLock style={{ color: "var(--accent-teal)" }} />}
-            type={showPassword ? "text" : "password"} 
+            type={showPassword ? "text" : "password"}
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -216,22 +215,22 @@ const AuthPage = () => {
             onEndIconClick={() => setShowPassword(!showPassword)}
           />
 
-        <button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full px-8 py-3 rounded-xl font-bold text-lg transition transform 
+          <button
+            type="submit"
+            disabled={isLoading}
+            className={`w-full px-8 py-3 rounded-xl font-bold text-lg transition transform 
                         bg-gradient-to-r from-blue-500 to-indigo-600
                         ${isLoading ? 'opacity-70 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98] hover:from-blue-600 hover:to-indigo-700 shadow-lg hover:shadow-xl'}`}
-              style={{ color: "white" }}
-            >
-              {isLoading ? (
-                <div className="flex items-center justify-center gap-2">
-                  <FaSpinner className="animate-spin text-xl" />
-                  <span>Logging in...</span>
-                </div>
-              ) : (
-                "Log In"
-              )}
+            style={{ color: "white" }}
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2">
+                <FaSpinner className="animate-spin text-xl" />
+                <span>Logging in...</span>
+              </div>
+            ) : (
+              "Log In"
+            )}
           </button>
         </form>
       </div>

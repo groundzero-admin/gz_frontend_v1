@@ -82,7 +82,7 @@ const BookOneOnOneSession_Spark = () => {
 
   return (
     <div className={`min-h-screen w-full font-sans transition-colors duration-700 relative ${isDark ? "bg-[#0B0C15] text-gray-100" : "bg-slate-50 text-slate-900"}`}>
-      
+
       <PageBackground isDark={isDark} />
 
       <motion.div
@@ -94,10 +94,10 @@ const BookOneOnOneSession_Spark = () => {
         {/* HEADER */}
         <motion.div variants={ITEM_VARIANTS} className="flex justify-between mb-3">
           <button
-            onClick={() => navigate("/spark")}
+            onClick={() => navigate("/")}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${isDark ? "border-white/10 text-gray-400 hover:bg-white/5" : "bg-white border-slate-200 text-slate-600 shadow-sm hover:bg-slate-50"}`}
           >
-            <ArrowLeft size={14} /> Back to Spark
+            <ArrowLeft size={14} /> Back to Home
           </button>
 
           <button
@@ -113,7 +113,7 @@ const BookOneOnOneSession_Spark = () => {
           <h1 className="text-2xl md:text-3xl font-extrabold mb-1">
             Book Your{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-500 to-violet-600">
-               Session
+              Session
             </span>
           </h1>
           <p className={`text-xs md:text-sm max-w-lg mx-auto ${isDark ? "text-gray-400" : "text-slate-600"}`}>
@@ -123,14 +123,14 @@ const BookOneOnOneSession_Spark = () => {
 
         {/* SYMMETRICAL INFO CARDS */}
         <motion.div variants={ITEM_VARIANTS} className="mb-6 flex flex-col md:flex-row gap-5 items-stretch">
-          
+
           {/* Card 1: What's Included */}
           <div className={themeStyles.cardBase}>
             <div className={themeStyles.sectionHeader}>
               <Zap size={16} className={isDark ? "text-indigo-400" : "text-indigo-600"} />
               What's included
             </div>
-            
+
             <div className="flex flex-col gap-3">
               {[
                 "1:1 Live Strategy Sessions",
@@ -140,7 +140,7 @@ const BookOneOnOneSession_Spark = () => {
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-2.5">
                   <div className={`mt-0.5 shrink-0 ${isDark ? "text-indigo-400" : "text-indigo-600"}`}>
-                     <CheckCircle2 size={14} />
+                    <CheckCircle2 size={14} />
                   </div>
                   <span className={themeStyles.bodyText}>{item}</span>
                 </div>
@@ -154,7 +154,7 @@ const BookOneOnOneSession_Spark = () => {
               <CreditCard size={16} className={isDark ? "text-blue-400" : "text-blue-600"} />
               Session Fee
             </div>
-            
+
             <div className="flex flex-col h-full justify-between">
               <div>
                 <h3 className="font-extrabold text-3xl mb-1">

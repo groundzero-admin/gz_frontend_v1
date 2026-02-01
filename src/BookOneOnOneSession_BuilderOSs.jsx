@@ -63,7 +63,7 @@ const BookOneOnOneSession_BuilderOSs = () => {
     <div className={`min-h-screen w-full font-sans transition-colors duration-700 relative ${isDark ? "bg-[#0B0C15] text-gray-100" : "bg-slate-50 text-slate-900"}`}>
       <PageBackground isDark={isDark} />
 
-      <motion.div 
+      <motion.div
         className="relative z-10 max-w-5xl w-full mx-auto px-4 md:px-6 pt-4 pb-6"
         variants={CONTAINER_VARIANTS}
         initial="hidden"
@@ -72,10 +72,10 @@ const BookOneOnOneSession_BuilderOSs = () => {
         {/* HEADER */}
         <motion.div variants={ITEM_VARIANTS} className="flex items-center justify-between mb-6">
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/builderos")}
             className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${isDark ? "border-white/10 text-gray-400 hover:bg-white/5" : "bg-white border-slate-200 text-slate-600 shadow-sm hover:bg-slate-50"}`}
           >
-            <ArrowLeft size={14} /> Back to Home
+            <ArrowLeft size={14} /> Back to BuilderOs
           </button>
 
           <button
@@ -92,7 +92,7 @@ const BookOneOnOneSession_BuilderOSs = () => {
             Book Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-blue-600 to-violet-600">1:1 Session</span>
           </h1>
           <p className={`text-xs md:text-sm max-w-md mx-auto ${isDark ? "text-gray-400" : "text-slate-600"}`}>
-           For individuals who want rapid, specific acceleration and focused unblocking.
+            For individuals who want rapid, specific acceleration and focused unblocking.
           </p>
         </motion.div>
 
