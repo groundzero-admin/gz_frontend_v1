@@ -14,6 +14,7 @@ import {
 import { useNavigate } from "react-router-dom"
 import "./color.css"
 import { login } from "./api.js"
+import useThemeStore from "./store/useThemeStore"
 
 // --- REUSABLE INPUT COMPONENT (Unchanged) ---
 
@@ -63,7 +64,7 @@ const InputField = ({
 )
 
 const AuthPage = () => {
-  const [isDark, setIsDark] = useState(false)
+  const { isDark, toggleTheme } = useThemeStore()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -156,7 +157,7 @@ const AuthPage = () => {
 
       {/* Theme Toggle */}
       <button
-        onClick={() => setIsDark(!isDark)}
+        onClick={toggleTheme}
         className="absolute top-6 right-6 z-30 p-3 rounded-full hover:opacity-80 transition shadow-sm"
         style={{
           backgroundColor: `var(${isDark ? "--card-dark" : "--card-light"})`,

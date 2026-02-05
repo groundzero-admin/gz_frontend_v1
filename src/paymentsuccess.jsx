@@ -1,6 +1,7 @@
 import React, { useState, useEffect, memo, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Moon, Sun, CheckCircle, Mail, Phone, Home, ArrowRight } from "lucide-react";
+import useThemeStore from "./store/useThemeStore";
 
 // 1. HOISTED STYLES (Created once, prevents memory churn)
 const THEME_STYLES = `
@@ -37,7 +38,7 @@ const SuccessDecor = memo(() => (
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, toggleTheme } = useThemeStore();
 
   // 3. SILENT REDIRECT (No re-renders)
   useEffect(() => {
@@ -70,7 +71,7 @@ const PaymentSuccess = () => {
           </div>
 
           <button
-            onClick={() => setIsDark(!isDark)}
+            onClick={toggleTheme}
             className="p-2 rounded-full border border-white/10 shadow-lg transition-transform active:scale-90"
             style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' }}
           >

@@ -6,6 +6,7 @@ import {
   Mail, Phone, GraduationCap, School, Layers, Sun, Moon, Rocket
 } from "lucide-react";
 import { motion } from "framer-motion";
+import useThemeStore from "./store/useThemeStore";
 
 // --- CONFIGURATION VARIABLES ---
 const PRICE_ONLINE_SESSION = 1500;
@@ -45,7 +46,7 @@ const BuyCourse = () => {
   const BATCH_TYPE = normalizedType === "OFFLINE" ? "OFFLINE" : "ONLINE";
 
   // --- STATE ---
-  const [isDarkMode, setIsDarkMode] = useState(false); // DEFAULT: LIGHT MODE
+  const { isDark: isDarkMode, toggleTheme } = useThemeStore();
   const [purchaseType, setPurchaseType] = useState("FULL_BUNDLE");
   const [isProcessing, setIsProcessing] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
@@ -62,8 +63,6 @@ const BuyCourse = () => {
     classGrade: "",
     schoolName: "",
   });
-
-  const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
   // --- PRICING CALCULATION ---
   const pricePerSession = BATCH_TYPE === "OFFLINE" ? PRICE_OFFLINE_SESSION : PRICE_ONLINE_SESSION;

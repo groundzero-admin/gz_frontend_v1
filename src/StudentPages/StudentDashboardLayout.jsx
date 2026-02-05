@@ -7,27 +7,28 @@ import {
   FaCompass,
   FaSun,
   FaMoon,
-  
-} from "react-icons/fa" 
+
+} from "react-icons/fa"
 
 // import { BsClipboard2Pulse } from "react-icons/bs";
 
 
 import { GoGoal } from "react-icons/go";
 
-import { MdOutlineRocketLaunch } from "react-icons/md"; 
+import { MdOutlineRocketLaunch } from "react-icons/md";
 import { BsStars } from "react-icons/bs"
 import { HiOutlineLogout } from "react-icons/hi";
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom"
 import "../color.css"
 import { checkRole, logout } from "../api.js"
+import useThemeStore from "../store/useThemeStore"
 
 // --- Helper: Full Page Message ---
 const FullPageMessage = ({ isDark, children }) => (
   <div
     className="min-h-screen w-full flex flex-col items-center justify-center p-6 transition-colors duration-300"
     style={{
-      backgroundColor: isDark ? "#02040a" : "#F3F4F6", 
+      backgroundColor: isDark ? "#02040a" : "#F3F4F6",
       color: isDark ? "#E0E7FF" : "#1F2937",
     }}
   >
@@ -51,8 +52,8 @@ const SidebarItem = ({ to, icon, label, subLabel, isActive, isDark }) => {
       // OPTIMIZATION: Removed 'backdrop-blur-md' from non-active state to save resources
       // Added 'transform-gpu' to active state to smooth out the glow effect rendering
       className={`group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 mb-2 overflow-hidden transform-gpu
-        ${isActive 
-          ? "bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.15)] border border-cyan-500/20 backdrop-blur-md" 
+        ${isActive
+          ? "bg-cyan-500/10 shadow-[0_0_20px_rgba(6,182,212,0.15)] border border-cyan-500/20 backdrop-blur-md"
           : "text-gray-500 hover:bg-gray-500/5 hover:text-cyan-400 border border-transparent"
         }
       `}
@@ -61,10 +62,10 @@ const SidebarItem = ({ to, icon, label, subLabel, isActive, isDark }) => {
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent opacity-50 pointer-events-none" />
       )}
 
-      <div 
+      <div
         className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 relative z-10
-          ${isActive 
-            ? "bg-cyan-500/20 text-cyan-400 shadow-inner shadow-cyan-500/20" 
+          ${isActive
+            ? "bg-cyan-500/20 text-cyan-400 shadow-inner shadow-cyan-500/20"
             : "bg-gray-500/10 text-gray-500 group-hover:bg-cyan-500/10 group-hover:text-cyan-400"
           }
         `}
@@ -73,16 +74,16 @@ const SidebarItem = ({ to, icon, label, subLabel, isActive, isDark }) => {
       </div>
 
       <div className="flex-1 relative z-10">
-        <span 
+        <span
           className={`font-semibold text-sm block transition-colors truncate
-          ${isActive 
-             ? (isDark ? "text-cyan-50" : "text-black") 
-             : (isDark ? "text-gray-400" : "text-gray-600")
-          }`}
+          ${isActive
+              ? (isDark ? "text-cyan-50" : "text-black")
+              : (isDark ? "text-gray-400" : "text-gray-600")
+            }`}
         >
           {label}
         </span>
-        
+
         <span className={`text-[10px] uppercase tracking-wider font-medium ${isActive ? "text-cyan-400/80" : "text-gray-500"}`}>
           {subLabel}
         </span>
@@ -99,7 +100,7 @@ const SidebarItem = ({ to, icon, label, subLabel, isActive, isDark }) => {
 const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
   const location = useLocation()
   const [companionName, setCompanionName] = useState("Spark");
-  
+
   const isActive = (path) => {
     if (path === "/student/dashboard") return location.pathname === "/student/dashboard";
     return location.pathname.startsWith(path);
@@ -108,7 +109,7 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
   useEffect(() => {
     const updateCompanionName = () => {
       if (!userData) return;
-      
+
       const userKey = userData.email || userData.user_number || "guest";
       const storageKey = `student_companion_name_${userKey}`;
       const savedName = localStorage.getItem(storageKey);
@@ -139,7 +140,7 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
         ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
       `}
       style={{
-        backgroundColor: isDark ? "rgba(2, 4, 16, 0.85)" : "rgba(255, 255, 255, 0.9)", 
+        backgroundColor: isDark ? "rgba(2, 4, 16, 0.85)" : "rgba(255, 255, 255, 0.9)",
         borderColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)",
       }}
     >
@@ -151,7 +152,7 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
         <div className="flex items-center gap-3">
           {/* OPTIMIZATION: Reduced shadow spread and complex overlapping animations */}
           <div className="w-12 h-12 rounded-[1.25rem] bg-gradient-to-br from-cyan-600 via-blue-600 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
-             <MdOutlineRocketLaunch className="w-6 h-6 text-white drop-shadow-md" />
+            <MdOutlineRocketLaunch className="w-6 h-6 text-white drop-shadow-md" />
           </div>
           <div>
             <h1 className="font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 tracking-tight">
@@ -165,32 +166,32 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
       </div>
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar relative z-10">
-        <SidebarItem 
-            to="/student/dashboard" 
-            icon={<FaHome />} 
-            label="Home" 
-            subLabel="Command Deck" 
-            isActive={isActive("/student/dashboard")} 
-            isDark={isDark} 
+        <SidebarItem
+          to="/student/dashboard"
+          icon={<FaHome />}
+          label="Home"
+          subLabel="Command Deck"
+          isActive={isActive("/student/dashboard")}
+          isDark={isDark}
         />
-        
-        <SidebarItem 
-            to="/student/dashboard/asktoai" 
-            icon={<FaCommentDots />} 
-            label={`Ask ${companionName}`} 
-            subLabel="Your Companion" 
-            isActive={isActive("/student/dashboard/asktoai")} 
-            isDark={isDark} 
+
+        <SidebarItem
+          to="/student/dashboard/asktoai"
+          icon={<FaCommentDots />}
+          label={`Ask ${companionName}`}
+          subLabel="Your Companion"
+          isActive={isActive("/student/dashboard/asktoai")}
+          isDark={isDark}
         />
 
         {/* --- Assignments --- */}
-        <SidebarItem 
-            to="/student/dashboard/my-assignments" 
-            icon={<GoGoal />} 
-            label="Assignments" 
-            subLabel="Your Goals" 
-            isActive={isActive("/student/dashboard/my-assignments")} 
-            isDark={isDark} 
+        <SidebarItem
+          to="/student/dashboard/my-assignments"
+          icon={<GoGoal />}
+          label="Assignments"
+          subLabel="Your Goals"
+          isActive={isActive("/student/dashboard/my-assignments")}
+          isDark={isDark}
         />
 
         {/* --- NEW ENTRY: White Board --- */}
@@ -202,26 +203,26 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
             isActive={isActive("/student/dashboard/whiteboard")} 
             isDark={isDark} 
         /> */}
-        
-        <SidebarItem 
-            to="/student/dashboard/workspace" 
-            icon={<FaCompass />} 
-            label="My Space" 
-            subLabel="Your Universe" 
-            isActive={isActive("/student/dashboard/workspace")} 
-            isDark={isDark} 
+
+        <SidebarItem
+          to="/student/dashboard/workspace"
+          icon={<FaCompass />}
+          label="My Space"
+          subLabel="Your Universe"
+          isActive={isActive("/student/dashboard/workspace")}
+          isDark={isDark}
         />
       </nav>
 
       <div className="p-4 border-t border-gray-500/10 flex flex-col gap-3 relative z-10 bg-gradient-to-t from-black/5 to-transparent">
         <div className="flex items-center justify-between px-2 mb-1">
-             <button onClick={onToggleTheme} className={`p-2 rounded-lg transition-all ${isDark ? "text-gray-400 hover:text-white hover:bg-white/10" : "text-gray-400 hover:text-gray-800 hover:bg-black/5"}`} title="Toggle Theme">
-               {isDark ? <FaSun className="text-sm text-white" /> : <FaMoon className="text-sm text-black" />}
-             </button>
-             <button onClick={onLogout} className="p-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all flex items-center gap-2" title="Logout">
-                <span className="text-[10px] font-bold uppercase tracking-widest">Logout</span>
-                <HiOutlineLogout className="text-sm" />
-             </button>
+          <button onClick={onToggleTheme} className={`p-2 rounded-lg transition-all ${isDark ? "text-gray-400 hover:text-white hover:bg-white/10" : "text-gray-400 hover:text-gray-800 hover:bg-black/5"}`} title="Toggle Theme">
+            {isDark ? <FaSun className="text-sm text-white" /> : <FaMoon className="text-sm text-black" />}
+          </button>
+          <button onClick={onLogout} className="p-2 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all flex items-center gap-2" title="Logout">
+            <span className="text-[10px] font-bold uppercase tracking-widest">Logout</span>
+            <HiOutlineLogout className="text-sm" />
+          </button>
         </div>
         <div className={`flex items-center gap-3 px-3 py-3 rounded-2xl transition-all duration-300 border backdrop-blur-sm ${isDark ? "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10" : "bg-gray-100/80 border-gray-200 hover:bg-gray-200/80"}`}>
           <div className="w-11 h-11 rounded-[1rem] bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-lg font-bold text-white shadow-lg shadow-indigo-500/30">
@@ -242,7 +243,7 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
 
 // --- Main Layout ---
 const StudentLayout = () => {
-  const [isDark, setIsDark] = useState(false)
+  const { isDark, toggleTheme } = useThemeStore()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [authStatus, setAuthStatus] = useState({ isLoading: true, isAuthorized: false, userData: null, correctRole: "", message: "Checking authorization..." })
   const navigate = useNavigate()
@@ -251,7 +252,7 @@ const StudentLayout = () => {
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add("dark")
-      document.body.style.backgroundColor = "#02040a" 
+      document.body.style.backgroundColor = "#02040a"
     } else {
       document.documentElement.classList.remove("dark")
       document.body.style.backgroundColor = "#F3F4F6"
@@ -277,7 +278,7 @@ const StudentLayout = () => {
   const handleLogout = () => logout(navigate)
 
   if (authStatus.isLoading) return <FullPageMessage isDark={isDark}><h2 className="text-xl font-bold animate-pulse text-cyan-500">Initializing Command Deck...</h2></FullPageMessage>
-  
+
   if (!authStatus.isAuthorized) {
     const isRoleMismatch = authStatus.correctRole && authStatus.correctRole !== "student"
     return (
@@ -297,18 +298,18 @@ const StudentLayout = () => {
     <div className={`min-h-screen flex ${isDark ? "bg-[#02040a] text-gray-100" : "bg-gray-50 text-gray-900"}`}>
       {/* Overlay: Removed expensive blur, just simple transparency */}
       {isSidebarOpen && <div className="fixed inset-0 z-30 bg-black/80 lg:hidden" onClick={() => setIsSidebarOpen(false)}></div>}
-      
-      <Sidebar isDark={isDark} onLogout={handleLogout} onToggleTheme={() => setIsDark(!isDark)} isOpen={isSidebarOpen} userData={authStatus.userData} />
-      
+
+      <Sidebar isDark={isDark} onLogout={handleLogout} onToggleTheme={toggleTheme} isOpen={isSidebarOpen} userData={authStatus.userData} />
+
       <button onClick={() => setIsSidebarOpen(prev => !prev)} className="lg:hidden fixed top-4 left-4 z-50 p-3 rounded-full bg-cyan-600/20 border border-cyan-500/50 text-cyan-400 backdrop-blur-md">
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
       </button>
 
-      <main 
+      <main
         className={`flex-1 transition-all duration-300 lg:ml-72 overflow-x-hidden 
           ${isChatPage ? "p-0 h-screen" : "p-8 md:p-12"}`}
       >
-        <Outlet context={{ isDark, userData: authStatus.userData }} /> 
+        <Outlet context={{ isDark, userData: authStatus.userData }} />
       </main>
     </div>
   )

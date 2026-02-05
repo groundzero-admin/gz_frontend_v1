@@ -13,12 +13,13 @@ import {
   FaBars, // Hamburger
   FaTimes, // Close
   FaSun,
-  FaMoon ,
+  FaMoon,
   FaChalkboard
 } from "react-icons/fa"
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom"
 import "../color.css" // Your color.css file
 import { checkRole, logout } from "../api.js"
+import useThemeStore from "../store/useThemeStore"
 
 // --- Sidebar Component (Re-styled) ---
 const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, setIsSidebarOpen }) => {
@@ -37,7 +38,7 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
     // ✅ NEW ATTENDANCE ROUTE ADDED
     { to: "/admin/dashboard/attendance", icon: <FaUserGraduate />, label: "Mark Attendance" },
 
-    { to: "/admin/dashboard/collaborativeboard/batches", icon: <FaChalkboard />, label: "Student Boards" } 
+    { to: "/admin/dashboard/collaborativeboard/batches", icon: <FaChalkboard />, label: "Student Boards" }
   ]
 
 
@@ -45,7 +46,7 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
     <>
       {/* Mobile Overlay */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-10 bg-black/50 backdrop-blur-sm md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         ></div>
@@ -64,10 +65,10 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
       >
         {/* User Info Header */}
         <div className="flex items-center gap-3 mb-8">
-          <FaUserCircle className="text-4xl" style={{ color: "var(--accent-teal)"}} />
+          <FaUserCircle className="text-4xl" style={{ color: "var(--accent-teal)" }} />
           <div>
             <h3 className="font-bold text-sm">{userData.username} - Admin</h3>
-            <p className="text-xs" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}>
+            <p className="text-xs" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` }}>
               {userData.email}
             </p>
           </div>
@@ -81,7 +82,7 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
               to={link.to}
               icon={link.icon}
               label={link.label}
-            isActive={currentPath.startsWith(link.to)}
+              isActive={currentPath.startsWith(link.to)}
 
               isDark={isDark}
             />
@@ -92,12 +93,12 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
         <button
           onClick={onToggleTheme}
           className="flex items-center gap-3 p-3 mb-2 rounded-lg font-medium transition-colors"
-          style={{ 
+          style={{
             color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`,
             backgroundColor: `var(${isDark ? "--card-dark" : "rgba(0,0,0,0.03)"})`
           }}
         >
-          {isDark ? <FaSun style={{ color: "white"}} /> : <FaMoon style={{ color: "var(--accent-purple)"}} />}
+          {isDark ? <FaSun style={{ color: "white" }} /> : <FaMoon style={{ color: "var(--accent-purple)" }} />}
           <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
         </button>
 
@@ -105,7 +106,7 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
         <button
           onClick={onLogout}
           className="flex items-center gap-3 p-3 rounded-lg font-medium transition-colors"
-          style={{ 
+          style={{
             color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`,
           }}
           onMouseOver={(e) => e.currentTarget.style.backgroundColor = `var(${isDark ? "--card-dark" : "rgba(0,0,0,0.03)"})`}
@@ -124,17 +125,16 @@ const SidebarLink = ({ to, icon, label, isActive, isDark }) => (
   <li>
     <Link
       to={to}
-      className={`flex items-center justify-between p-3 rounded-lg transition-colors ${
-        isActive
+      className={`flex items-center justify-between p-3 rounded-lg transition-colors ${isActive
           ? "text-[var(--accent-teal)]"
           : ""
-      }`}
+        }`}
       style={{
         backgroundColor: isActive ? `var(${isDark ? "rgba(0,196,204,0.1)" : "rgba(0,196,204,0.1)"})` : 'transparent',
         color: isActive ? "var(--accent-teal)" : `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`
       }}
-      onMouseOver={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = `var(${isDark ? "--card-dark" : "rgba(0,0,0,0.03)"})`}}
-      onMouseOut={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'}}
+      onMouseOver={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = `var(${isDark ? "--card-dark" : "rgba(0,0,0,0.03)"})` }}
+      onMouseOut={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent' }}
     >
       <div className="flex items-center gap-3">
         {icon}
@@ -160,7 +160,7 @@ const FullPageMessage = ({ isDark, children }) => (
 
 // --- The Main Layout Component (Handles Auth & State) ---
 const AdminLayout = () => {
-  const [isDark, setIsDark] = useState(false) // Default to light
+  const { isDark, toggleTheme } = useThemeStore()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [authStatus, setAuthStatus] = useState({
     isLoading: true,
@@ -225,12 +225,12 @@ const AdminLayout = () => {
       <FullPageMessage isDark={isDark}>
         <h2 className="text-3xl font-bold text-red-500">Access Denied</h2>
         <p className="text-lg">{authStatus.message}</p>
-        
+
         {isRoleMismatch ? (
           <button
             onClick={() => navigate(`/${authStatus.correctRole}/dashboard`)}
             className="px-6 py-3 rounded-lg font-bold text-lg text-white"
-            style={{ backgroundColor: "var(--accent-purple)"}}
+            style={{ backgroundColor: "var(--accent-purple)" }}
           >
             Go to {authStatus.correctRole} Dashboard
           </button>
@@ -238,7 +238,7 @@ const AdminLayout = () => {
           <button
             onClick={() => navigate("/login")}
             className="px-6 py-3 rounded-lg font-bold text-lg text-white"
-            style={{ backgroundColor: "var(--accent-teal)"}}
+            style={{ backgroundColor: "var(--accent-teal)" }}
           >
             Go to Login
           </button>
@@ -256,17 +256,17 @@ const AdminLayout = () => {
         color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`,
       }}
     >
-      <Sidebar 
-        userData={authStatus.userData} 
-        onLogout={handleLogout} 
+      <Sidebar
+        userData={authStatus.userData}
+        onLogout={handleLogout}
         isDark={isDark}
-        onToggleTheme={() => setIsDark(!isDark)}
+        onToggleTheme={toggleTheme}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
       />
-      
+
       {/* Mobile Header with Hamburger Button */}
-      <header 
+      <header
         className="md:hidden sticky top-0 flex items-center p-4 z-10"
         style={{
           backgroundColor: `var(${isDark ? "--bg-dark" : "--bg-light"})`,
@@ -284,7 +284,7 @@ const AdminLayout = () => {
         {/* --- THIS IS THE UPDATE ---
           Pass both isDark and userData to all child routes
         */}
-        <Outlet context={{ isDark, userData: authStatus.userData }} /> 
+        <Outlet context={{ isDark, userData: authStatus.userData }} />
       </main>
     </div>
   )

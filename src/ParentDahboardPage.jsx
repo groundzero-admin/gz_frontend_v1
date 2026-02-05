@@ -17,8 +17,9 @@ import {
 } from "react-icons/fa"
 import { useNavigate } from "react-router-dom"
 // Assuming api.js and color.css are in the parent directory
-import "./color.css" 
+import "./color.css"
 import { checkRole, logout, getMyChildrenDetails, getMyChildHistory } from "./api.js"
+import useThemeStore from "./store/useThemeStore"
 
 // --- Helper: Full Page Message (for Auth Errors) ---
 const FullPageMessage = ({ isDark, children }) => (
@@ -29,7 +30,7 @@ const FullPageMessage = ({ isDark, children }) => (
       color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`,
     }}
   >
-    <div 
+    <div
       className="p-10 rounded-2xl border text-center"
       style={{
         backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
@@ -62,20 +63,20 @@ const ChildCard = ({ child, isDark, isSelected, onClick }) => (
       src={`https://i.pinimg.com/originals/15/c1/ec/15c1ec0f3beb08c3587d65462fd0fc7a.jpg`}
       alt={child.name}
       className="w-24 h-24 rounded-full mb-4"
-      style={{ backgroundColor: `var(${isDark ? "--bg-dark" : "rgba(0,0,0,0.03)"})`}}
+      style={{ backgroundColor: `var(${isDark ? "--bg-dark" : "rgba(0,0,0,0.03)"})` }}
       // Fallback in case the avatar service is down
-      onError={(e) => { 
-        e.target.onerror = null; 
-        e.target.src = `https://placehold.co/100/EEE/333?text=${child.name.charAt(0)}`; 
+      onError={(e) => {
+        e.target.onerror = null;
+        e.target.src = `https://placehold.co/100/EEE/333?text=${child.name.charAt(0)}`;
       }}
     />
     {/* --- END OF CHANGE --- */}
-    
+
     {/* Child Info */}
     <h3 className="text-xl font-bold">{child.name}</h3>
-    <p 
-      className="text-sm" 
-      style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}
+    <p
+      className="text-sm"
+      style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` }}
     >
       Age {child.age}, Class {child.class}
     </p>
@@ -84,7 +85,7 @@ const ChildCard = ({ child, isDark, isSelected, onClick }) => (
 
 // --- Helper: Add Child Card (Dummy) ---
 const AddChildCard = ({ isDark }) => (
-  <button 
+  <button
     className="p-6 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center 
                min-h-[220px] transition-all duration-300 hover:shadow-lg"
     style={{
@@ -99,7 +100,7 @@ const AddChildCard = ({ isDark }) => (
 
 // --- Helper: Prompt History Row Component ---
 const HistoryRow = ({ item, isDark }) => (
-  <div 
+  <div
     className="group relative flex items-center p-4 border-b"
     style={{
       borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
@@ -114,32 +115,32 @@ const HistoryRow = ({ item, isDark }) => (
         <FaCheckCircle className="text-green-500 text-xl" title="Good Prompt" />
       )}
     </div>
-    
+
     {/* Prompt (Truncated) */}
     <div className="w-5/12 px-4">
       <p className={`truncate ${item.isBadPrompt ? 'text-red-400' : ''}`}>
         {item.prompt}
       </p>
     </div>
-    
+
     {/* Date */}
-    <div 
-      className="w-3/12 px-4 text-xs" 
-      style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}
+    <div
+      className="w-3/12 px-4 text-xs"
+      style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` }}
     >
       {new Date(item.createdAt).toLocaleString()}
     </div>
-    
+
     {/* Worksheet ID */}
-    <div 
-      className="w-3/12 px-4 text-xs" 
-      style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}
+    <div
+      className="w-3/12 px-4 text-xs"
+      style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` }}
     >
       {item.worksheetId || 'N/A'}
     </div>
 
     {/* The Hover Tooltip */}
-    <div 
+    <div
       className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-96 p-4
                  hidden group-hover:block z-20 
                  rounded-lg shadow-xl"
@@ -152,16 +153,16 @@ const HistoryRow = ({ item, isDark }) => (
       <h4 className="font-bold mb-1">Full Prompt:</h4>
       <p className="text-sm mb-3 whitespace-pre-wrap">{item.prompt}</p>
       <h4 className="font-bold mb-1">Full Response:</h4>
-      <p 
-        className="text-sm whitespace-pre-wrap" 
-        style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}
+      <p
+        className="text-sm whitespace-pre-wrap"
+        style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` }}
       >
         {item.response || "No response (Bad Prompt)"}
       </p>
-      <div 
+      <div
         className="w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent 
                    border-t-8 absolute top-full left-1/2 -translate-x-1/2"
-        style={{ borderTopColor: `var(${isDark ? "--border-dark" : "--border-light"})`}}
+        style={{ borderTopColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}
       ></div>
     </div>
   </div>
@@ -169,7 +170,7 @@ const HistoryRow = ({ item, isDark }) => (
 
 // --- Main Page Component ---
 const ParentDashboardPage = () => {
-  const [isDark, setIsDark] = useState(false )
+  const { isDark, toggleTheme } = useThemeStore()
   const [authStatus, setAuthStatus] = useState({
     isLoading: true,
     isAuthorized: false,
@@ -177,11 +178,11 @@ const ParentDashboardPage = () => {
     correctRole: "",
     message: "Verifying your access...",
   })
-  
+
   // Child Data
   const [childrenData, setChildrenData] = useState([])
   const [isDataLoading, setIsDataLoading] = useState(true)
-  
+
   // History Data
   const [selectedChildEmail, setSelectedChildEmail] = useState(null);
   const [historyData, setHistoryData] = useState([]);
@@ -216,7 +217,7 @@ const ParentDashboardPage = () => {
           isLoading: false,
           isAuthorized: false,
           username: "",
-          correctRole: response.data?.correctRole || "", 
+          correctRole: response.data?.correctRole || "",
           message: response.message,
         })
       }
@@ -226,7 +227,7 @@ const ParentDashboardPage = () => {
 
   // --- 2. Children Data Fetch Effect (Only after auth) ---
   useEffect(() => {
-    if (!authStatus.isAuthorized) return; 
+    if (!authStatus.isAuthorized) return;
 
     const fetchChildren = async () => {
       setIsDataLoading(true);
@@ -286,7 +287,7 @@ const ParentDashboardPage = () => {
       <FullPageMessage isDark={isDark}>
         <h2 className="text-3xl font-bold text-red-500 mb-4">Access Denied</h2>
         <p className="text-lg mb-6">{authStatus.message}</p>
-        
+
         {isRoleMismatch ? (
           <button
             onClick={() => navigate(`/${authStatus.correctRole}/dashboard`)}
@@ -333,12 +334,12 @@ const ParentDashboardPage = () => {
           <div className="flex items-center gap-4">
             <span className="font-medium hidden sm:inline">
               Welcome, {authStatus.username}!
-              <span className="text-sm ml-2" style={{ color: 'var(--accent-teal)'}}>
+              <span className="text-sm ml-2" style={{ color: 'var(--accent-teal)' }}>
                 ({authStatus.correctRole})
               </span>
             </span>
             <button
-              onClick={() => setIsDark(!isDark)}
+              onClick={toggleTheme}
               className="p-3 rounded-full hover:opacity-80 transition"
               style={{
                 backgroundColor: `var(${isDark ? "--bg-dark" : "--card-light"})`,
@@ -372,7 +373,7 @@ const ParentDashboardPage = () => {
 
       {/* Main Content */}
       <main className="container mx-auto max-w-6xl p-4 sm:p-10">
-        
+
         <h3 className="text-2xl font-bold mb-6">
           Your Children
         </h3>
@@ -383,9 +384,9 @@ const ParentDashboardPage = () => {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
             {childrenData.map(child => (
-              <ChildCard 
-                key={child._id} 
-                child={child} 
+              <ChildCard
+                key={child._id}
+                child={child}
                 isDark={isDark}
                 isSelected={selectedChildEmail === child.email}
                 onClick={() => handleChildClick(child)}
@@ -398,49 +399,47 @@ const ParentDashboardPage = () => {
         {/* --- History Section --- */}
         <div className="mt-12">
           {/* Tabs */}
-          <div className="flex justify-between items-center border-b" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`}}>
+          <div className="flex justify-between items-center border-b" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>
             <div className="flex gap-6">
-              <button className="py-4 font-bold border-b-2" style={{ borderColor: 'var(--accent-purple)'}}>
+              <button className="py-4 font-bold border-b-2" style={{ borderColor: 'var(--accent-purple)' }}>
                 Prompt History
               </button>
-              <button 
-                className="py-4 font-medium" 
-                style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}
+              <button
+                className="py-4 font-medium"
+                style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` }}
                 onClick={() => alert("Recent Activity coming soon!")}
               >
                 Recent Activity
               </button>
             </div>
-            
+
             {/* Toggle Switch */}
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}>All</span>
+              <span className="text-sm font-medium" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` }}>All</span>
               <button
                 onClick={() => setFilterBadPrompts(!filterBadPrompts)}
-                className={`w-12 h-6 rounded-full p-1 flex items-center transition-colors ${
-                  filterBadPrompts ? 'bg-red-500' : 'bg-[var(--accent-teal)]'
-                }`}
+                className={`w-12 h-6 rounded-full p-1 flex items-center transition-colors ${filterBadPrompts ? 'bg-red-500' : 'bg-[var(--accent-teal)]'
+                  }`}
               >
-                <span className={`w-4 h-4 rounded-full bg-white transition-transform ${
-                  filterBadPrompts ? 'translate-x-6' : ''
-                }`}></span>
+                <span className={`w-4 h-4 rounded-full bg-white transition-transform ${filterBadPrompts ? 'translate-x-6' : ''
+                  }`}></span>
               </button>
-              <span className="text-sm font-medium" style={{ color: 'var(--accent-teal)'}}>Bad Prompts Only</span>
+              <span className="text-sm font-medium" style={{ color: 'var(--accent-teal)' }}>Bad Prompts Only</span>
             </div>
           </div>
 
           {/* History List */}
-          <div 
-            className="rounded-b-2xl border border-t-0 overflow-hidden" 
+          <div
+            className="rounded-b-2xl border border-t-0 overflow-hidden"
             style={{
               backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
               borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
             }}
           >
             {/* Header */}
-            <div 
+            <div
               className="flex items-center p-4 text-sm uppercase"
-              style={{ 
+              style={{
                 color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`,
                 backgroundColor: `var(${isDark ? "rgba(0,0,0,0.1)" : "rgba(0,0,0,0.02)"})`
               }}
@@ -459,19 +458,19 @@ const ParentDashboardPage = () => {
                   <span className="ml-4 text-lg">Loading history...</span>
                 </div>
               ) : !selectedChildEmail ? (
-                <p className="p-10 text-center" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}>
+                <p className="p-10 text-center" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` }}>
                   Please select a child's card above to view their prompt history.
                 </p>
               ) : filteredHistory.length === 0 ? (
-                <p className="p-10 text-center" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`}}>
+                <p className="p-10 text-center" style={{ color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})` }}>
                   No {filterBadPrompts ? "bad prompts" : "prompts"} found for this student.
                 </p>
               ) : (
                 filteredHistory.map((item, index) => (
-                  <HistoryRow 
-                    key={index} 
-                    item={item} 
-                    isDark={isDark} 
+                  <HistoryRow
+                    key={index}
+                    item={item}
+                    isDark={isDark}
                   />
                 ))
               )}

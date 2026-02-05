@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
+import useThemeStore from "./store/useThemeStore";
 
 gsap.registerPlugin(ScrollToPlugin);
 
@@ -34,7 +35,7 @@ const PageBackground = memo(({ isDark }) => (
 ));
 
 const BookOneOnOneSession_BuilderOSs = () => {
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, toggleTheme } = useThemeStore();
   const navigate = useNavigate();
   const widgetRef = useRef(null);
 
@@ -79,7 +80,7 @@ const BookOneOnOneSession_BuilderOSs = () => {
           </button>
 
           <button
-            onClick={() => setIsDark(!isDark)}
+            onClick={toggleTheme}
             className={`p-2 rounded-full border transition-all ${isDark ? "bg-white/5 border-white/10 text-yellow-400" : "bg-white border-slate-200 text-slate-600 shadow-sm"}`}
           >
             {isDark ? <Sun size={14} /> : <Moon size={14} />}

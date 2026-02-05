@@ -6,17 +6,18 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { validateInvitation, completeRegistration } from "./api";
+import useThemeStore from "./store/useThemeStore";
 
 export default function StudentRegistration() {
   const token = new URLSearchParams(window.location.search).get("token");
 
   // --- STATE ---
-  const [isDarkMode, setIsDarkMode] = useState(false); // Default Light
+  const { isDark: isDarkMode, toggleTheme } = useThemeStore();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  
+
   // Password Visibility State
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -115,20 +116,20 @@ export default function StudentRegistration() {
         token,
         otp: form.otp,
         password: form.password,
-        
+
         // Mapped Fields
         name: form.studentName,      // studentName -> name
         mobile: form.parentPhone,    // parentPhone -> mobile
         schoolName: form.schoolName, // Matches
         board: form.board,           // Matches
-        
+
         // Optional Extras (if backend needs them later)
         classGrade: form.classGrade,
         parentName: form.parentName
       };
 
       const res = await completeRegistration(payload);
-      
+
       if (res.success) setSuccess(true);
       else alert(res.message);
     } catch (e) {
@@ -167,7 +168,7 @@ export default function StudentRegistration() {
 
   return (
     <div className={`min-h-screen font-sans ${theme.bg} ${theme.text} selection:bg-cyan-500/30 flex flex-col items-center justify-center p-4 relative overflow-hidden transition-colors duration-500`}>
-      
+
       {/* --- BACKGROUND ANIMATIONS --- */}
       <style>{`
         @keyframes twinkle {
@@ -196,7 +197,7 @@ export default function StudentRegistration() {
       {/* --- TOP RIGHT THEME TOGGLE --- */}
       <div className="absolute top-6 right-6 z-50">
         <button
-          onClick={() => setIsDarkMode(!isDarkMode)}
+          onClick={toggleTheme}
           className={`p-3 rounded-full border transition-all duration-300 backdrop-blur-md
             ${isDarkMode ? "bg-white/10 border-white/20 text-yellow-400" : "bg-white/50 border-slate-200 text-slate-600 shadow-sm"}`}
         >
@@ -219,14 +220,14 @@ export default function StudentRegistration() {
       </div>
 
       {/* --- MAIN WIDE CARD --- */}
-      <motion.div 
+      <motion.div
         className="w-full max-w-6xl relative z-10"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         <div className={`${theme.cardBg} border ${theme.cardBorder} rounded-3xl p-8 md:p-12 transition-colors duration-300`}>
-          
+
           {/* LOADING STATE */}
           {loading && (
             <div className="text-center py-20 space-y-4">
@@ -264,12 +265,12 @@ export default function StudentRegistration() {
           {/* FORM STATE */}
           {!loading && !error && !success && (
             <form onSubmit={handleSubmit} className="space-y-10">
-              
+
               {/* SECTION 1: PERSONAL & ACADEMIC (3 Columns Grid) */}
               <div className="space-y-6">
                 <div className={`flex items-center gap-2 ${theme.text} border-b ${theme.cardBorder} pb-2`}>
-                   <User size={20} className="text-cyan-500" /> 
-                   <h3 className="font-bold text-sm uppercase tracking-wider">Student & Parent Details</h3>
+                  <User size={20} className="text-cyan-500" />
+                  <h3 className="font-bold text-sm uppercase tracking-wider">Student & Parent Details</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -289,7 +290,7 @@ export default function StudentRegistration() {
                     <div className={inputWrapperStyle}>
                       <Mail size={18} className={iconStyle} />
                       <input disabled type="email" className={`${inputStyle} opacity-60 cursor-not-allowed`}
-                        value={form.studentEmail} 
+                        value={form.studentEmail}
                       />
                     </div>
                   </div>
@@ -305,7 +306,7 @@ export default function StudentRegistration() {
                   </div>
 
                   {/* Row 2 */}
-                   <div className={inputGroupStyle}>
+                  <div className={inputGroupStyle}>
                     <label className={labelStyle}>Parent Phone</label>
                     <div className={inputWrapperStyle}>
                       <Phone size={18} className={iconStyle} />
@@ -315,7 +316,7 @@ export default function StudentRegistration() {
                     </div>
                   </div>
 
-                   <div className={inputGroupStyle}>
+                  <div className={inputGroupStyle}>
                     <label className={labelStyle}>School Name</label>
                     <div className={inputWrapperStyle}>
                       <School size={18} className={iconStyle} />
@@ -326,24 +327,24 @@ export default function StudentRegistration() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                     <div className={inputGroupStyle}>
-                        <label className={labelStyle}>Grade</label>
-                        <div className={inputWrapperStyle}>
-                          <GraduationCap size={18} className={iconStyle} />
-                          <input required type="text" inputMode="numeric" pattern="[0-9]*" placeholder="Class" className={inputStyle}
-                            value={form.classGrade} onChange={(e) => handleNumericInput(e, 'classGrade')}
-                          />
-                        </div>
+                    <div className={inputGroupStyle}>
+                      <label className={labelStyle}>Grade</label>
+                      <div className={inputWrapperStyle}>
+                        <GraduationCap size={18} className={iconStyle} />
+                        <input required type="text" inputMode="numeric" pattern="[0-9]*" placeholder="Class" className={inputStyle}
+                          value={form.classGrade} onChange={(e) => handleNumericInput(e, 'classGrade')}
+                        />
                       </div>
-                      <div className={inputGroupStyle}>
-                        <label className={labelStyle}>Board</label>
-                        <div className={inputWrapperStyle}>
-                          <Layers size={18} className={iconStyle} />
-                          <input required type="text" placeholder="CBSE/ICSE" className={inputStyle}
-                            value={form.board} onChange={(e) => setForm({ ...form, board: e.target.value })}
-                          />
-                        </div>
+                    </div>
+                    <div className={inputGroupStyle}>
+                      <label className={labelStyle}>Board</label>
+                      <div className={inputWrapperStyle}>
+                        <Layers size={18} className={iconStyle} />
+                        <input required type="text" placeholder="CBSE/ICSE" className={inputStyle}
+                          value={form.board} onChange={(e) => setForm({ ...form, board: e.target.value })}
+                        />
                       </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -351,12 +352,12 @@ export default function StudentRegistration() {
               {/* SECTION 2: SECURITY (3 Columns Grid) */}
               <div className="space-y-6">
                 <div className={`flex items-center gap-2 ${theme.text} border-b ${theme.cardBorder} pb-2`}>
-                   <Lock size={20} className="text-purple-500" /> 
-                   <h3 className="font-bold text-sm uppercase tracking-wider">Security Setup</h3>
+                  <Lock size={20} className="text-purple-500" />
+                  <h3 className="font-bold text-sm uppercase tracking-wider">Security Setup</h3>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                   <div className={inputGroupStyle}>
+                  <div className={inputGroupStyle}>
                     <label className={labelStyle}>OTP (From Email)</label>
                     <div className={inputWrapperStyle}>
                       <KeyRound size={18} className={iconStyle} />
@@ -371,12 +372,12 @@ export default function StudentRegistration() {
                     <label className={labelStyle}>Password</label>
                     <div className={inputWrapperStyle}>
                       <Lock size={18} className={iconStyle} />
-                      <input 
-                        required 
-                        type={showPassword ? "text" : "password"} 
-                        placeholder="Create Password" 
+                      <input
+                        required
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Create Password"
                         className={inputStyle}
-                        value={form.password} 
+                        value={form.password}
                         onChange={(e) => setForm({ ...form, password: e.target.value })}
                       />
                       <div className={eyeIconStyle} onClick={() => setShowPassword(!showPassword)}>
@@ -385,17 +386,17 @@ export default function StudentRegistration() {
                     </div>
                   </div>
 
-                   {/* Confirm Password Field */}
-                   <div className={inputGroupStyle}>
+                  {/* Confirm Password Field */}
+                  <div className={inputGroupStyle}>
                     <label className={labelStyle}>Confirm Password</label>
                     <div className={inputWrapperStyle}>
                       <Lock size={18} className={iconStyle} />
-                      <input 
-                        required 
-                        type={showConfirmPassword ? "text" : "password"} 
-                        placeholder="Confirm Password" 
+                      <input
+                        required
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm Password"
                         className={inputStyle}
-                        value={form.confirmPassword} 
+                        value={form.confirmPassword}
                         onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
                       />
                       <div className={eyeIconStyle} onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
@@ -413,8 +414,8 @@ export default function StudentRegistration() {
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
                 className={`w-full py-4 rounded-xl font-bold text-base shadow-lg transition-all flex items-center justify-center gap-2
-                  ${submitting 
-                    ? 'bg-gray-400 cursor-not-allowed' 
+                  ${submitting
+                    ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white hover:shadow-cyan-500/25'}`}
               >
                 {submitting ? (

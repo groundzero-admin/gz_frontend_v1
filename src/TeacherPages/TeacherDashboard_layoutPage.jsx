@@ -18,6 +18,7 @@ import {
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom"
 import "../color.css"
 import { checkRole, logout } from "../api.js"
+import useThemeStore from "../store/useThemeStore"
 
 // --- Helper: Full Page Message ---
 const FullPageMessage = ({ isDark, children }) => (
@@ -46,9 +47,8 @@ const SidebarLink = ({ to, icon, label, isActive, isDark }) => (
   <li>
     <Link
       to={to}
-      className={`flex items-center gap-4 p-3 rounded-lg transition-all duration-200 ${
-        isActive ? "font-bold text-white shadow-lg" : "font-medium"
-      }`}
+      className={`flex items-center gap-4 p-3 rounded-lg transition-all duration-200 ${isActive ? "font-bold text-white shadow-lg" : "font-medium"
+        }`}
       style={{
         backgroundColor: isActive ? "var(--accent-purple)" : "transparent",
         color: isActive
@@ -133,7 +133,7 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
           isActive={isActive("/teacher/dashboard/batches")}
           isDark={isDark}
         />
-      
+
         <SidebarLink
           to="/teacher/dashboard/doubts"
           icon={<FaQuestionCircle />}
@@ -157,9 +157,8 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
           className="flex items-center gap-4 p-3 rounded-lg font-medium transition"
           style={{
             color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`,
-            backgroundColor: `var(${
-              isDark ? "--bg-dark" : "rgba(0,0,0,0.03)"
-            })`,
+            backgroundColor: `var(${isDark ? "--bg-dark" : "rgba(0,0,0,0.03)"
+              })`,
           }}
         >
           {isDark ? <FaSun /> : <FaMoon />}
@@ -170,9 +169,8 @@ const Sidebar = ({ isDark, onLogout, onToggleTheme, isOpen, userData }) => {
           className="flex items-center gap-4 p-3 rounded-lg font-medium transition"
           style={{
             color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"})`,
-            backgroundColor: `var(${
-              isDark ? "--bg-dark" : "rgba(0,0,0,0.03)"
-            })`,
+            backgroundColor: `var(${isDark ? "--bg-dark" : "rgba(0,0,0,0.03)"
+              })`,
           }}
         >
           <FaSignOutAlt />
@@ -190,9 +188,8 @@ const Navbar = ({ userData, onToggleSidebar, isDark }) => (
       md:left-72
     "
     style={{
-      backgroundColor: `var(${
-        isDark ? "rgba(11, 12, 27, 0.8)" : "rgba(248, 249, 250, 0.8)"
-      })`,
+      backgroundColor: `var(${isDark ? "rgba(11, 12, 27, 0.8)" : "rgba(248, 249, 250, 0.8)"
+        })`,
       borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
       borderBottomWidth: "1px",
       backdropFilter: "blur(10px)",
@@ -219,9 +216,8 @@ const Navbar = ({ userData, onToggleSidebar, isDark }) => (
       <FaUserCircle
         className="text-3xl"
         style={{
-          color: `var(${
-            isDark ? "--text-dark-secondary" : "--text-light-secondary"
-          })`,
+          color: `var(${isDark ? "--text-dark-secondary" : "--text-light-secondary"
+            })`,
         }}
       />
     </div>
@@ -230,7 +226,7 @@ const Navbar = ({ userData, onToggleSidebar, isDark }) => (
 
 // --- TeacherLayout Component ---
 const TeacherLayout = () => {
-  const [isDark, setIsDark] = useState(false )
+  const { isDark, toggleTheme } = useThemeStore()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [authStatus, setAuthStatus] = useState({
     isLoading: true,
@@ -337,7 +333,7 @@ const TeacherLayout = () => {
       <Sidebar
         isDark={isDark}
         onLogout={handleLogout}
-        onToggleTheme={() => setIsDark(!isDark)}
+        onToggleTheme={toggleTheme}
         isOpen={isSidebarOpen}
         userData={authStatus.userData}
       />

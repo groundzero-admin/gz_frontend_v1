@@ -1,6 +1,7 @@
 import React, { useState, useEffect, memo, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Moon, Sun, XCircle, Mail, Phone, Home, ArrowRight } from "lucide-react";
+import useThemeStore from "./store/useThemeStore";
 
 // 1. HOISTED CONSTANTS (Created once, saves memory across tabs)
 const THEME_STYLES = `
@@ -39,7 +40,7 @@ const BackgroundDecor = memo(() => (
 
 const PaymentFailure = () => {
   const navigate = useNavigate();
-  const [isDark, setIsDark] = useState(false);
+  const { isDark, toggleTheme } = useThemeStore();
 
   // 3. SILENT REDIRECT (Zero State Updates)
   useEffect(() => {
@@ -72,7 +73,7 @@ const PaymentFailure = () => {
           </div>
 
           <button
-            onClick={() => setIsDark(!isDark)}
+            onClick={toggleTheme}
             className="p-2 rounded-full border border-white/10 shadow-lg transition-transform active:scale-90"
             style={{ backgroundColor: 'var(--card-bg)', color: 'var(--text-primary)' }}
           >
