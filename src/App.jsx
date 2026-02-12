@@ -51,6 +51,8 @@ import NotFoundPage from './NotFound404Page.jsx'
 import StudentAssignments from './StudentPages/StudentAssignment.jsx'
 import ActiveBatchesPageForBoard from './AdminPages/AdminActiveBatchPageForWhiteBoard.jsx'
 import AdminAllBoardsForABatch from './AdminPages/AdminListAllBoardsForABstch.jsx'
+import AdminBatchTemplatePage from './AdminPages/AdminBatchTemplatePage.jsx'
+import AdminBatchTemplateSessionPage from './AdminPages/AdminBatchTemplateSessionPage.jsx'
 // import StudentWhiteboardPage from './StudentPages/StudentWhiteBoard.jsx'
 
 
@@ -113,6 +115,8 @@ function App() {
 
         <Route path="batches/:batchId" element={<  AdminBatchWeekPage />} />
 
+        <Route path="templates" element={< AdminBatchTemplatePage />} />
+        <Route path="templates/:templateId" element={< AdminBatchTemplateSessionPage />} />
 
 
         <Route path="teacher" element={<AdminListAllTeacherPage />} />

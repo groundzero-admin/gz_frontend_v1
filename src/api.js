@@ -1250,6 +1250,19 @@ export const updateSessionDetails = async (sessionData) => {
   }
 };
 
+export const deleteBatchSession = async (session_obj_id) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/delete-session?session_obj_id=${session_obj_id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    return await handleResponse(response);
+  } catch (error) {
+    console.error("Error deleting session:", error);
+    throw error;
+  }
+};
+
 
 
 
@@ -2151,5 +2164,112 @@ export const getMyBoardLink = async () => {
   } catch (error) {
     console.error("Get My Board Link error:", error);
     return { success: false, message: "Network error fetching board." };
+  }
+};
+
+
+
+// ==========================================
+//        BATCH TEMPLATE APIs
+// ==========================================
+
+export const createBatchTemplate = async (templateName, description, templateType) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/template/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ templateName, description, templateType }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Create Batch Template error:", error);
+    return { success: false, message: "Network error creating template." };
+  }
+};
+
+export const listAllBatchTemplates = async () => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/template/list`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("List Batch Templates error:", error);
+    return { success: false, message: "Network error fetching templates." };
+  }
+};
+
+export const getBatchTemplateDetails = async (template_obj_id) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/template/details?template_obj_id=${template_obj_id}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Get Template Details error:", error);
+    return { success: false, message: "Network error fetching template details." };
+  }
+};
+
+export const createBatchTemplateSession = async (formData) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/template/session/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(formData),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Create Template Session error:", error);
+    return { success: false, message: "Network error creating template session." };
+  }
+};
+
+export const updateBatchTemplateSession = async (formData) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/template/session/update`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(formData),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Update Template Session error:", error);
+    return { success: false, message: "Network error updating template session." };
+  }
+};
+
+export const deleteBatchTemplateSession = async (session_obj_id) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/template/session/delete`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ session_obj_id }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Delete Template Session error:", error);
+    return { success: false, message: "Network error deleting template session." };
+  }
+};
+
+export const importTemplateIntoBatch = async (template_obj_id, batch_obj_id) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/template/import`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ template_obj_id, batch_obj_id }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Import Template error:", error);
+    return { success: false, message: "Network error importing template." };
   }
 };

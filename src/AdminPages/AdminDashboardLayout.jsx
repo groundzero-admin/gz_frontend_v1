@@ -14,7 +14,8 @@ import {
   FaTimes, // Close
   FaSun,
   FaMoon,
-  FaChalkboard
+  FaChalkboard,
+  FaLayerGroup
 } from "react-icons/fa"
 import { useNavigate, Link, Outlet, useLocation } from "react-router-dom"
 import "../color.css" // Your color.css file
@@ -29,6 +30,7 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
   const sidebarLinks = [
     { to: "/admin/dashboard/request", icon: <FaRegLightbulb />, label: "Paid Registration Requests" },
     { to: "/admin/dashboard/batches", icon: <FaBook />, label: "Batches" },
+    { to: "/admin/dashboard/templates", icon: <FaLayerGroup />, label: "Batch Templates" },
     { to: "/admin/dashboard/teacher", icon: <FaChalkboardTeacher />, label: "Teachers" },
     { to: "/admin/dashboard/student", icon: <FaUserGraduate />, label: "Students Info" },
     { to: "/admin/dashboard/invitation", icon: <FaEnvelopeOpenText />, label: "Invite New User" },
@@ -126,8 +128,8 @@ const SidebarLink = ({ to, icon, label, isActive, isDark }) => (
     <Link
       to={to}
       className={`flex items-center justify-between p-3 rounded-lg transition-colors ${isActive
-          ? "text-[var(--accent-teal)]"
-          : ""
+        ? "text-[var(--accent-teal)]"
+        : ""
         }`}
       style={{
         backgroundColor: isActive ? `var(${isDark ? "rgba(0,196,204,0.1)" : "rgba(0,196,204,0.1)"})` : 'transparent',
