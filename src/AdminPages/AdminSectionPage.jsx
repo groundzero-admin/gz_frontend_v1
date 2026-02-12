@@ -27,6 +27,7 @@ const AdminSectionPage = () => {
     const currentSessionId = isTemplateMode ? templateSessionId : batchSessionId;
 
     const [sections, setSections] = useState([]);
+    const [sessionDetails, setSessionDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,6 +45,7 @@ const AdminSectionPage = () => {
             const res = await apiCall(currentSessionId);
             if (res.success) {
                 setSections(res.data?.sections || []);
+                setSessionDetails(isTemplateMode ? res.data?.templateSession : res.data?.batchSession);
             } else {
                 setError(res.message);
             }
@@ -118,10 +120,21 @@ const AdminSectionPage = () => {
                         </button>
                         <div>
                             <h1 className="text-2xl font-bold">
-                                {isTemplateMode ? "Template Session Sections" : "Batch Session Sections"}
+                                {sessionDetails ? (
+                                    <>
+                                        <span className="text-gray-400 font-medium text-lg block mb-1">
+                                            {isTemplateMode
+                                                ? sessionDetails.template_obj_id?.templateName || "Template"
+                                                : sessionDetails.batch_obj_id?.batchName || "Batch"}
+                                        </span>
+                                        {sessionDetails.title || (isTemplateMode ? "Template Session" : "Batch Session")}
+                                    </>
+                                ) : (
+                                    isTemplateMode ? "Template Session Sections" : "Batch Session Sections"
+                                )}
                             </h1>
                             <p className="text-gray-500 text-sm">
-                                Manage sections for this session
+                                {sessionDetails?.description || "Manage sections for this session"}
                             </p>
                         </div>
                     </div>

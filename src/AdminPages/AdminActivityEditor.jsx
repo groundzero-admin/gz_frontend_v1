@@ -95,8 +95,6 @@ const AdminActivityEditor = () => {
         order: 0,
         allowCalculator: false,
         showAgent: false,
-        youtubeEmbedUrl: '',
-        playgroundUrl: '',
         readingData: { link: '' },
         practiceData: { description: '', questions: [] }
     };
@@ -362,21 +360,7 @@ const AdminActivityEditor = () => {
                                 </div>
                             )}
 
-                            {/* Activity-level YouTube and Playground URLs */}
-                            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
-                                <div>
-                                    <label className="block text-xs font-bold text-red-500 uppercase mb-1">YouTube Embed URL</label>
-                                    <input className="w-full p-2 border rounded-lg bg-red-50 text-sm" placeholder="https://www.youtube.com/embed/..."
-                                        value={form.youtubeEmbedUrl || ''}
-                                        onChange={e => setForm({ ...form, youtubeEmbedUrl: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-indigo-500 uppercase mb-1">Playground URL</label>
-                                    <input className="w-full p-2 border rounded-lg bg-indigo-50 text-sm" placeholder="https://codepen.io/..."
-                                        value={form.playgroundUrl || ''}
-                                        onChange={e => setForm({ ...form, playgroundUrl: e.target.value })} />
-                                </div>
-                            </div>
+
                         </div>
 
                         {/* ──── Questions Editor ──── */}
@@ -441,8 +425,8 @@ const AdminActivityEditor = () => {
                                                     {q.media.map((m, mIdx) => (
                                                         <div key={mIdx} className="flex gap-2 items-center bg-white p-2 rounded-lg shadow-sm border border-gray-100">
                                                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-[8px] uppercase ${m.mediaType === 'image' ? 'bg-blue-100 text-blue-600'
-                                                                    : m.mediaType === 'video' ? 'bg-purple-100 text-purple-600'
-                                                                        : 'bg-green-100 text-green-600'
+                                                                : m.mediaType === 'video' ? 'bg-purple-100 text-purple-600'
+                                                                    : 'bg-green-100 text-green-600'
                                                                 }`}>
                                                                 {m.mediaType}
                                                             </div>

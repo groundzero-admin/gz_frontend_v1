@@ -2656,3 +2656,17 @@ export const getMySessionResponses = async (batchSessionId) => {
     return { success: false, message: "Network error getting your responses." };
   }
 };
+
+export const listAllSessionActivities = async (batchSessionId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch-session/${batchSessionId}/activities`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("listAllSessionActivities error:", error);
+    return { success: false, message: "Network error listing session activities." };
+  }
+};

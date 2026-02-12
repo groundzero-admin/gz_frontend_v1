@@ -177,8 +177,8 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                         {(qData.options || []).map((opt, i) => (
                             <button key={i} onClick={() => update(opt)} disabled={readOnly}
                                 className={`p-6 rounded-2xl border-4 font-bold text-lg text-left transition-all ${response === opt
-                                        ? 'border-teal-500 bg-teal-50 text-teal-700 shadow-md'
-                                        : 'bg-white border-gray-100 text-gray-500 hover:border-teal-200'
+                                    ? 'border-teal-500 bg-teal-50 text-teal-700 shadow-md'
+                                    : 'bg-white border-gray-100 text-gray-500 hover:border-teal-200'
                                     }`}>
                                 {opt}
                             </button>
@@ -199,8 +199,8 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                                     onInput(newSelection, qIndex);
                                 }} disabled={readOnly}
                                     className={`p-6 rounded-2xl border-4 font-bold text-lg text-left transition-all flex items-center gap-4 ${selected
-                                            ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-md'
-                                            : 'bg-white border-gray-100 text-gray-500 hover:border-blue-200'
+                                        ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-md'
+                                        : 'bg-white border-gray-100 text-gray-500 hover:border-blue-200'
                                         }`}>
                                     <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300'
                                         }`}>
@@ -224,8 +224,8 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                             return (
                                 <button key={i} onClick={() => update(opt)} disabled={readOnly}
                                     className={`p-6 rounded-[2rem] border-4 flex flex-col items-center justify-center gap-4 transition-all h-48 ${isSelected
-                                            ? 'border-teal-500 bg-white shadow-xl scale-105 z-10'
-                                            : 'border-gray-100 bg-gray-50 hover:bg-white'
+                                        ? 'border-teal-500 bg-white shadow-xl scale-105 z-10'
+                                        : 'border-gray-100 bg-gray-50 hover:bg-white'
                                         }`}>
                                     <div className={`p-3 rounded-full ${colors[i % 3]}`}>{icons[i % 3]}</div>
                                     <span className="font-black text-sm text-center uppercase leading-tight text-gray-700">{opt || 'Option'}</span>
@@ -298,8 +298,8 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                                         value={val || ''}
                                         onChange={e => update(e.target.value, idx)}
                                         className={`inline-block border-b-4 w-40 mx-2 px-3 text-center outline-none rounded-t-lg font-bold transition-colors ${readOnly && !val
-                                                ? 'border-red-300 bg-red-100/50 text-red-900'
-                                                : 'border-teal-300 bg-teal-50 text-teal-900 focus:bg-teal-100 focus:border-teal-600'
+                                            ? 'border-red-300 bg-red-100/50 text-red-900'
+                                            : 'border-teal-300 bg-teal-50 text-teal-900 focus:bg-teal-100 focus:border-teal-600'
                                             }`}
                                     />
                                 );
@@ -413,13 +413,13 @@ const ActivityListView = ({ section, responses, allActivities, onSelectActivity,
                                 key={act._id}
                                 onClick={() => !locked && onSelectActivity(act)}
                                 className={`bg-white rounded-xl p-4 border flex items-center gap-4 transition-all ${locked
-                                        ? 'border-gray-100 opacity-50 cursor-not-allowed'
-                                        : 'border-gray-100 cursor-pointer hover:shadow-md hover:border-teal-200'
+                                    ? 'border-gray-100 opacity-50 cursor-not-allowed'
+                                    : 'border-gray-100 cursor-pointer hover:shadow-md hover:border-teal-200'
                                     }`}
                             >
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${passed ? 'bg-teal-500 text-white'
-                                        : locked ? 'bg-gray-100 text-gray-400'
-                                            : 'bg-teal-50 text-teal-600'
+                                    : locked ? 'bg-gray-100 text-gray-400'
+                                        : 'bg-teal-50 text-teal-600'
                                     }`}>
                                     {passed ? <CheckCircle size={20} /> : locked ? <Lock size={16} /> : <Play size={16} />}
                                 </div>
@@ -613,8 +613,8 @@ const QuestionView = ({
                             }}
                             disabled={!hasAnswer(currentQuestionIdx) || currentQuestionIdx >= totalQ - 1}
                             className={`p-2 rounded-lg transition-all ${hasAnswer(currentQuestionIdx) && currentQuestionIdx < totalQ - 1
-                                    ? 'bg-teal-100 text-teal-600 hover:bg-teal-200'
-                                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                                ? 'bg-teal-100 text-teal-600 hover:bg-teal-200'
+                                : 'bg-gray-100 text-gray-300 cursor-not-allowed'
                                 }`}
                         >
                             <ChevronRight size={20} />
@@ -651,34 +651,7 @@ const QuestionView = ({
                         />
                     )}
 
-                    {/* YouTube Embed (activity level) */}
-                    {activity.youtubeEmbedUrl && currentQuestionIdx === 0 && (
-                        <div className="mt-6 rounded-2xl overflow-hidden border-4 border-gray-100 shadow-lg bg-black">
-                            <div className="aspect-video w-full">
-                                <iframe
-                                    src={activity.youtubeEmbedUrl}
-                                    className="w-full h-full border-0"
-                                    allowFullScreen
-                                    title="YouTube video"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                />
-                            </div>
-                        </div>
-                    )}
 
-                    {/* Playground Link */}
-                    {activity.playgroundUrl && currentQuestionIdx === 0 && (
-                        <div className="mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-5 border border-indigo-100">
-                            <h4 className="text-xs font-bold text-indigo-600 uppercase mb-2">🔗 Playground</h4>
-                            <div className="rounded-xl overflow-hidden border border-indigo-200">
-                                <iframe src={activity.playgroundUrl} className="w-full h-64" title="Playground" />
-                            </div>
-                            <a href={activity.playgroundUrl} target="_blank" rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-sm text-indigo-600 font-medium mt-2 hover:underline">
-                                Open in new tab <ExternalLink size={14} />
-                            </a>
-                        </div>
-                    )}
                 </div>
             </div>
 
@@ -690,8 +663,8 @@ const QuestionView = ({
                             onClick={handleSubmit}
                             disabled={!hasAnswer(currentQuestionIdx)}
                             className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${hasAnswer(currentQuestionIdx)
-                                    ? 'bg-teal-500 text-white hover:bg-teal-600 shadow-lg'
-                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                ? 'bg-teal-500 text-white hover:bg-teal-600 shadow-lg'
+                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                 }`}
                         >
                             Submit Answer
