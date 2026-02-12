@@ -8,7 +8,8 @@ import ListItem from '@tiptap/extension-list-item';
 import {
     ArrowLeft, ArrowRight, CheckCircle, Lock, Play, RotateCcw,
     Calculator as CalcIcon, MessageSquare, X, GraduationCap,
-    ChevronLeft, ChevronRight, ExternalLink
+    ChevronLeft, ChevronRight, ExternalLink, Check, AlertTriangle,
+    HelpCircle, Image as ImageIcon, Video, Monitor
 } from 'lucide-react';
 import {
     listStudentBatchSections, listStudentBatchActivities,
@@ -25,7 +26,7 @@ const ReadOnlyEditor = ({ content }) => {
         content: content || '',
         editable: false,
         editorProps: {
-            attributes: { class: 'prose prose-lg max-w-none text-gray-800' },
+            attributes: { class: 'prose prose-lg max-w-none text-gray-800 [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_li]:my-1' },
         },
     });
     useEffect(() => {
@@ -41,19 +42,272 @@ const SimpleCalculator = ({ onClose }) => {
     const handleClick = (val) => setInput(prev => prev + val);
     const calculate = () => { try { setInput(eval(input).toString()); } catch { setInput('Error'); } };
     return (
-        <div className="fixed bottom-24 right-6 bg-gray-900 p-4 rounded-2xl shadow-2xl w-64 border border-gray-700 z-50">
+        <div className="fixed bottom-24 right-6 bg-gray-900 p-5 rounded-2xl shadow-2xl w-64 border-2 border-gray-700 z-50">
             <div className="flex justify-between mb-2">
-                <span className="text-white text-xs font-bold">Calculator</span>
+                <span className="text-white text-xs font-bold uppercase tracking-widest">Calculator</span>
                 <button onClick={onClose}><X size={14} className="text-gray-400" /></button>
             </div>
-            <div className="bg-gray-100 p-2 rounded mb-2 text-right font-mono text-xl overflow-hidden h-10 flex items-center justify-end">{input || '0'}</div>
-            <div className="grid grid-cols-4 gap-1">
-                {['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', '=', '+', 'C'].map(btn => (
+            <div className="bg-gray-100 p-3 rounded-xl mb-3 text-right font-mono text-2xl font-bold h-14 overflow-hidden flex items-center justify-end text-gray-800">{input || '0'}</div>
+            <div className="grid grid-cols-4 gap-1.5">
+                {['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', '=', '+'].map(btn => (
                     <button key={btn}
-                        onClick={() => btn === '=' ? calculate() : btn === 'C' ? setInput('') : handleClick(btn)}
-                        className={`p-2 rounded font-bold text-sm ${btn === '=' ? 'bg-teal-600 text-white col-span-2' : btn === 'C' ? 'bg-red-500 text-white' : 'bg-gray-700 text-white hover:bg-gray-600'}`}
+                        onClick={() => btn === '=' ? calculate() : handleClick(btn)}
+                        className={`p-3 rounded-lg font-bold text-lg hover:scale-105 transition-transform ${btn === '=' ? 'bg-teal-500 text-white col-span-2' : 'bg-gray-800 text-white hover:bg-gray-700'}`}
                     >{btn}</button>
                 ))}
+                <button onClick={() => setInput('')} className="col-span-2 bg-red-500 text-white p-2 rounded-lg font-bold mt-1.5">C</button>
+            </div>
+        </div>
+    );
+};
+
+// ──────────────────────────────────────────
+//  Per-Question Media Carousel (Exact Port)
+// ──────────────────────────────────────────
+
+const MediaCarousel = ({ mediaItems }) => {
+    const [mediaIndex, setMediaIndex] = useState(0);
+    if (!mediaItems || mediaItems.length === 0) return null;
+
+    const hasMultiple = mediaItems.length > 1;
+    const current = mediaItems[mediaIndex];
+
+    const renderMedia = () => {
+        if (!current?.url) return null;
+
+        // YouTube detection
+        const isYouTube = current.url.includes('youtu');
+
+        if (current.mediaType === 'image') {
+            return <img src={current.url} className="w-full h-auto max-h-[400px] object-contain" alt="question media" />;
+        }
+        if (current.mediaType === 'video' && !isYouTube) {
+            return <video src={current.url} controls className="w-full h-auto max-h-[400px]" />;
+        }
+        // embed, youtube, or anything else → iframe
+        return (
+            <div className="aspect-video w-full">
+                <iframe src={current.url} className="w-full h-full border-0" title="embed" allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
+            </div>
+        );
+    };
+
+    return (
+        <div className="mb-6 relative">
+            <div className="w-full rounded-2xl overflow-hidden border-4 border-gray-100 shadow-lg bg-black relative">
+                {renderMedia()}
+
+                {/* Navigation Arrows */}
+                {hasMultiple && (
+                    <>
+                        <button
+                            onClick={() => setMediaIndex(prev => prev === 0 ? mediaItems.length - 1 : prev - 1)}
+                            className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center text-gray-700 hover:text-teal-600 transition-all hover:scale-110"
+                        >
+                            <ArrowLeft size={20} />
+                        </button>
+                        <button
+                            onClick={() => setMediaIndex(prev => prev === mediaItems.length - 1 ? 0 : prev + 1)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center text-gray-700 hover:text-teal-600 transition-all hover:scale-110"
+                        >
+                            <ArrowRight size={20} />
+                        </button>
+                    </>
+                )}
+            </div>
+
+            {/* Dot Indicators */}
+            {hasMultiple && (
+                <div className="flex justify-center gap-2 mt-4">
+                    {mediaItems.map((_, i) => (
+                        <button
+                            key={i}
+                            onClick={() => setMediaIndex(i)}
+                            className={`w-2.5 h-2.5 rounded-full transition-all ${i === mediaIndex ? 'bg-teal-500 scale-125' : 'bg-gray-300 hover:bg-gray-400'}`}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+// ──────────────────────────────────────────
+//  Question Block Renderer (Faithful Prototype Port)
+// ──────────────────────────────────────────
+
+const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
+    if (!qData) {
+        return <div className="p-6 bg-gray-100 rounded-xl text-gray-400 text-center">No question loaded</div>;
+    }
+
+    const update = (val, subIdx = null) => {
+        if (readOnly) return;
+        if (subIdx !== null) {
+            const current = Array.isArray(response) ? [...response] : [];
+            current[subIdx] = val;
+            onInput(current, qIndex);
+        } else {
+            onInput(val, qIndex);
+        }
+    };
+
+    const mediaItems = qData.media || [];
+
+    return (
+        <div className="space-y-6">
+            {/* Question Prompt */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <div className="prose prose-lg max-w-none text-gray-800 [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_li]:my-1"
+                    dangerouslySetInnerHTML={{ __html: qData.prompt || '<p>Question...</p>' }}
+                />
+            </div>
+
+            {/* Per-Question Media Carousel */}
+            <MediaCarousel mediaItems={mediaItems} />
+
+            {/* Answer Section */}
+            <div className="bg-white rounded-2xl p-6 border border-teal-100 shadow-sm">
+                <h4 className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-4">Write your answer here</h4>
+
+                {/* MCQ - Single correct */}
+                {qData.qType === 'mcq' && (
+                    <div className="grid gap-4">
+                        {(qData.options || []).map((opt, i) => (
+                            <button key={i} onClick={() => update(opt)} disabled={readOnly}
+                                className={`p-6 rounded-2xl border-4 font-bold text-lg text-left transition-all ${response === opt
+                                        ? 'border-teal-500 bg-teal-50 text-teal-700 shadow-md'
+                                        : 'bg-white border-gray-100 text-gray-500 hover:border-teal-200'
+                                    }`}>
+                                {opt}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {/* MSQ - Multiple correct with checkboxes */}
+                {qData.qType === 'msq' && (
+                    <div className="grid gap-4">
+                        {(qData.options || []).map((opt, i) => {
+                            const selected = Array.isArray(response) ? response.includes(opt) : false;
+                            return (
+                                <button key={i} onClick={() => {
+                                    if (readOnly) return;
+                                    const current = Array.isArray(response) ? [...response] : [];
+                                    const newSelection = selected ? current.filter(a => a !== opt) : [...current, opt];
+                                    onInput(newSelection, qIndex);
+                                }} disabled={readOnly}
+                                    className={`p-6 rounded-2xl border-4 font-bold text-lg text-left transition-all flex items-center gap-4 ${selected
+                                            ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-md'
+                                            : 'bg-white border-gray-100 text-gray-500 hover:border-blue-200'
+                                        }`}>
+                                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300'
+                                        }`}>
+                                        {selected && <Check size={14} strokeWidth={3} />}
+                                    </div>
+                                    {opt}
+                                </button>
+                            );
+                        })}
+                        <p className="text-center text-xs font-bold text-blue-400 uppercase tracking-widest mt-2">Select all that apply</p>
+                    </div>
+                )}
+
+                {/* Fact / Trick / Opinion */}
+                {qData.qType === 'fact_trick' && (
+                    <div className="grid grid-cols-3 gap-4">
+                        {(qData.options || ['Fact', 'Trick', 'Opinion']).slice(0, 3).map((opt, i) => {
+                            const icons = [<Check size={32} />, <AlertTriangle size={32} />, <HelpCircle size={32} />];
+                            const colors = ['bg-green-100 text-green-700', 'bg-red-100 text-red-700', 'bg-blue-100 text-blue-700'];
+                            const isSelected = response === opt;
+                            return (
+                                <button key={i} onClick={() => update(opt)} disabled={readOnly}
+                                    className={`p-6 rounded-[2rem] border-4 flex flex-col items-center justify-center gap-4 transition-all h-48 ${isSelected
+                                            ? 'border-teal-500 bg-white shadow-xl scale-105 z-10'
+                                            : 'border-gray-100 bg-gray-50 hover:bg-white'
+                                        }`}>
+                                    <div className={`p-3 rounded-full ${colors[i % 3]}`}>{icons[i % 3]}</div>
+                                    <span className="font-black text-sm text-center uppercase leading-tight text-gray-700">{opt || 'Option'}</span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* Single Input */}
+                {qData.qType === 'single_input' && (
+                    <div className="space-y-3">
+                        <label className="text-sm font-black text-teal-400 uppercase tracking-widest ml-2">{qData.inputLabel}</label>
+                        <div className={`border-2 rounded-xl overflow-hidden bg-white transition-all ${readOnly ? 'bg-gray-50 border-gray-200 cursor-not-allowed' : 'border-gray-200 focus-within:border-teal-400 focus-within:shadow-lg'
+                            }`}>
+                            <textarea
+                                className="w-full outline-none px-5 py-4 text-gray-800 text-lg leading-relaxed resize-none"
+                                placeholder={readOnly ? "NOT ANSWERED" : "Type your answer here..."}
+                                rows={Math.max(3, Math.ceil((qData.maxChars || 500) / 100))}
+                                maxLength={qData.maxChars || 500}
+                                value={response || ''}
+                                onChange={e => update(e.target.value)}
+                                disabled={readOnly}
+                                style={{ minHeight: (qData.maxChars || 500) <= 100 ? '80px' : `${80 + Math.ceil(((qData.maxChars || 500) - 100) / 100) * 40}px` }}
+                            />
+                        </div>
+                        <div className="text-right text-xs font-bold text-gray-300">{(response || '').length} / {qData.maxChars || 500}</div>
+                    </div>
+                )}
+
+                {/* Multi-Step Input */}
+                {qData.qType === 'multi_input' && (
+                    <div className="grid gap-8">
+                        {(qData.multiFields || []).map((field, fIdx) => (
+                            <div key={fIdx} className="space-y-3">
+                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-2 flex justify-between">
+                                    <span>{field.label || `Step ${fIdx + 1}`}</span>
+                                    <span>{(response && response[fIdx]?.length) || 0} / {field.maxChars || 100}</span>
+                                </label>
+                                <div className={`border-2 rounded-xl overflow-hidden bg-white transition-all ${readOnly ? 'bg-gray-50 border-gray-200 cursor-not-allowed' : 'border-gray-200 focus-within:border-teal-400 focus-within:shadow-lg'
+                                    }`}>
+                                    <textarea
+                                        className="w-full outline-none px-5 py-4 text-gray-800 text-lg leading-relaxed resize-none"
+                                        placeholder={readOnly ? "NOT ANSWERED" : "Type your answer here..."}
+                                        maxLength={field.maxChars || 100}
+                                        value={(response && response[fIdx]) || ''}
+                                        onChange={e => update(e.target.value, fIdx)}
+                                        disabled={readOnly}
+                                        style={{ minHeight: (field.maxChars || 100) <= 100 ? '80px' : `${80 + Math.ceil(((field.maxChars || 100) - 100) / 100) * 40}px` }}
+                                    />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* Fill in the Blanks — exact prototype regex */}
+                {qData.qType === 'fill_blanks' && (
+                    <div className="leading-[3.5rem] text-xl text-gray-700 font-medium">
+                        {(qData.fillBlankText || '').split(/(\[\$.*?\])/).map((part, i, arr) => {
+                            if (part.startsWith('[$')) {
+                                const max = part.match(/\d+/)?.[0] || '10';
+                                const idx = arr.slice(0, i).filter(p => p.startsWith('[$')).length;
+                                const val = response ? response[idx] : '';
+                                return (
+                                    <input
+                                        key={i}
+                                        maxLength={parseInt(max, 10)}
+                                        disabled={readOnly}
+                                        value={val || ''}
+                                        onChange={e => update(e.target.value, idx)}
+                                        className={`inline-block border-b-4 w-40 mx-2 px-3 text-center outline-none rounded-t-lg font-bold transition-colors ${readOnly && !val
+                                                ? 'border-red-300 bg-red-100/50 text-red-900'
+                                                : 'border-teal-300 bg-teal-50 text-teal-900 focus:bg-teal-100 focus:border-teal-600'
+                                            }`}
+                                    />
+                                );
+                            }
+                            return <span key={i}>{part}</span>;
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -136,12 +390,10 @@ const ActivityListView = ({ section, responses, allActivities, onSelectActivity,
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <div className="max-w-2xl mx-auto w-full px-6 pt-8 pb-12">
-                {/* Back button */}
                 <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-gray-800 text-sm font-medium mb-6 transition">
                     <ChevronLeft size={18} /> Back to Sections
                 </button>
 
-                {/* Section Header */}
                 <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-6 border border-teal-100 text-center mb-6">
                     <span className="text-xs font-bold text-teal-600 bg-teal-100 px-3 py-1 rounded-full uppercase tracking-wider">
                         Section {(section.order ?? 0) + 1}
@@ -150,7 +402,6 @@ const ActivityListView = ({ section, responses, allActivities, onSelectActivity,
                     <p className="text-sm text-gray-500 mt-1">Complete all activities below to finish this mission</p>
                 </div>
 
-                {/* Activity List */}
                 <div className="space-y-3">
                     {acts.map((act, idx) => {
                         const locked = isLocked(act);
@@ -173,7 +424,10 @@ const ActivityListView = ({ section, responses, allActivities, onSelectActivity,
                                     {passed ? <CheckCircle size={20} /> : locked ? <Lock size={16} /> : <Play size={16} />}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-xs text-gray-400 uppercase font-bold">Activity {idx + 1}</div>
+                                    <div className="text-xs text-gray-400 uppercase font-bold flex items-center gap-2">
+                                        Activity {idx + 1}
+                                        {!locked && !passed && <span className="bg-pink-500 text-white px-2 py-0.5 rounded text-[8px]">NEXT</span>}
+                                    </div>
                                     <h4 className="font-bold text-gray-900 truncate">{act.title}</h4>
                                 </div>
                                 {!locked && !passed && <ArrowRight size={18} className="text-gray-300 flex-shrink-0" />}
@@ -182,7 +436,6 @@ const ActivityListView = ({ section, responses, allActivities, onSelectActivity,
                     })}
                 </div>
 
-                {/* Progress */}
                 <div className="bg-white rounded-xl p-5 border border-gray-100 mt-6">
                     <div className="flex items-center justify-between mb-2">
                         <h4 className="font-bold text-gray-900">Progress</h4>
@@ -201,7 +454,7 @@ const ActivityListView = ({ section, responses, allActivities, onSelectActivity,
 };
 
 // ──────────────────────────────────────────
-//  Step 3: Question View
+//  Step 3: Question View (Full Prototype Port)
 // ──────────────────────────────────────────
 
 const QuestionView = ({
@@ -214,29 +467,28 @@ const QuestionView = ({
     const [showCalculator, setShowCalculator] = useState(false);
     const [gradingResult, setGradingResult] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showAI, setShowAI] = useState(false);
 
     const questions = activity.practiceData?.questions || [];
     const totalQ = questions.length;
     const currentQ = questions[currentQuestionIdx];
     const progress = totalQ > 0 ? ((currentQuestionIdx + 1) / totalQ) * 100 : 0;
 
-    const handleAnswerChange = (val) => {
-        setAnswers(prev => ({ ...prev, [currentQuestionIdx]: val }));
+    const handleInput = (val, qIdx) => {
+        if (typeof qIdx === 'number') {
+            setAnswers(prev => ({
+                ...prev,
+                [qIdx]: val
+            }));
+        }
     };
 
-    const checkAnswerFormat = (q, ans) => {
-        if (!q) return false;
-        if (q.qType === 'mcq' || q.qType === 'single_input' || q.qType === 'fact_trick') return !!ans;
-        if (q.qType === 'msq') return ans && ans.length > 0;
-        if (q.qType === 'fill_blanks') {
-            if (Array.isArray(ans)) return ans.some(v => !!v);
-            return !!ans;
-        }
-        if (q.qType === 'multi_input') {
-            if (typeof ans === 'object' && !Array.isArray(ans)) return Object.values(ans).some(v => !!v);
-            return !!ans;
-        }
-        return false;
+    const hasAnswer = (idx) => {
+        const ans = answers[idx];
+        if (!ans) return false;
+        if (Array.isArray(ans)) return ans.some(v => !!v);
+        if (typeof ans === 'object') return Object.values(ans).some(v => !!v);
+        return !!ans;
     };
 
     const handleSubmit = async () => {
@@ -250,34 +502,37 @@ const QuestionView = ({
                 questionIndex: currentQuestionIdx
             });
             if (res.success) {
-                setGradingResult(res.data?.grade);
-                onUpdateResponses(activity._id, { grade: res.data?.grade });
+                const grade = res.data?.grade;
+                setGradingResult(grade);
+                setShowAI(true);
+                onUpdateResponses(activity._id, { grade });
             } else {
                 alert("Submission failed: " + res.message);
             }
         } catch (err) {
             console.error(err);
-            alert("Error submitting.");
+            setGradingResult({ score: 0, feedback: "Error submitting.", tip: "Please try again." });
+            setShowAI(true);
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const handleRetry = () => {
+    const handleContinue = () => {
+        setShowAI(false);
         setGradingResult(null);
-        setCurrentQuestionIdx(0);
-        setAnswers({});
+        if (currentQuestionIdx < totalQ - 1) {
+            setCurrentQuestionIdx(prev => prev + 1);
+        } else {
+            // All questions done → back to activity list
+            onBack();
+        }
     };
 
-    const handleNextActivity = () => {
-        const idx = allActivities.findIndex(a => a._id === activity._id);
-        if (idx < allActivities.length - 1) {
-            // Go back to activity list, the parent will handle selection
-            onBack();
-        } else {
-            alert("All activities completed!");
-            navigate(-1);
-        }
+    const handleRetry = () => {
+        setShowAI(false);
+        setGradingResult(null);
+        // Keep current question, let them re-answer
     };
 
     // Reading type
@@ -309,7 +564,7 @@ const QuestionView = ({
                                 }).then(res => {
                                     if (res.success) {
                                         onUpdateResponses(activity._id, { grade: { score: 10 } });
-                                        handleNextActivity();
+                                        onBack();
                                     }
                                 });
                             }}
@@ -327,325 +582,195 @@ const QuestionView = ({
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col relative">
             {/* Teal Header */}
-            <div className="bg-gradient-to-r from-teal-500 to-emerald-500 px-6 py-5">
+            <div className="bg-gradient-to-r from-teal-500 to-teal-400 px-6 py-5">
                 <button onClick={onBack} className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-medium mb-2 transition">
-                    <ChevronLeft size={18} /> Back
+                    <ChevronLeft size={18} /> Back to Mission
                 </button>
-                <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold text-white/70 bg-white/20 px-3 py-1 rounded-full">🎯 practice</span>
-                    {activity.allowCalculator && (
-                        <button onClick={() => setShowCalculator(!showCalculator)}
-                            className="text-xs font-bold text-white/70 bg-white/20 px-3 py-1 rounded-full hover:bg-white/30 transition flex items-center gap-1">
-                            <CalcIcon size={12} /> Calculator
-                        </button>
-                    )}
+                <div className="flex items-center gap-2 mb-2">
+                    <span className="bg-white/20 text-white text-[10px] font-bold px-2 py-1 rounded">🧩 {activity.type || 'Activity'}</span>
                 </div>
-                <h1 className="text-xl font-black text-white mt-2">{activity.title}</h1>
+                <h1 className="text-xl font-bold text-white">{activity.title}</h1>
             </div>
 
             {/* Question Navigation */}
-            <div className="bg-white border-b px-6 py-3 flex items-center justify-between">
-                <button
-                    onClick={() => setCurrentQuestionIdx(Math.max(0, currentQuestionIdx - 1))}
-                    disabled={currentQuestionIdx === 0}
-                    className="p-1.5 rounded-full hover:bg-gray-100 disabled:opacity-30 transition text-gray-500"
-                >
-                    <ChevronLeft size={20} />
-                </button>
-                <span className="text-sm font-bold text-gray-700">Question {currentQuestionIdx + 1} of {totalQ}</span>
-                <button
-                    onClick={() => setCurrentQuestionIdx(Math.min(totalQ - 1, currentQuestionIdx + 1))}
-                    disabled={currentQuestionIdx === totalQ - 1}
-                    className="p-1.5 rounded-full hover:bg-gray-100 disabled:opacity-30 transition text-teal-600"
-                >
-                    <ChevronRight size={20} />
-                </button>
+            <div className="bg-white border-b px-6 py-3">
+                <div className="max-w-2xl mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => currentQuestionIdx > 0 && setCurrentQuestionIdx(currentQuestionIdx - 1)}
+                            disabled={currentQuestionIdx === 0}
+                            className={`p-2 rounded-lg transition-all ${currentQuestionIdx > 0 ? 'bg-teal-100 text-teal-600 hover:bg-teal-200' : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                                }`}
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <span className="text-gray-600 font-medium">Question {currentQuestionIdx + 1} of {totalQ}</span>
+                        <button
+                            onClick={() => {
+                                if (hasAnswer(currentQuestionIdx) && currentQuestionIdx < totalQ - 1) {
+                                    setCurrentQuestionIdx(currentQuestionIdx + 1);
+                                }
+                            }}
+                            disabled={!hasAnswer(currentQuestionIdx) || currentQuestionIdx >= totalQ - 1}
+                            className={`p-2 rounded-lg transition-all ${hasAnswer(currentQuestionIdx) && currentQuestionIdx < totalQ - 1
+                                    ? 'bg-teal-100 text-teal-600 hover:bg-teal-200'
+                                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                                }`}
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+                    </div>
+                    <div className="flex gap-1">
+                        {questions.map((_, i) => (
+                            <div key={i} className={`w-3 h-3 rounded-full transition-all ${i === currentQuestionIdx ? 'bg-teal-500' : hasAnswer(i) ? 'bg-teal-200' : 'bg-gray-200'
+                                }`} />
+                        ))}
+                    </div>
+                </div>
             </div>
 
-            {/* Question Dots */}
-            <div className="bg-white pb-3 px-6 flex items-center justify-center gap-1.5">
-                {questions.map((_, idx) => (
-                    <button
-                        key={idx}
-                        onClick={() => setCurrentQuestionIdx(idx)}
-                        className={`w-2.5 h-2.5 rounded-full transition-all ${idx === currentQuestionIdx ? 'bg-teal-500 scale-125'
-                                : answers[idx] !== undefined ? 'bg-teal-200' : 'bg-gray-200'
-                            }`}
-                    />
-                ))}
+            {/* Progress Bar */}
+            <div className="max-w-2xl mx-auto w-full px-6 mt-4">
+                <div className="flex items-center gap-4">
+                    <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <div className="h-full bg-teal-500 transition-all duration-500" style={{ width: `${progress}%` }} />
+                    </div>
+                </div>
             </div>
 
             {/* Question Content */}
             <div className="flex-1 overflow-y-auto px-6 py-6 pb-36">
                 <div className="max-w-2xl mx-auto">
                     {currentQ && (
-                        <div className="space-y-6">
-                            {/* Question Card */}
-                            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                                <h3 className="text-base font-bold text-gray-900 mb-3">
-                                    Activity {allActivities.findIndex(a => a._id === activity._id) + 1}: {activity.title}
-                                </h3>
-                                <div className="text-gray-700 leading-relaxed">
-                                    <ReadOnlyEditor content={currentQ.prompt} />
-                                </div>
+                        <QuestionBlock
+                            qData={currentQ}
+                            qIndex={currentQuestionIdx}
+                            response={answers[currentQuestionIdx]}
+                            onInput={handleInput}
+                            readOnly={isSubmitting}
+                        />
+                    )}
 
-                                {/* Media */}
-                                {currentQ.media && currentQ.media.length > 0 && (
-                                    <div className="mt-4 space-y-3">
-                                        {currentQ.media.map((m, mIdx) => (
-                                            <div key={mIdx} className="rounded-xl overflow-hidden bg-gray-100">
-                                                {m.mediaType === 'image' && m.url && (
-                                                    <img src={m.url} alt="Question media" className="w-full h-auto max-h-80 object-contain" />
-                                                )}
-                                                {m.mediaType === 'video' && m.url && (
-                                                    <video src={m.url} controls className="w-full max-h-80" />
-                                                )}
-                                                {m.mediaType === 'embed' && m.url && (
-                                                    <iframe src={m.url} className="w-full h-72 border-0" allowFullScreen title={`embed-${mIdx}`} />
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {/* YouTube Embed (activity level) */}
-                                {activity.youtubeEmbedUrl && currentQuestionIdx === 0 && (
-                                    <div className="mt-4 rounded-xl overflow-hidden">
-                                        <iframe
-                                            src={activity.youtubeEmbedUrl}
-                                            className="w-full h-72 border-0"
-                                            allowFullScreen
-                                            title="YouTube video"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        />
-                                    </div>
-                                )}
+                    {/* YouTube Embed (activity level) */}
+                    {activity.youtubeEmbedUrl && currentQuestionIdx === 0 && (
+                        <div className="mt-6 rounded-2xl overflow-hidden border-4 border-gray-100 shadow-lg bg-black">
+                            <div className="aspect-video w-full">
+                                <iframe
+                                    src={activity.youtubeEmbedUrl}
+                                    className="w-full h-full border-0"
+                                    allowFullScreen
+                                    title="YouTube video"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                />
                             </div>
+                        </div>
+                    )}
 
-                            {/* Playground Link */}
-                            {activity.playgroundUrl && currentQuestionIdx === 0 && (
-                                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-5 border border-indigo-100">
-                                    <h4 className="text-xs font-bold text-indigo-600 uppercase mb-2">🔗 Playground</h4>
-                                    <iframe
-                                        src={activity.playgroundUrl}
-                                        className="w-full h-64 rounded-xl border border-indigo-200"
-                                        title="Playground"
-                                    />
-                                    <a href={activity.playgroundUrl} target="_blank" rel="noreferrer"
-                                        className="inline-flex items-center gap-1 text-sm text-indigo-600 font-medium mt-2 hover:underline">
-                                        Open in new tab <ExternalLink size={14} />
-                                    </a>
-                                </div>
-                            )}
-
-                            {/* Answer Section */}
-                            <div className="bg-white rounded-2xl p-6 border border-teal-100 shadow-sm">
-                                <h4 className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-4">Write your ans here</h4>
-
-                                {/* MCQ */}
-                                {currentQ.qType === 'mcq' && (
-                                    <div className="space-y-3">
-                                        {(currentQ.options || []).map(opt => (
-                                            <button key={opt} onClick={() => handleAnswerChange(opt)}
-                                                className={`w-full p-4 rounded-xl text-left border-2 transition-all font-medium ${answers[currentQuestionIdx] === opt
-                                                        ? 'border-teal-500 bg-teal-50 text-teal-800 shadow-md'
-                                                        : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'
-                                                    }`}
-                                            >{opt}</button>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {/* MSQ */}
-                                {currentQ.qType === 'msq' && (
-                                    <div className="space-y-3">
-                                        <p className="text-xs text-gray-400 mb-1">Select all that apply</p>
-                                        {(currentQ.options || []).map(opt => {
-                                            const current = answers[currentQuestionIdx] || [];
-                                            const isSelected = current.includes(opt);
-                                            return (
-                                                <button key={opt}
-                                                    onClick={() => handleAnswerChange(isSelected ? current.filter(x => x !== opt) : [...current, opt])}
-                                                    className={`w-full p-4 rounded-xl text-left border-2 transition-all font-medium flex items-center justify-between ${isSelected
-                                                            ? 'border-teal-500 bg-teal-50 text-teal-800 shadow-md'
-                                                            : 'border-gray-100 hover:border-gray-300 hover:bg-gray-50'
-                                                        }`}
-                                                >
-                                                    {opt}
-                                                    {isSelected && <CheckCircle size={20} className="text-teal-500" />}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-
-                                {/* Single Input */}
-                                {currentQ.qType === 'single_input' && (
-                                    <div>
-                                        {currentQ.inputLabel && <label className="text-sm text-gray-600 font-medium mb-2 block">{currentQ.inputLabel}</label>}
-                                        <textarea
-                                            autoFocus
-                                            className="w-full p-4 border border-gray-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none transition"
-                                            placeholder="Type your answer here..."
-                                            rows={4}
-                                            maxLength={currentQ.maxChars || 500}
-                                            value={answers[currentQuestionIdx] || ''}
-                                            onChange={e => handleAnswerChange(e.target.value)}
-                                        />
-                                        <p className="text-xs text-gray-400 text-right mt-1">
-                                            {(answers[currentQuestionIdx] || '').length} / {currentQ.maxChars || 500}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Multi Input */}
-                                {currentQ.qType === 'multi_input' && (
-                                    <div className="space-y-4">
-                                        {(currentQ.multiFields || []).map((field, fIdx) => (
-                                            <div key={fIdx}>
-                                                <label className="text-sm text-gray-600 font-medium mb-1.5 block">{field.label || `Field ${fIdx + 1}`}</label>
-                                                <textarea
-                                                    className="w-full p-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none transition"
-                                                    placeholder={`Enter ${field.label || 'your answer'}...`}
-                                                    rows={2}
-                                                    maxLength={field.maxChars || 100}
-                                                    value={(answers[currentQuestionIdx] || {})[fIdx] || ''}
-                                                    onChange={e => {
-                                                        const prev = answers[currentQuestionIdx] || {};
-                                                        handleAnswerChange({ ...prev, [fIdx]: e.target.value });
-                                                    }}
-                                                />
-                                                <p className="text-xs text-gray-400 text-right mt-0.5">
-                                                    {((answers[currentQuestionIdx] || {})[fIdx] || '').length} / {field.maxChars || 100}
-                                                </p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {/* Fill in the Blanks */}
-                                {currentQ.qType === 'fill_blanks' && (
-                                    <div className="leading-[3.5rem] text-lg text-gray-700 font-medium">
-                                        {(currentQ.fillBlankText || '').split(/(\[\$\d+\])/).map((part, i, arr) => {
-                                            const match = part.match(/\[\$(\d+)\]/);
-                                            if (match) {
-                                                const max = parseInt(match[1], 10);
-                                                const prevBlanks = arr.slice(0, i).filter(p => /\[\$\d+\]/.test(p)).length;
-                                                const blanks = Array.isArray(answers[currentQuestionIdx]) ? answers[currentQuestionIdx] : [];
-                                                const val = blanks[prevBlanks] || '';
-                                                return (
-                                                    <input
-                                                        key={i}
-                                                        maxLength={max}
-                                                        value={val}
-                                                        onChange={e => {
-                                                            const updated = [...blanks];
-                                                            updated[prevBlanks] = e.target.value;
-                                                            handleAnswerChange(updated);
-                                                        }}
-                                                        className="inline-block border-b-4 w-40 mx-2 px-3 text-center outline-none rounded-t-lg font-bold transition-colors border-teal-300 bg-teal-50 text-teal-900 focus:bg-teal-100 focus:border-teal-600"
-                                                    />
-                                                );
-                                            }
-                                            return <span key={i}>{part}</span>;
-                                        })}
-                                    </div>
-                                )}
-
-                                {/* Fact / Trick */}
-                                {currentQ.qType === 'fact_trick' && (
-                                    <div className="grid grid-cols-3 gap-3">
-                                        {['Fact', 'Trick', 'Opinion'].map(opt => (
-                                            <button key={opt}
-                                                onClick={() => handleAnswerChange(opt)}
-                                                className={`p-4 rounded-xl text-center border-2 transition-all font-bold ${answers[currentQuestionIdx] === opt
-                                                        ? 'border-teal-500 bg-teal-50 text-teal-800 shadow-md'
-                                                        : 'border-gray-100 hover:border-gray-300 text-gray-600'
-                                                    }`}
-                                            >
-                                                {opt === 'Fact' && '📘'}
-                                                {opt === 'Trick' && '🎩'}
-                                                {opt === 'Opinion' && '💭'}
-                                                <div className="mt-1 text-sm">{opt}</div>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
+                    {/* Playground Link */}
+                    {activity.playgroundUrl && currentQuestionIdx === 0 && (
+                        <div className="mt-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-5 border border-indigo-100">
+                            <h4 className="text-xs font-bold text-indigo-600 uppercase mb-2">🔗 Playground</h4>
+                            <div className="rounded-xl overflow-hidden border border-indigo-200">
+                                <iframe src={activity.playgroundUrl} className="w-full h-64" title="Playground" />
                             </div>
+                            <a href={activity.playgroundUrl} target="_blank" rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-sm text-indigo-600 font-medium mt-2 hover:underline">
+                                Open in new tab <ExternalLink size={14} />
+                            </a>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Footer */}
-            <div className="fixed bottom-0 left-0 w-full bg-white border-t px-6 py-4 z-10">
-                <div className="max-w-2xl mx-auto">
-                    {currentQuestionIdx === totalQ - 1 ? (
+            {/* Footer: Submit / Next */}
+            {!showAI && !isSubmitting && (
+                <div className="fixed bottom-0 left-0 w-full bg-white border-t px-6 py-4 z-10">
+                    <div className="max-w-2xl mx-auto">
                         <button
                             onClick={handleSubmit}
-                            disabled={isSubmitting || !checkAnswerFormat(currentQ, answers[currentQuestionIdx])}
-                            className="w-full py-4 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-xl font-bold text-lg hover:from-teal-600 hover:to-emerald-600 disabled:opacity-50 transition shadow-lg shadow-teal-200"
+                            disabled={!hasAnswer(currentQuestionIdx)}
+                            className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${hasAnswer(currentQuestionIdx)
+                                    ? 'bg-teal-500 text-white hover:bg-teal-600 shadow-lg'
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                }`}
                         >
-                            {isSubmitting ? 'Submitting...' : 'Submit Answer'}
+                            Submit Answer
                         </button>
-                    ) : (
-                        <button
-                            onClick={() => setCurrentQuestionIdx(currentQuestionIdx + 1)}
-                            disabled={!checkAnswerFormat(currentQ, answers[currentQuestionIdx])}
-                            className="w-full py-4 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-xl font-bold text-lg hover:from-teal-600 hover:to-emerald-600 disabled:opacity-50 transition shadow-lg shadow-teal-200"
-                        >
-                            Next Question
-                        </button>
-                    )}
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {/* Grading Spinner */}
+            {isSubmitting && (
+                <div className="fixed bottom-0 left-0 w-full bg-white border-t px-6 py-4 z-10">
+                    <div className="max-w-2xl mx-auto flex items-center justify-center gap-4 py-4">
+                        <div className="w-6 h-6 border-4 border-teal-200 border-t-teal-500 rounded-full animate-spin" />
+                        <span className="font-bold text-gray-600">AI is grading your answer...</span>
+                    </div>
+                </div>
+            )}
 
             {/* Calculator */}
             {showCalculator && <SimpleCalculator onClose={() => setShowCalculator(false)} />}
 
-            {/* Grading Modal */}
-            {gradingResult && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl relative animate-fadeIn">
-                        <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl font-bold shadow-xl ${gradingResult.score >= 5 ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
-                            }`}>
-                            {gradingResult.score}
-                        </div>
-                        <h2 className="text-2xl font-black text-center mb-2">
-                            {gradingResult.score >= 5 ? 'Nice Work! 🎉' : 'Almost There...'}
-                        </h2>
-                        <p className="text-center text-gray-500 mb-6 font-medium">
-                            {gradingResult.score >= 5 ? 'You mastered this concept.' : "Let's review and try again."}
-                        </p>
-                        <div className="bg-gray-50 p-5 rounded-2xl mb-6 border border-gray-100 space-y-4">
-                            <div className="flex items-start gap-3">
-                                <MessageSquare className="text-blue-500 min-w-[20px] mt-1" size={18} />
+            {/* Floating Tool Buttons */}
+            <div className="fixed bottom-24 right-6 z-40 flex gap-3">
+                {activity.allowCalculator && (
+                    <button
+                        onClick={() => setShowCalculator(!showCalculator)}
+                        className={`p-4 rounded-full shadow-xl hover:scale-110 transition-all ${showCalculator ? 'bg-teal-600 text-white' : 'bg-white text-teal-600 border-2 border-teal-200'
+                            }`}
+                    >
+                        <CalcIcon size={24} />
+                    </button>
+                )}
+            </div>
+
+            {/* AI Grading Modal (Exact Prototype Style) */}
+            {showAI && gradingResult && (
+                <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-6">
+                    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+                        <div className="bg-gradient-to-r from-teal-500 to-teal-400 p-6 text-white flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-white/20 rounded-xl"><GraduationCap size={24} /></div>
                                 <div>
-                                    <h4 className="font-bold text-sm text-gray-900 mb-1">Feedback</h4>
-                                    <p className="text-sm text-gray-600 leading-relaxed">{gradingResult.feedback}</p>
+                                    <h3 className="font-bold text-lg">AI Evaluation</h3>
+                                    <p className="text-teal-100 text-xs">Analysis Complete</p>
                                 </div>
                             </div>
-                            {gradingResult.tip && (
-                                <div className="flex items-start gap-3">
-                                    <div className="text-amber-500 font-black min-w-[20px] mt-1">💡</div>
+                            <div className="text-right">
+                                <span className="text-3xl font-black">{gradingResult.score}</span>
+                                <span className="text-teal-200 text-lg">/10</span>
+                            </div>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <span className="text-teal-500 font-bold text-xs uppercase tracking-wide block mb-1">AI Feedback</span>
+                                <p className="text-gray-700 italic">"{gradingResult.feedback}"</p>
+                            </div>
+                            {(gradingResult.tip || currentQ?.postAnswerTip) && (
+                                <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100 flex gap-3">
+                                    <div className="p-2 bg-yellow-400 text-white rounded-lg h-fit">💡</div>
                                     <div>
-                                        <h4 className="font-bold text-sm text-gray-900 mb-1">Coach Tip</h4>
-                                        <p className="text-sm text-gray-600 leading-relaxed">{gradingResult.tip}</p>
+                                        <span className="text-yellow-600 font-bold text-xs uppercase block mb-1">Pro Tip</span>
+                                        <p className="text-yellow-800 text-sm">{gradingResult.tip || currentQ?.postAnswerTip}</p>
                                     </div>
                                 </div>
                             )}
-                        </div>
-                        <div className="flex gap-3">
+
                             {gradingResult.score < 5 ? (
-                                <button onClick={handleRetry}
-                                    className="flex-1 py-4 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition flex items-center justify-center gap-2">
-                                    <RotateCcw size={18} /> Try Again
+                                <button
+                                    onClick={handleRetry}
+                                    className="w-full bg-red-500 text-white py-4 rounded-xl font-bold hover:bg-red-600 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <RotateCcw size={20} /> Try Again
                                 </button>
                             ) : (
                                 <button
-                                    onClick={() => { setGradingResult(null); handleNextActivity(); }}
-                                    className="flex-1 py-4 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-xl font-bold hover:from-teal-600 hover:to-emerald-600 transition flex items-center justify-center gap-2 shadow-lg shadow-teal-200">
-                                    Continue <ArrowRight size={18} />
+                                    onClick={handleContinue}
+                                    className="w-full bg-teal-500 text-white py-4 rounded-xl font-bold hover:bg-teal-600 transition-all"
+                                >
+                                    {currentQuestionIdx < totalQ - 1 ? 'Next Question →' : 'Complete Activity ✓'}
                                 </button>
                             )}
                         </div>
@@ -665,12 +790,10 @@ const StudentActivityPage = () => {
     const effectiveSessionId = batchSessionId || sessionId;
     const navigate = useNavigate();
 
-    // Data
     const [sections, setSections] = useState([]);
     const [responses, setResponses] = useState({});
     const [loading, setLoading] = useState(true);
 
-    // Navigation state: 'sections' | 'activities' | 'question'
     const [step, setStep] = useState('sections');
     const [selectedSection, setSelectedSection] = useState(null);
     const [selectedActivity, setSelectedActivity] = useState(null);

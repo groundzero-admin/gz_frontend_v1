@@ -7,19 +7,21 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import ListItem from '@tiptap/extension-list-item';
 import {
     FaArrowLeft, FaSave, FaPlus, FaTrash, FaImage, FaVideo, FaCode,
-    FaBold, FaItalic, FaListUl, FaListOl, FaQuoteRight, FaHeading, FaTimes
+    FaBold, FaItalic, FaListUl, FaListOl, FaQuoteRight, FaHeading, FaTimes,
+    FaCheck, FaGlobe
 } from "react-icons/fa";
 import {
     listActivities, createActivity, getActivity, updateActivity, deleteActivity,
     listBatchActivities, createBatchActivity, getBatchActivity, updateBatchActivity, deleteBatchActivity
 } from "../api.js";
 
-// --- Rich Text Editor ---
+// ──────────────────────────────────────────
+//  Rich Text Editor
+// ──────────────────────────────────────────
+
 const MenuBar = ({ editor }) => {
     if (!editor) return null;
-
     const isActive = (type, opts) => editor.isActive(type, opts) ? 'bg-gray-200 text-black' : 'text-gray-500 hover:bg-gray-100';
-
     return (
         <div className="flex flex-wrap gap-1 p-2 border-b bg-gray-50 rounded-t-lg">
             <button onClick={() => editor.chain().focus().toggleBold().run()} className={`p-1.5 rounded ${isActive('bold')}`} title="Bold"><FaBold size={14} /></button>
@@ -35,29 +37,18 @@ const MenuBar = ({ editor }) => {
 
 const RichTextEditor = ({ content, onChange, placeholder }) => {
     const editor = useEditor({
-        extensions: [
-            StarterKit,
-            TextStyle,
-            Color,
-            ListItem
-        ],
+        extensions: [StarterKit, TextStyle, Color, ListItem],
         content: content || '',
-        onUpdate: ({ editor }) => {
-            onChange(editor.getHTML());
-        },
+        onUpdate: ({ editor }) => onChange(editor.getHTML()),
         editorProps: {
-            attributes: {
-                class: 'prose prose-sm sm:prose-base max-w-none focus:outline-none min-h-[100px] p-4',
-            },
+            attributes: { class: 'prose prose-sm sm:prose-base max-w-none focus:outline-none min-h-[100px] p-4' },
         },
     });
-
     useEffect(() => {
         if (editor && content !== editor.getHTML()) {
             editor.commands.setContent(content || '');
         }
     }, [content, editor]);
-
     return (
         <div className="border rounded-lg bg-white overflow-hidden focus-within:ring-2 focus-within:ring-black">
             <MenuBar editor={editor} />
@@ -66,49 +57,60 @@ const RichTextEditor = ({ content, onChange, placeholder }) => {
     );
 };
 
-// --- Main Component ---
+// ──────────────────────────────────────────
+//  Main Component
+// ──────────────────────────────────────────
+
 const AdminActivityEditor = () => {
     const { templateSessionId, sectionId, activityId: routeActivityId, batchSectionId } = useParams();
     const navigate = useNavigate();
 
-    // Template Mode Check
     const isTemplateMode = location.pathname.includes('template-section');
     const displaySectionId = isTemplateMode ? sectionId : batchSectionId;
 
-    // State
     const [activities, setActivities] = useState([]);
     const [sidebarLoading, setSidebarLoading] = useState(false);
     const [selectedActId, setSelectedActId] = useState(null);
     const [isLoadingAct, setIsLoadingAct] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Form State
+    const defaultQuestion = {
+        qType: 'mcq',
+        prompt: '',
+        aiPrompt: 'Grade based on correctness.',
+        postAnswerTip: '',
+        options: ['', ''],
+        correctAnswer: '',
+        correctAnswers: [],
+        inputLabel: '',
+        maxChars: 500,
+        fillBlankText: '',
+        multiFields: [{ label: 'Step 1', maxChars: 100 }],
+        media: []
+    };
+
     const initialForm = {
         type: 'practice',
         title: '',
         order: 0,
         allowCalculator: false,
         showAgent: false,
+        youtubeEmbedUrl: '',
+        playgroundUrl: '',
         readingData: { link: '' },
         practiceData: { description: '', questions: [] }
     };
     const [form, setForm] = useState(initialForm);
 
-    // Initial Load
+    // Load sidebar
     useEffect(() => {
         fetchSidebar();
-        if (routeActivityId) {
-            setSelectedActId(routeActivityId);
-        }
+        if (routeActivityId) setSelectedActId(routeActivityId);
     }, [displaySectionId]);
 
-    // Fetch Activity Details when selected changes
     useEffect(() => {
-        if (selectedActId) {
-            fetchActivityDetails(selectedActId);
-        } else {
-            setForm(initialForm);
-        }
+        if (selectedActId) fetchActivityDetails(selectedActId);
+        else setForm(initialForm);
     }, [selectedActId]);
 
     const fetchSidebar = async () => {
@@ -116,14 +118,9 @@ const AdminActivityEditor = () => {
         try {
             const apiCall = isTemplateMode ? listActivities : listBatchActivities;
             const res = await apiCall(displaySectionId);
-            if (res.success) {
-                setActivities(res.data?.activities || []);
-            }
-        } catch (err) {
-            console.error("Sidebar load error", err);
-        } finally {
-            setSidebarLoading(false);
-        }
+            if (res.success) setActivities(res.data?.activities || []);
+        } catch (err) { console.error("Sidebar load error", err); }
+        finally { setSidebarLoading(false); }
     };
 
     const fetchActivityDetails = async (id) => {
@@ -133,7 +130,6 @@ const AdminActivityEditor = () => {
             const res = await apiCall(id);
             if (res.success) {
                 const act = res.data?.activity;
-                // Ensure structure
                 setForm({
                     ...initialForm,
                     ...act,
@@ -141,11 +137,8 @@ const AdminActivityEditor = () => {
                     practiceData: act.practiceData || { description: '', questions: [] }
                 });
             }
-        } catch (err) {
-            console.error("Activity load error", err);
-        } finally {
-            setIsLoadingAct(false);
-        }
+        } catch (err) { console.error("Activity load error", err); }
+        finally { setIsLoadingAct(false); }
     };
 
     const handleCreateNew = () => {
@@ -162,21 +155,18 @@ const AdminActivityEditor = () => {
         setIsSaving(true);
         try {
             if (selectedActId) {
-                // Update
                 const apiCall = isTemplateMode ? updateActivity : updateBatchActivity;
                 await apiCall(selectedActId, form);
             } else {
-                // Create
                 const apiCall = isTemplateMode ? createActivity : createBatchActivity;
                 const res = await apiCall(displaySectionId, form);
                 if (res.success) {
                     setSelectedActId(res.data?.activity?._id);
-                    // Update URL without reload
                     navigate(isTemplateMode
                         ? `/admin/dashboard/template-section/${sectionId}/activities`
                         : `/admin/dashboard/batch-section/${batchSectionId}/activities`
                     );
-                    fetchSidebar(); // Refresh list to show new item
+                    fetchSidebar();
                 }
             }
             alert("Saved successfully!");
@@ -184,9 +174,7 @@ const AdminActivityEditor = () => {
         } catch (err) {
             console.error(err);
             alert("Failed to save.");
-        } finally {
-            setIsSaving(false);
-        }
+        } finally { setIsSaving(false); }
     };
 
     const handleDelete = async (id) => {
@@ -196,35 +184,46 @@ const AdminActivityEditor = () => {
             await apiCall(id);
             fetchSidebar();
             if (selectedActId === id) handleCreateNew();
-        } catch (err) {
-            alert("Failed to delete.");
-        }
+        } catch (err) { alert("Failed to delete."); }
     };
 
-    // --- Form Handlers ---
-    const updateQuestion = (idx, field, val) => {
+    // ──────────────────────────────────────
+    //  Question Helpers
+    // ──────────────────────────────────────
+
+    const updateQuestion = (idx, field, value) => {
         const newQs = [...form.practiceData.questions];
-        newQs[idx] = { ...newQs[idx], [field]: val };
+        let updatedQ = { ...newQs[idx], [field]: value };
+
+        // Type-specific defaults when switching qType
+        if (field === 'qType') {
+            if (value === 'fact_trick') {
+                updatedQ.options = ['Fact', 'Trick', 'Opinion'];
+                updatedQ.correctAnswer = '';
+            }
+            if (value === 'msq') {
+                updatedQ.options = updatedQ.options?.length >= 2 ? updatedQ.options : ['', ''];
+                updatedQ.correctAnswers = [];
+            }
+            if (value === 'mcq') {
+                updatedQ.options = updatedQ.options?.length >= 2 ? updatedQ.options : ['', ''];
+                updatedQ.correctAnswer = '';
+            }
+            if (value === 'multi_input' && (!updatedQ.multiFields || updatedQ.multiFields.length === 0)) {
+                updatedQ.multiFields = [{ label: 'Step 1', maxChars: 100 }];
+            }
+        }
+        newQs[idx] = updatedQ;
         setForm({ ...form, practiceData: { ...form.practiceData, questions: newQs } });
     };
 
-    const addQuestion = (type) => {
-        const newQ = {
-            qType: type,
-            prompt: '',
-            aiPrompt: 'Grade based on correctness.',
-            postAnswerTip: '',
-            options: type === 'mcq' || type === 'msq' ? ['Option 1', 'Option 2'] : [],
-            correctAnswer: '',
-            correctAnswers: [],
-            inputLabel: 'Target Answer',
-            maxChars: 100,
-            fillBlankText: 'The sky is <blank>.',
-            media: []
-        };
+    const addQuestion = () => {
         setForm({
             ...form,
-            practiceData: { ...form.practiceData, questions: [...form.practiceData.questions, newQ] }
+            practiceData: {
+                ...form.practiceData,
+                questions: [...form.practiceData.questions, { ...defaultQuestion }]
+            }
         });
     };
 
@@ -232,6 +231,50 @@ const AdminActivityEditor = () => {
         const newQs = form.practiceData.questions.filter((_, i) => i !== idx);
         setForm({ ...form, practiceData: { ...form.practiceData, questions: newQs } });
     };
+
+    // Multi-field helpers
+    const addMultiField = (qIdx) => {
+        const newQs = [...form.practiceData.questions];
+        if (!newQs[qIdx].multiFields) newQs[qIdx].multiFields = [];
+        newQs[qIdx].multiFields.push({ label: `Step ${newQs[qIdx].multiFields.length + 1}`, maxChars: 100 });
+        setForm({ ...form, practiceData: { ...form.practiceData, questions: newQs } });
+    };
+
+    const updateMultiField = (qIdx, fIdx, key, val) => {
+        const newQs = [...form.practiceData.questions];
+        newQs[qIdx].multiFields[fIdx][key] = val;
+        setForm({ ...form, practiceData: { ...form.practiceData, questions: newQs } });
+    };
+
+    const removeMultiField = (qIdx, fIdx) => {
+        const newQs = [...form.practiceData.questions];
+        newQs[qIdx].multiFields = newQs[qIdx].multiFields.filter((_, i) => i !== fIdx);
+        setForm({ ...form, practiceData: { ...form.practiceData, questions: newQs } });
+    };
+
+    // Per-question media helpers
+    const addMediaToQuestion = (qIdx, type) => {
+        const newQs = [...form.practiceData.questions];
+        if (!newQs[qIdx].media) newQs[qIdx].media = [];
+        newQs[qIdx].media.push({ url: '', mediaType: type });
+        setForm({ ...form, practiceData: { ...form.practiceData, questions: newQs } });
+    };
+
+    const updateQuestionMedia = (qIdx, mIdx, val) => {
+        const newQs = [...form.practiceData.questions];
+        newQs[qIdx].media[mIdx].url = val;
+        setForm({ ...form, practiceData: { ...form.practiceData, questions: newQs } });
+    };
+
+    const removeQuestionMedia = (qIdx, mIdx) => {
+        const newQs = [...form.practiceData.questions];
+        newQs[qIdx].media = newQs[qIdx].media.filter((_, i) => i !== mIdx);
+        setForm({ ...form, practiceData: { ...form.practiceData, questions: newQs } });
+    };
+
+    // ──────────────────────────────────────
+    //  Render
+    // ──────────────────────────────────────
 
     return (
         <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-800">
@@ -275,45 +318,31 @@ const AdminActivityEditor = () => {
                     </button>
                 </div>
 
-                {/* Scrollable Form Area */}
+                {/* Scrollable Form */}
                 <div className="flex-1 overflow-y-auto p-8">
                     <div className="max-w-4xl mx-auto space-y-8 pb-20">
-                        {/* Basic Info */}
+
+                        {/* ──── Basic Info ──── */}
                         <div className="bg-white p-6 rounded-xl shadow-sm border space-y-4">
                             <div>
                                 <label className="block text-sm font-bold mb-1">Configuration</label>
-                                <div className="flex gap-4">
+                                <div className="flex gap-4 flex-wrap">
                                     <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            checked={form.type === 'practice'}
-                                            onChange={() => setForm({ ...form, type: 'practice' })}
-                                        /> Practice (Questions)
+                                        <input type="radio" checked={form.type === 'practice'} onChange={() => setForm({ ...form, type: 'practice' })} /> Practice (Questions)
                                     </label>
                                     <label className="flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            checked={form.type === 'reading'}
-                                            onChange={() => setForm({ ...form, type: 'reading' })}
-                                        /> Reading (Link)
+                                        <input type="radio" checked={form.type === 'reading'} onChange={() => setForm({ ...form, type: 'reading' })} /> Reading (Link)
                                     </label>
                                     <div className="w-px bg-gray-200 mx-2" />
                                     <label className="flex items-center gap-2 cursor-pointer text-sm">
-                                        <input
-                                            type="checkbox"
-                                            checked={form.allowCalculator}
-                                            onChange={e => setForm({ ...form, allowCalculator: e.target.checked })}
-                                        /> Calculator
+                                        <input type="checkbox" checked={form.allowCalculator} onChange={e => setForm({ ...form, allowCalculator: e.target.checked })} /> Calculator
                                     </label>
                                     <label className="flex items-center gap-2 cursor-pointer text-sm">
-                                        <input
-                                            type="checkbox"
-                                            checked={form.showAgent}
-                                            onChange={e => setForm({ ...form, showAgent: e.target.checked })}
-                                        /> AI Tutor
+                                        <input type="checkbox" checked={form.showAgent} onChange={e => setForm({ ...form, showAgent: e.target.checked })} /> AI Tutor
                                     </label>
                                 </div>
                             </div>
+
                             <div>
                                 <label className="block text-sm font-bold mb-1">Activity Title</label>
                                 <input
@@ -323,46 +352,62 @@ const AdminActivityEditor = () => {
                                     onChange={e => setForm({ ...form, title: e.target.value })}
                                 />
                             </div>
+
                             {form.type === 'reading' && (
                                 <div>
                                     <label className="block text-sm font-bold mb-1">Document Link / URL</label>
-                                    <input
-                                        className="w-full p-2 border rounded-lg bg-gray-50"
-                                        placeholder="https://..."
+                                    <input className="w-full p-2 border rounded-lg bg-gray-50" placeholder="https://..."
                                         value={form.readingData.link}
-                                        onChange={e => setForm({ ...form, readingData: { link: e.target.value } })}
-                                    />
+                                        onChange={e => setForm({ ...form, readingData: { link: e.target.value } })} />
                                 </div>
                             )}
+
+                            {/* Activity-level YouTube and Playground URLs */}
+                            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                                <div>
+                                    <label className="block text-xs font-bold text-red-500 uppercase mb-1">YouTube Embed URL</label>
+                                    <input className="w-full p-2 border rounded-lg bg-red-50 text-sm" placeholder="https://www.youtube.com/embed/..."
+                                        value={form.youtubeEmbedUrl || ''}
+                                        onChange={e => setForm({ ...form, youtubeEmbedUrl: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-indigo-500 uppercase mb-1">Playground URL</label>
+                                    <input className="w-full p-2 border rounded-lg bg-indigo-50 text-sm" placeholder="https://codepen.io/..."
+                                        value={form.playgroundUrl || ''}
+                                        onChange={e => setForm({ ...form, playgroundUrl: e.target.value })} />
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Questions Editor (Practice Mode) */}
+                        {/* ──── Questions Editor ──── */}
                         {form.type === 'practice' && (
                             <div className="space-y-6">
                                 {form.practiceData.questions.map((q, idx) => (
-                                    <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border relative group">
-                                        {/* Question Header */}
+                                    <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border relative group hover:border-gray-300 transition-colors">
+
+                                        {/* Header */}
                                         <div className="flex justify-between items-start mb-4">
-                                            <div className="flex items-center gap-2">
-                                                <span className="bg-black text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">{idx + 1}</span>
+                                            <div className="flex items-center gap-3">
+                                                <span className="bg-black text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">{idx + 1}</span>
                                                 <select
                                                     value={q.qType}
                                                     onChange={e => updateQuestion(idx, 'qType', e.target.value)}
-                                                    className="font-bold bg-transparent outline-none cursor-pointer hover:underline"
+                                                    className="font-bold bg-gray-100 px-3 py-1.5 rounded-lg outline-none cursor-pointer text-sm"
                                                 >
-                                                    <option value="mcq">Multiple Choice</option>
-                                                    <option value="msq">Multiple Select</option>
-                                                    <option value="single_input">Short Answer</option>
+                                                    <option value="mcq">Multiple Choice (Single)</option>
+                                                    <option value="msq">Multiple Select (Multi)</option>
+                                                    <option value="single_input">Single Input</option>
+                                                    <option value="multi_input">Multi-Step Input</option>
                                                     <option value="fill_blanks">Fill Blanks</option>
                                                     <option value="fact_trick">Fact / Trick / Opinion</option>
                                                 </select>
                                             </div>
-                                            <button onClick={() => removeQuestion(idx)} className="text-gray-300 hover:text-red-500"><FaTrash /></button>
+                                            <button onClick={() => removeQuestion(idx)} className="text-gray-300 hover:text-red-500 p-1"><FaTrash size={14} /></button>
                                         </div>
 
                                         {/* Prompt */}
                                         <div className="mb-4">
-                                            <label className="text-xs font-bold text-gray-500 uppercase">Question Prompt</label>
+                                            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Question Prompt</label>
                                             <RichTextEditor
                                                 content={q.prompt}
                                                 onChange={val => updateQuestion(idx, 'prompt', val)}
@@ -370,81 +415,238 @@ const AdminActivityEditor = () => {
                                             />
                                         </div>
 
-                                        {/* Media Inputs (Simplified) */}
-                                        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                                            <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Attachment URL (Optional)</label>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    className="flex-1 p-2 text-sm border rounded bg-white"
-                                                    placeholder="Image or Video URL..."
-                                                    value={q.media?.[0]?.url || ''}
-                                                    onChange={e => {
-                                                        // Simple single media handling for now
-                                                        const newVal = e.target.value;
-                                                        const newMedia = newVal ? [{ url: newVal, mediaType: 'image' }] : [];
-                                                        updateQuestion(idx, 'media', newMedia);
-                                                    }}
-                                                />
+                                        {/* ──── Per-Question Media Section ──── */}
+                                        <div className="mb-4 p-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1">
+                                                    <FaImage size={10} /> Question Media
+                                                </label>
+                                                <div className="flex gap-2">
+                                                    <button onClick={() => addMediaToQuestion(idx, 'image')}
+                                                        className="bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm font-bold text-[10px] flex gap-1 items-center hover:bg-blue-50 hover:border-blue-200 transition-all">
+                                                        <FaImage size={10} /> IMG
+                                                    </button>
+                                                    <button onClick={() => addMediaToQuestion(idx, 'video')}
+                                                        className="bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm font-bold text-[10px] flex gap-1 items-center hover:bg-purple-50 hover:border-purple-200 transition-all">
+                                                        <FaVideo size={10} /> VIDEO
+                                                    </button>
+                                                    <button onClick={() => addMediaToQuestion(idx, 'embed')}
+                                                        className="bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm font-bold text-[10px] flex gap-1 items-center hover:bg-green-50 hover:border-green-200 transition-all">
+                                                        <FaGlobe size={10} /> EMBED
+                                                    </button>
+                                                </div>
                                             </div>
+                                            {q.media && q.media.length > 0 ? (
+                                                <div className="space-y-2">
+                                                    {q.media.map((m, mIdx) => (
+                                                        <div key={mIdx} className="flex gap-2 items-center bg-white p-2 rounded-lg shadow-sm border border-gray-100">
+                                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-[8px] uppercase ${m.mediaType === 'image' ? 'bg-blue-100 text-blue-600'
+                                                                    : m.mediaType === 'video' ? 'bg-purple-100 text-purple-600'
+                                                                        : 'bg-green-100 text-green-600'
+                                                                }`}>
+                                                                {m.mediaType}
+                                                            </div>
+                                                            <input
+                                                                className="flex-1 p-1.5 bg-transparent outline-none font-medium text-sm text-gray-700"
+                                                                placeholder="Paste URL..."
+                                                                value={m.url}
+                                                                onChange={e => updateQuestionMedia(idx, mIdx, e.target.value)}
+                                                            />
+                                                            <button onClick={() => removeQuestionMedia(idx, mIdx)}
+                                                                className="w-6 h-6 rounded-full bg-red-50 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">
+                                                                <FaTimes size={10} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <p className="text-center text-gray-300 text-xs font-bold py-1">No media added yet</p>
+                                            )}
                                         </div>
 
-                                        {/* Specific Type Inputs */}
-                                        {(q.qType === 'mcq' || q.qType === 'msq') && (
-                                            <div className="mb-4">
-                                                <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Options</label>
-                                                {q.options.map((opt, oIdx) => (
-                                                    <div key={oIdx} className="flex items-center gap-2 mb-2">
-                                                        <div className={`w-4 h-4 border rounded-full ${q.qType === 'mcq' && q.correctAnswer === opt ? 'bg-green-500' : ''} ${q.qType === 'msq' && q.correctAnswers?.includes(opt) ? 'bg-green-500' : ''}`} />
-                                                        <input
-                                                            className="flex-1 p-2 border rounded text-sm"
-                                                            value={opt}
-                                                            onChange={e => {
-                                                                const newOpts = [...q.options];
-                                                                newOpts[oIdx] = e.target.value;
-                                                                updateQuestion(idx, 'options', newOpts);
-                                                            }}
-                                                        />
-                                                        <button
-                                                            onClick={() => {
-                                                                // Toggle correct answer logic
-                                                                if (q.qType === 'mcq') updateQuestion(idx, 'correctAnswer', opt);
-                                                                else {
+                                        {/* ──── MCQ Options ──── */}
+                                        {q.qType === 'mcq' && (
+                                            <div className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                                <div className="flex justify-between items-center mb-3">
+                                                    <span className="text-xs font-bold text-gray-500 uppercase">MCQ Options (click ✓ for correct)</span>
+                                                    <button onClick={() => updateQuestion(idx, 'options', [...(q.options || []), ''])}
+                                                        className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100">+ Add Option</button>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    {(q.options || []).map((opt, oi) => (
+                                                        <div key={oi} className="flex gap-2 items-center">
+                                                            <button onClick={() => updateQuestion(idx, 'correctAnswer', opt)}
+                                                                className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${q.correctAnswer === opt && opt !== '' ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-gray-200 text-gray-300 hover:border-green-300'
+                                                                    }`}><FaCheck size={10} /></button>
+                                                            <input className="flex-1 p-2 bg-white rounded-lg border border-gray-200 text-sm font-medium outline-none focus:border-black"
+                                                                placeholder={`Option ${oi + 1}`}
+                                                                value={opt}
+                                                                onChange={e => { const n = [...q.options]; n[oi] = e.target.value; updateQuestion(idx, 'options', n); }}
+                                                            />
+                                                            {q.options.length > 2 && (
+                                                                <button onClick={() => { const n = q.options.filter((_, i) => i !== oi); if (q.correctAnswer === opt) updateQuestion(idx, 'correctAnswer', ''); updateQuestion(idx, 'options', n); }}
+                                                                    className="w-6 h-6 rounded-full bg-red-50 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white"><FaTimes size={10} /></button>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* ──── MSQ Options (Multiple Correct) ──── */}
+                                        {q.qType === 'msq' && (
+                                            <div className="mb-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                                <div className="flex justify-between items-center mb-3">
+                                                    <span className="text-xs font-bold text-blue-600 uppercase">MSQ Options — Select ALL Correct</span>
+                                                    <button onClick={() => updateQuestion(idx, 'options', [...(q.options || []), ''])}
+                                                        className="text-xs font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-full hover:bg-blue-200">+ Add Option</button>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    {(q.options || []).map((opt, oi) => {
+                                                        const isCorrect = (q.correctAnswers || []).includes(opt) && opt !== '';
+                                                        return (
+                                                            <div key={oi} className="flex gap-2 items-center">
+                                                                <button onClick={() => {
+                                                                    if (opt === '') return;
                                                                     const current = q.correctAnswers || [];
-                                                                    const text = opt;
-                                                                    if (current.includes(text)) updateQuestion(idx, 'correctAnswers', current.filter(c => c !== text));
-                                                                    else updateQuestion(idx, 'correctAnswers', [...current, text]);
-                                                                }
-                                                            }}
-                                                            className="text-xs text-green-600 font-bold hover:underline"
-                                                        >
-                                                            Mark Correct
-                                                        </button>
-                                                        <button onClick={() => updateQuestion(idx, 'options', q.options.filter((_, i) => i !== oIdx))} className="text-gray-400 hover:text-red-500"><FaTimes /></button>
-                                                    </div>
-                                                ))}
-                                                <button onClick={() => updateQuestion(idx, 'options', [...q.options, `Option ${q.options.length + 1}`])} className="text-sm text-blue-600 font-medium">+ Add Option</button>
+                                                                    const newCorrect = isCorrect ? current.filter(a => a !== opt) : [...current, opt];
+                                                                    updateQuestion(idx, 'correctAnswers', newCorrect);
+                                                                }}
+                                                                    className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${isCorrect ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white border-gray-200 text-gray-300 hover:border-blue-300'
+                                                                        }`}><FaCheck size={10} /></button>
+                                                                <input className="flex-1 p-2 bg-white rounded-lg border border-blue-100 text-sm font-medium outline-none focus:border-blue-400"
+                                                                    placeholder={`Option ${oi + 1}`}
+                                                                    value={opt}
+                                                                    onChange={e => { const n = [...q.options]; n[oi] = e.target.value; updateQuestion(idx, 'options', n); }}
+                                                                />
+                                                                {q.options.length > 2 && (
+                                                                    <button onClick={() => {
+                                                                        const n = q.options.filter((_, i) => i !== oi);
+                                                                        const nc = (q.correctAnswers || []).filter(a => a !== opt);
+                                                                        updateQuestion(idx, 'correctAnswers', nc);
+                                                                        updateQuestion(idx, 'options', n);
+                                                                    }}
+                                                                        className="w-6 h-6 rounded-full bg-red-50 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white"><FaTimes size={10} /></button>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                                <p className="text-[10px] text-blue-500 mt-2 text-center font-bold uppercase tracking-widest">Click checkmarks to select ALL correct answers</p>
                                             </div>
                                         )}
 
+                                        {/* ──── Fact / Trick / Opinion ──── */}
+                                        {q.qType === 'fact_trick' && (
+                                            <div className="mb-4 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                                                <span className="text-xs font-bold text-amber-600 uppercase block mb-3">Fact / Trick / Opinion</span>
+                                                <div className="space-y-2">
+                                                    {['Fact', 'Trick', 'Opinion'].map((label, i) => (
+                                                        <div key={i} className="flex gap-2 items-center">
+                                                            <button onClick={() => updateQuestion(idx, 'correctAnswer', q.options?.[i] || label)}
+                                                                className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${q.correctAnswer === (q.options?.[i] || label) && q.options?.[i] !== '' ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white border-gray-200 text-gray-300 hover:border-amber-300'
+                                                                    }`}><FaCheck size={10} /></button>
+                                                            <div className="flex-1 p-2 bg-white rounded-lg border border-amber-100 flex items-center gap-3">
+                                                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${i === 0 ? 'bg-green-100 text-green-600' : i === 1 ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                                                                    }`}>{label}</span>
+                                                                <input className="flex-1 bg-transparent outline-none font-medium text-sm" placeholder={`${label} text...`}
+                                                                    value={q.options?.[i] || ''}
+                                                                    onChange={e => {
+                                                                        const newOpts = [...(q.options || ['', '', ''])];
+                                                                        while (newOpts.length < 3) newOpts.push('');
+                                                                        newOpts[i] = e.target.value;
+                                                                        updateQuestion(idx, 'options', newOpts);
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <p className="text-[10px] text-amber-500 mt-2 text-center font-bold uppercase tracking-widest">Click checkmark to mark the correct category</p>
+                                            </div>
+                                        )}
+
+                                        {/* ──── Single Input ──── */}
                                         {q.qType === 'single_input' && (
-                                            <div className="mb-4">
-                                                <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">Valid Answers (Comma separated)</label>
-                                                <input
-                                                    className="w-full p-2 border rounded bg-yellow-50 font-mono text-sm"
-                                                    value={q.correctAnswer}
-                                                    onChange={e => updateQuestion(idx, 'correctAnswer', e.target.value)}
-                                                    placeholder="e.g., 42, forty-two, 42.0"
-                                                />
+                                            <div className="mb-4 flex gap-4">
+                                                <div className="flex-1">
+                                                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Input Label</label>
+                                                    <input className="w-full p-2 bg-gray-50 rounded-lg border outline-none focus:border-black text-sm font-medium"
+                                                        placeholder="e.g., Your Answer" value={q.inputLabel || ''}
+                                                        onChange={e => updateQuestion(idx, 'inputLabel', e.target.value)} />
+                                                </div>
+                                                <div className="w-24">
+                                                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Max Chars</label>
+                                                    <input className="w-full p-2 bg-gray-50 rounded-lg border outline-none focus:border-black text-sm font-bold text-center"
+                                                        type="number" value={q.maxChars || 500}
+                                                        onChange={e => updateQuestion(idx, 'maxChars', parseInt(e.target.value, 10) || 500)} />
+                                                </div>
                                             </div>
                                         )}
 
-                                        {/* AI Grading Config */}
-                                        <div className="grid grid-cols-2 gap-4 mt-6 border-t pt-4">
+                                        {/* ──── Multi-Step Input ──── */}
+                                        {q.qType === 'multi_input' && (
+                                            <div className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                                <div className="flex justify-between items-center mb-3">
+                                                    <span className="text-xs font-bold text-gray-500 uppercase">Input Fields (Steps)</span>
+                                                    <button onClick={() => addMultiField(idx)}
+                                                        className="text-xs font-bold text-teal-600 bg-teal-50 px-3 py-1 rounded-full hover:bg-teal-100">+ Add Step</button>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    {(q.multiFields || []).map((f, fIdx) => (
+                                                        <div key={fIdx} className="flex gap-3 items-center">
+                                                            <div className="w-7 h-7 rounded-full bg-gray-200 text-gray-500 font-bold flex items-center justify-center text-xs flex-shrink-0">{fIdx + 1}</div>
+                                                            <input className="flex-1 p-2 rounded-lg border border-gray-200 text-sm font-medium outline-none focus:border-black"
+                                                                placeholder="Label (e.g. Step 1)" value={f.label}
+                                                                onChange={e => updateMultiField(idx, fIdx, 'label', e.target.value)} />
+                                                            <input className="w-16 p-2 rounded-lg border border-gray-200 text-sm font-bold outline-none focus:border-black text-center"
+                                                                type="number" placeholder="Max" value={f.maxChars}
+                                                                onChange={e => updateMultiField(idx, fIdx, 'maxChars', parseInt(e.target.value, 10) || 100)} />
+                                                            <button onClick={() => removeMultiField(idx, fIdx)}
+                                                                className="text-red-300 hover:text-red-500"><FaTimes size={12} /></button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* ──── Fill in the Blanks ──── */}
+                                        {q.qType === 'fill_blanks' && (
+                                            <div className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                                <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">
+                                                    Blank Text — Use <code className="bg-gray-200 px-1 rounded text-[10px]">[$N]</code> for blanks (N = max chars)
+                                                </label>
+                                                <textarea
+                                                    className="w-full bg-white p-3 rounded-lg border outline-none font-mono text-sm text-gray-600 min-h-[80px] focus:border-black"
+                                                    placeholder="Ex: The capital of France is [$5]. Its currency is the [$4]."
+                                                    value={q.fillBlankText || ''}
+                                                    onChange={e => updateQuestion(idx, 'fillBlankText', e.target.value)}
+                                                />
+                                                {/* Live Preview */}
+                                                {q.fillBlankText && (
+                                                    <div className="mt-3 p-3 bg-white rounded-lg border border-gray-100">
+                                                        <p className="text-[10px] font-bold text-gray-400 mb-1 uppercase">Preview</p>
+                                                        <div className="text-sm text-gray-700 leading-8">
+                                                            {q.fillBlankText.split(/(\[\$.*?\])/).map((part, pi) => {
+                                                                if (part.startsWith('[$')) {
+                                                                    const max = part.match(/\d+/)?.[0] || '?';
+                                                                    return <span key={pi} className="inline-block mx-1 px-3 py-0.5 bg-teal-50 border-b-2 border-teal-400 rounded-t text-teal-700 font-bold text-xs">_{max} chars_</span>;
+                                                                }
+                                                                return <span key={pi}>{part}</span>;
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* ──── AI Grading Config ──── */}
+                                        <div className="grid grid-cols-2 gap-4 mt-4 border-t pt-4">
                                             <div>
                                                 <label className="text-xs font-bold text-purple-600 uppercase mb-1 block">AI Grading Prompt</label>
                                                 <textarea
-                                                    className="w-full p-2 border border-purple-100 rounded bg-purple-50 text-xs min-h-[80px]"
-                                                    value={q.aiPrompt}
+                                                    className="w-full p-2 border border-purple-100 rounded-lg bg-purple-50 text-xs min-h-[80px] outline-none focus:border-purple-300"
+                                                    value={q.aiPrompt || ''}
                                                     onChange={e => updateQuestion(idx, 'aiPrompt', e.target.value)}
                                                     placeholder="Instructions for the AI grader..."
                                                 />
@@ -452,8 +654,8 @@ const AdminActivityEditor = () => {
                                             <div>
                                                 <label className="text-xs font-bold text-blue-600 uppercase mb-1 block">Post-Answer Tip/Feedback</label>
                                                 <textarea
-                                                    className="w-full p-2 border border-blue-100 rounded bg-blue-50 text-xs min-h-[80px]"
-                                                    value={q.postAnswerTip}
+                                                    className="w-full p-2 border border-blue-100 rounded-lg bg-blue-50 text-xs min-h-[80px] outline-none focus:border-blue-300"
+                                                    value={q.postAnswerTip || ''}
                                                     onChange={e => updateQuestion(idx, 'postAnswerTip', e.target.value)}
                                                     placeholder="Helpful explanation shown after submission..."
                                                 />
@@ -462,18 +664,13 @@ const AdminActivityEditor = () => {
                                     </div>
                                 ))}
 
-                                {/* Add Question Buttons */}
-                                <div className="grid grid-cols-3 gap-2 py-4">
-                                    {['mcq', 'single_input', 'fill_blanks'].map(type => (
-                                        <button
-                                            key={type}
-                                            onClick={() => addQuestion(type)}
-                                            className="p-3 border-2 border-dashed border-gray-300 rounded-xl hover:border-black hover:bg-gray-50 text-gray-500 hover:text-black font-bold transition flex items-center justify-center gap-2"
-                                        >
-                                            <FaPlus /> Add {type.replace('_', ' ').toUpperCase()}
-                                        </button>
-                                    ))}
-                                </div>
+                                {/* Add Question Button */}
+                                <button
+                                    onClick={addQuestion}
+                                    className="w-full py-6 border-2 border-dashed border-gray-300 rounded-xl text-gray-400 font-bold text-lg hover:bg-gray-50 hover:border-black hover:text-black transition-all flex items-center justify-center gap-2"
+                                >
+                                    <FaPlus /> ADD QUESTION
+                                </button>
                             </div>
                         )}
                     </div>
@@ -482,4 +679,5 @@ const AdminActivityEditor = () => {
         </div>
     );
 };
+
 export default AdminActivityEditor;
