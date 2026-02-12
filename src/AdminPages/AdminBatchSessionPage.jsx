@@ -593,9 +593,10 @@ const LinkActionButton = ({ url, label, icon: Icon, colorClass, isDark }) => {
   );
 };
 
-// --- Session Card ---
+// --- SessionCard ---
 const SessionCard = ({ session, isDark, onClick, batchType, onDelete }) => {
   const isOnline = (batchType || '').toUpperCase() === "ONLINE";
+  const navigate = useNavigate();
 
   return (
     <div
@@ -616,6 +617,21 @@ const SessionCard = ({ session, isDark, onClick, batchType, onDelete }) => {
           title="Delete session"
         >
           <FaTrash size={12} />
+        </button>
+      </div>
+
+      <div className="absolute bottom-2 right-2 flex gap-2 z-10 opacity-0 group-hover:opacity-100 transition">
+        <button
+          onClick={(e) => { e.stopPropagation(); navigate(`/admin/dashboard/batch-session/${session._id}/sections`); }}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-black text-white hover:opacity-80 transition flex items-center gap-1 shadow-sm"
+        >
+          <FaLayerGroup /> Content
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); navigate(`/admin/dashboard/batch-session/${session._id}/review`); }}
+          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:opacity-80 transition flex items-center gap-1 shadow-sm"
+        >
+          <FaCheck /> Review
         </button>
       </div>
 

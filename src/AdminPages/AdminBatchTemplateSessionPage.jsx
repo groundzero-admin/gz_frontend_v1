@@ -205,6 +205,7 @@ const TemplateSessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSessio
 
 // --- Template Session Card ---
 const TemplateSessionCard = ({ session, isDark, onClick, onDelete }) => {
+    const navigate = useNavigate();
     return (
         <div
             onClick={onClick}
@@ -225,6 +226,15 @@ const TemplateSessionCard = ({ session, isDark, onClick, onDelete }) => {
                     title="Delete session"
                 >
                     <FaTrash size={12} />
+                </button>
+            </div>
+
+            <div className="absolute bottom-2 right-2">
+                <button
+                    onClick={(e) => { e.stopPropagation(); navigate(`/admin/dashboard/template-session/${session._id}/sections`); }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-black text-white hover:opacity-80 transition flex items-center gap-1 shadow-sm"
+                >
+                    <FaEdit /> Manage Content
                 </button>
             </div>
 

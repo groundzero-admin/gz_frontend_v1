@@ -54,6 +54,10 @@ import AdminAllBoardsForABatch from './AdminPages/AdminListAllBoardsForABstch.js
 import AdminBatchTemplatePage from './AdminPages/AdminBatchTemplatePage.jsx'
 import AdminBatchTemplateSessionPage from './AdminPages/AdminBatchTemplateSessionPage.jsx'
 // import StudentWhiteboardPage from './StudentPages/StudentWhiteBoard.jsx'
+import AdminSectionPage from './AdminPages/AdminSectionPage.jsx'
+import AdminActivityEditor from './AdminPages/AdminActivityEditor.jsx'
+import AdminActivityReview from './AdminPages/AdminActivityReview.jsx'
+import StudentActivityPage from './StudentPages/StudentActivityPage.jsx'
 
 
 
@@ -131,12 +135,23 @@ function App() {
         <Route path="collaborativeboard/batches" element={< ActiveBatchesPageForBoard />} />
         <Route path="collaborativeboard/batches/:batchId" element={<  AdminAllBoardsForABatch />} />
 
+        {/* Activity System Routes */}
+        <Route path="template-session/:templateSessionId/sections" element={<AdminSectionPage />} />
+        <Route path="template-section/:sectionId/activities" element={<AdminActivityEditor />} />
+        <Route path="batch-session/:batchSessionId/sections" element={<AdminSectionPage />} />
+        <Route path="batch-section/:batchSectionId/activities" element={<AdminActivityEditor />} />
+        <Route path="batch-session/:batchSessionId/review" element={<AdminActivityReview />} />
+
 
       </Route>
 
 
 
 
+
+
+      {/* Student Activity Player (Standalone) */}
+      <Route path="/student/activity/batch-session/:batchSessionId" element={<StudentActivityPage />} />
 
       <Route path="/student/dashboard" element={< StudentLayout />}>
         {/* Default page at /admin/dashboard */}

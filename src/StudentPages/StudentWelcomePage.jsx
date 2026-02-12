@@ -1,27 +1,25 @@
-import React, { useState, useEffect , useRef } from 'react';
-import { useOutletContext } from 'react-router-dom'; 
-import { motion, AnimatePresence } from 'framer-motion'; 
-import { 
-  Rocket, 
-  CheckCircle2, 
-  Sparkles, 
-  ExternalLink, 
-  MapPin, 
-  Clock, 
-  Video, 
-  CalendarPlus, 
-  Star,
-  BookOpen 
+import React, { useState, useEffect, useRef } from 'react';
+import { useOutletContext } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Rocket,
+  CheckCircle2,
+  Sparkles,
+  MapPin,
+  Clock,
+  Video,
+  CalendarPlus,
+  Star
 } from 'lucide-react';
-import { BsStars } from "react-icons/bs"; 
-import { getMyLiveBatches, getstudentsbatchprogress } from '../api.js'; 
+import { BsStars } from "react-icons/bs";
+import { getMyLiveBatches, getstudentsbatchprogress } from '../api.js';
 
 // --- Optimized Animation Variants ---
 const containerVariants = {
   hidden: { opacity: 0 },
-  visible: { 
+  visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.05 } 
+    transition: { staggerChildren: 0.05 }
   },
   exit: { opacity: 0 }
 };
@@ -63,30 +61,30 @@ const WelcomeBanner = ({ username }) => {
   }, []);
 
   return (
-    <motion.div 
+    <motion.div
       variants={bannerVariants}
       initial="hidden"
       animate="visible"
       className="relative w-full rounded-3xl overflow-hidden p-8 md:p-10 mb-8 shadow-2xl transform-gpu"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e1b4b] to-[#312e81] z-0"></div>
-      
+
       {/* Static Background Blobs for Performance */}
       <div className="absolute top-[-50%] left-[-20%] w-[500px] h-[500px] bg-cyan-500/20 rounded-full blur-[80px] pointer-events-none opacity-40" />
       <div className="absolute bottom-[-50%] right-[-20%] w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-[80px] pointer-events-none opacity-30" />
-      
+
       <div className="relative z-10 flex flex-col gap-4">
         <div className="self-start px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-950/30 backdrop-blur-md flex items-center gap-2">
-           <BsStars className="text-cyan-400 text-xs" />
-           <span className="text-cyan-300 text-xs font-bold uppercase tracking-wider">Welcome to your universe</span>
+          <BsStars className="text-cyan-400 text-xs" />
+          <span className="text-cyan-300 text-xs font-bold uppercase tracking-wider">Welcome to your universe</span>
         </div>
         <div>
-           <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-purple-200 mb-2 drop-shadow-[0_0_10px_rgba(34,211,238,0.3)]">
-             Spark Ground Zero
-           </h1>
-           <p className="text-xl md:text-2xl font-medium text-gray-300 flex items-center gap-2">
-              <span className="text-2xl">{greetingData.icon}</span> {greetingData.text},  <span className="text-cyan-400 font-bold">{username}</span>!
-           </p>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-purple-200 mb-2 drop-shadow-[0_0_10px_rgba(34,211,238,0.3)]">
+            Spark Ground Zero
+          </h1>
+          <p className="text-xl md:text-2xl font-medium text-gray-300 flex items-center gap-2">
+            <span className="text-2xl">{greetingData.icon}</span> {greetingData.text},  <span className="text-cyan-400 font-bold">{username}</span>!
+          </p>
         </div>
         <p className="text-gray-400 max-w-3xl text-sm md:text-base leading-relaxed">
           Ready to explore, create, and discover? Your learning adventure continues here✨
@@ -116,9 +114,9 @@ const SessionCard = ({ session, status, isDark }) => {
             target={session.meetingLinkOrLocation ? "_blank" : "_self"}
             rel="noopener noreferrer"
             className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold shadow-lg
-              ${session.sessionType === 'ONLINE' 
-                 ? "bg-cyan-500 hover:bg-cyan-400 text-black shadow-cyan-500/20" 
-                 : "bg-purple-600 hover:bg-purple-500 text-white shadow-purple-500/20"
+              ${session.sessionType === 'ONLINE'
+                ? "bg-cyan-500 hover:bg-cyan-400 text-black shadow-cyan-500/20"
+                : "bg-purple-600 hover:bg-purple-500 text-white shadow-purple-500/20"
               }
               ${!session.meetingLinkOrLocation ? 'opacity-50 cursor-not-allowed pointer-events-none grayscale' : ''}
             `}
@@ -127,36 +125,29 @@ const SessionCard = ({ session, status, isDark }) => {
             {session.sessionType === 'ONLINE' ? "Open GMeet" : "View Location"}
           </a>
 
-          <a
-            href={session.googleClassroomLink || "#"}
-            target={session.googleClassroomLink ? "_blank" : "_self"}
-            rel="noopener noreferrer"
+          <button
+            onClick={() => window.open(`/student/activity/batch-session/${session._id}`, '_blank')}
             className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold border
               ${isDark ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black"}
-              ${!session.googleClassroomLink ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
             `}
           >
-            <BookOpen className="w-4 h-4" />
-            Classroom
-          </a>
+            <Rocket className="w-4 h-4" />
+            Activity
+          </button>
         </div>
       );
     }
 
     if (status === 'completed') {
-       if (session.sessionType === 'OFFLINE') return null;
+      if (session.sessionType === 'OFFLINE') return null;
       return (
-        <a
-          href={session.googleClassroomLink || "#"}
-          target={session.googleClassroomLink ? "_blank" : "_self"}
-          rel="noopener noreferrer"
-          className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20 rounded-xl transition-all duration-300 text-sm font-bold
-             ${!session.googleClassroomLink ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
-          `}
+        <button
+          onClick={() => window.open(`/student/activity/batch-session/${session._id}`, '_blank')}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20 rounded-xl transition-all duration-300 text-sm font-bold"
         >
-          <ExternalLink className="w-4 h-4" />
-          Open Classroom
-        </a>
+          <Rocket className="w-4 h-4" />
+          Activity
+        </button>
       );
     }
 
@@ -164,7 +155,7 @@ const SessionCard = ({ session, status, isDark }) => {
       return (
         <div className="flex flex-col xl:flex-row gap-2 w-full">
           <a
-            href={ `./dashboard/catchup-session` }
+            href={`./dashboard/catchup-session`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl transition-all duration-300 text-sm font-bold shadow-amber-500/20 shadow-lg"
@@ -173,18 +164,15 @@ const SessionCard = ({ session, status, isDark }) => {
             Catch Up
           </a>
           {session.sessionType !== 'OFFLINE' && (
-            <a
-              href={session.googleClassroomLink || "#"}
-              target={session.googleClassroomLink ? "_blank" : "_self"}
-              rel="noopener noreferrer"
+            <button
+              onClick={() => window.open(`/student/activity/batch-session/${session._id}`, '_blank')}
               className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold border
                   ${isDark ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black"}
-                  ${!session.googleClassroomLink ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}
               `}
             >
-              <BookOpen className="w-4 h-4" />
-              Classroom
-            </a>
+              <Rocket className="w-4 h-4" />
+              Activity
+            </button>
           )}
         </div>
       );
@@ -197,8 +185,8 @@ const SessionCard = ({ session, status, isDark }) => {
 
   return (
     <motion.div
-      layout="position" 
-      variants={itemVariants} 
+      layout="position"
+      variants={itemVariants}
       className={`backdrop-blur-sm border-2 rounded-3xl p-5 transition-all duration-300 flex flex-col h-full transform-gpu
         ${statusStyles[status]}
         ${isDark ? "bg-gray-900/40" : "bg-white/60"}
@@ -232,7 +220,7 @@ const SessionCard = ({ session, status, isDark }) => {
         )}
 
         {session.description && (
-          <div 
+          <div
             onMouseEnter={() => setIsDescHovered(true)}
             onMouseLeave={() => setIsDescHovered(false)}
             className={`relative rounded-xl p-3 mt-2 cursor-pointer border transition-colors duration-300
@@ -247,12 +235,12 @@ const SessionCard = ({ session, status, isDark }) => {
               <p className={`text-xs leading-relaxed whitespace-pre-line pb-4 ${isDark ? "text-gray-300" : "text-gray-600"}`}>
                 {session.description}
               </p>
-              
-              <div 
+
+              <div
                 className={`absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t transition-opacity duration-300 pointer-events-none
                 ${isDark ? "from-[#111827] to-transparent" : "from-white to-transparent"}
                 ${isDescHovered ? "opacity-0" : "opacity-100"}
-                `} 
+                `}
               />
             </div>
           </div>
@@ -271,7 +259,7 @@ const SessionCard = ({ session, status, isDark }) => {
 const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const isUpcoming = type === "upcoming";
-  const INITIAL_COUNT = 3; 
+  const INITIAL_COUNT = 3;
   const headerRef = useRef(null); // Ref for the top of the section
 
   const [visibleCount, setVisibleCount] = useState(isUpcoming ? INITIAL_COUNT : sessions.length);
@@ -300,9 +288,9 @@ const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark
   // Scroll to new items ONLY when expanding (Show More)
   useEffect(() => {
     if (visibleCount > INITIAL_COUNT && lastCardRef.current) {
-        setTimeout(() => {
-            lastCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
-        }, 300);
+      setTimeout(() => {
+        lastCardRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
     }
   }, [visibleCount]);
 
@@ -360,11 +348,11 @@ const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark
         variants={accordionVariants}
         initial={defaultExpanded ? "expanded" : "collapsed"}
         animate={isExpanded ? "expanded" : "collapsed"}
-        transition={{ duration: 0.3, ease: "easeInOut" }} 
+        transition={{ duration: 0.3, ease: "easeInOut" }}
         className="border-2 border-t-0 rounded-b-2xl flex flex-col gap-6 origin-top"
-        style={{ 
-           borderColor: isDark ? 'rgba(6,182,212,0.1)' : 'rgba(6,182,212,0.2)',
-           backgroundColor: isDark ? 'rgba(8,51,68,0.2)' : 'rgba(236,254,255,0.5)'
+        style={{
+          borderColor: isDark ? 'rgba(6,182,212,0.1)' : 'rgba(6,182,212,0.2)',
+          backgroundColor: isDark ? 'rgba(8,51,68,0.2)' : 'rgba(236,254,255,0.5)'
         }}
       >
         <div className={`p-5 ${config.borderColor} ${config.bgColor}`}>
@@ -373,8 +361,8 @@ const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark
               {/* ✅ FIXED: Added layout prop to the GRID container and a spring transition 
                  This ensures the box shrinks smoothly when items are removed 
               */}
-              <motion.div 
-                layout 
+              <motion.div
+                layout
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
               >
@@ -382,9 +370,9 @@ const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark
                   {visibleSessions.map((session, index) => {
                     const isLast = index === visibleSessions.length - 1;
                     return (
-                      <motion.div 
-                        key={session._id} 
-                        layout="position" 
+                      <motion.div
+                        key={session._id}
+                        layout="position"
                         initial="hidden"
                         animate="visible"
                         // Faster exit animation so the container can shrink quickly
@@ -404,8 +392,8 @@ const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark
                   <button
                     onClick={showLoadMore ? handleLoadMore : handleShowLess}
                     className={`group flex items-center gap-2 px-6 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300 border
-                      ${isDark 
-                        ? "bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white hover:border-gray-500" 
+                      ${isDark
+                        ? "bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-white hover:border-gray-500"
                         : "bg-white/80 border-gray-200 text-gray-500 hover:bg-white hover:text-black hover:border-gray-400 shadow-sm"
                       }
                     `}
@@ -430,10 +418,10 @@ const SessionSection = ({ title, sessions, type, defaultExpanded = false, isDark
 const StudentDashboardPage = () => {
   const { isDark, userData } = useOutletContext();
   const username = userData?.username || "Explorer";
-  
+
   const [liveBatches, setLiveBatches] = useState([]);
-  const [selectedBatchId, setSelectedBatchId] = useState(null); 
-  const [batchData, setBatchData] = useState(null); 
+  const [selectedBatchId, setSelectedBatchId] = useState(null);
+  const [batchData, setBatchData] = useState(null);
   const [isLoadingBatches, setIsLoadingBatches] = useState(true);
   const [isLoadingData, setIsLoadingData] = useState(false);
 
@@ -463,13 +451,13 @@ const StudentDashboardPage = () => {
 
     const fetchBatchStatus = async () => {
       setIsLoadingData(true);
-      setBatchData(null); 
+      setBatchData(null);
 
       try {
         const response = await getstudentsbatchprogress({ batch_obj_id: selectedBatchId });
         if (active) {
-            if (response.success) setBatchData(response.data);
-            else setBatchData(null);
+          if (response.success) setBatchData(response.data);
+          else setBatchData(null);
         }
       } catch (err) {
         console.error("Failed to fetch batch status", err);
@@ -484,24 +472,24 @@ const StudentDashboardPage = () => {
 
   return (
     <div className="relative flex flex-col pb-20 max-w-7xl mx-auto min-h-screen">
-      
+
       {/* PERFORMANCE FIX: Static Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: -1 }}>
-          <div className="absolute top-[-20%] left-[-20%] w-[800px] h-[800px] bg-cyan-500/10 rounded-full blur-[100px] opacity-40 transform-gpu" />
-          <div className="absolute bottom-[-20%] right-[-20%] w-[800px] h-[800px] bg-purple-600/10 rounded-full blur-[100px] opacity-30 transform-gpu" />
+        <div className="absolute top-[-20%] left-[-20%] w-[800px] h-[800px] bg-cyan-500/10 rounded-full blur-[100px] opacity-40 transform-gpu" />
+        <div className="absolute bottom-[-20%] right-[-20%] w-[800px] h-[800px] bg-purple-600/10 rounded-full blur-[100px] opacity-30 transform-gpu" />
       </div>
 
       <WelcomeBanner username={username} />
 
       <div className="mb-8 relative z-10">
         <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-purple-500/20 text-purple-400">
-                <Star className="w-5 h-5" />
-            </div>
-            <div>
-                <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>My Sessions</h2>
-                <p className="text-xs text-gray-500 font-medium">What's next for you?</p>
-            </div>
+          <div className="p-2 rounded-lg bg-purple-500/20 text-purple-400">
+            <Star className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className={`text-xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>My Sessions</h2>
+            <p className="text-xs text-gray-500 font-medium">What's next for you?</p>
+          </div>
         </div>
 
         {isLoadingBatches ? (
@@ -513,10 +501,10 @@ const StudentDashboardPage = () => {
                 key={batch.batch_obj_id}
                 onClick={() => setSelectedBatchId(batch.batch_obj_id)}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-300 border backdrop-blur-sm
-                  ${selectedBatchId === batch.batch_obj_id 
-                    ? 'bg-purple-600 border-purple-500 text-white shadow-[0_0_15px_rgba(147,51,234,0.3)]' 
-                    : isDark 
-                      ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white hover:border-white/20' 
+                  ${selectedBatchId === batch.batch_obj_id
+                    ? 'bg-purple-600 border-purple-500 text-white shadow-[0_0_15px_rgba(147,51,234,0.3)]'
+                    : isDark
+                      ? 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white hover:border-white/20'
                       : 'bg-white/50 border-gray-200 text-gray-600 hover:bg-white hover:text-black hover:border-black'
                   }
                 `}
@@ -530,14 +518,14 @@ const StudentDashboardPage = () => {
 
       <AnimatePresence mode='wait'>
         {isLoadingData ? (
-          <motion.div 
+          <motion.div
             key="loader"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="flex items-center justify-center py-20 relative z-10"
           >
-               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400"></div>
           </motion.div>
         ) : batchData ? (
           <motion.div
@@ -553,14 +541,14 @@ const StudentDashboardPage = () => {
             <SessionSection title="Catch Up" sessions={batchData.missed} type="missed" defaultExpanded={batchData.missed.length > 0} isDark={isDark} />
           </motion.div>
         ) : (
-          <motion.div 
-             key="empty"
-             initial={{ opacity: 0 }}
-             animate={{ opacity: 1 }}
-             exit={{ opacity: 0 }}
-             className="text-center py-20 opacity-50 text-gray-400 relative z-10"
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-center py-20 opacity-50 text-gray-400 relative z-10"
           >
-             Select a mission batch above to view your progress.
+            Select a mission batch above to view your progress.
           </motion.div>
         )}
       </AnimatePresence>

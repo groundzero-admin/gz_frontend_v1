@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
-import { 
-  FaFire, 
-  FaCalendarAlt, 
-  FaUserFriends, 
-  FaChevronRight, 
-  FaTimes, 
+import {
+  FaFire,
+  FaCalendarAlt,
+  FaUserFriends,
+  FaChevronRight,
+  FaTimes,
   FaVideo,
   FaClock,
   FaMapMarkerAlt,
-  FaGlobe
-} from 'react-icons/fa'; 
+  FaMapMarkerAlt,
+  FaGlobe,
+  FaRocket
+} from 'react-icons/fa';
 
 // API helpers (keep your actual function names)
 import { getMyLiveBatches, getSessiosnForBatchStudent } from '../api.js';
@@ -30,7 +32,7 @@ const BatchCard = ({ batch, isDark, onClick }) => {
   const isOnline = batch.batchType === 'ONLINE';
 
   return (
-    <div 
+    <div
       onClick={onClick}
       className="group relative p-6 rounded-2xl border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer overflow-hidden flex flex-col justify-between"
       style={{
@@ -44,7 +46,7 @@ const BatchCard = ({ batch, isDark, onClick }) => {
       <div>
         <div className="flex justify-between items-start mb-4">
           <div className="flex gap-2">
-            <div 
+            <div
               className={`flex items-center gap-2 px-3 py-1 rounded-full bg-opacity-10 border border-opacity-20 text-xs font-bold tracking-wider ${statusBg}`}
               style={{ color: "white", borderColor: batch.isLive ? "green" : "purple" }}
             >
@@ -53,7 +55,7 @@ const BatchCard = ({ batch, isDark, onClick }) => {
             </div>
 
             <div className={`flex items-center gap-2 px-3 py-1 rounded-full border border-opacity-20 text-xs font-bold tracking-wider ${isOnline ? 'bg-blue-500/10 text-blue-500 border-blue-500' : 'bg-orange-500/10 text-orange-500 border-orange-500'}`}>
-               {isOnline ? 'ONLINE' : 'OFFLINE'}
+              {isOnline ? 'ONLINE' : 'OFFLINE'}
             </div>
           </div>
         </div>
@@ -66,7 +68,7 @@ const BatchCard = ({ batch, isDark, onClick }) => {
           {batch.cohort ? batch.cohort.charAt(0).toUpperCase() + batch.cohort.slice(1) : 'Cohort'} Level • {batch.level ? batch.level.charAt(0).toUpperCase() + batch.level.slice(1) : ''}
         </p>
 
-        <div 
+        <div
           className="grid grid-cols-2 gap-4 p-4 rounded-xl mb-4"
           style={{ backgroundColor: `var(${isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"})` }}
         >
@@ -124,32 +126,32 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
   const isOnlineBatch = batch.batchType === 'ONLINE';
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)" }}
       onClick={onClose}
     >
-      <div 
+      <div
         className="relative w-full max-w-5xl rounded-2xl shadow-2xl max-h-[85vh] flex flex-col"
-        style={{ 
+        style={{
           backgroundColor: isDark ? "#1A1B26" : "#fff",
-          color: textColor, 
-          borderColor: borderColor, 
+          color: textColor,
+          borderColor: borderColor,
           borderWidth: '1px'
         }}
-        onClick={(e) => e.stopPropagation()} 
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="p-8 border-b flex justify-between items-start" style={{ borderColor }}>
           <div>
             <h2 className="text-3xl font-bold flex flex-wrap items-center gap-4">
-              {batch.batchId} 
+              {batch.batchId}
               <span className={`text-sm px-3 py-1 rounded-full border text-white ${batch.isLive ? 'bg-green-500 border-green-500' : 'bg-purple-500 border-purple-500'}`}>
                 {batch.isLive ? 'LIVE' : 'UPCOMING'}
               </span>
               <span className={`text-sm px-3 py-1 rounded-full border ${isOnlineBatch ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-orange-100 text-orange-700 border-orange-200'}`}>
-                 {isOnlineBatch ? <FaGlobe className="inline mr-1"/> : <FaMapMarkerAlt className="inline mr-1"/>}
-                 {isOnlineBatch ? 'Online' : 'Offline'}
+                {isOnlineBatch ? <FaGlobe className="inline mr-1" /> : <FaMapMarkerAlt className="inline mr-1" />}
+                {isOnlineBatch ? 'Online' : 'Offline'}
               </span>
             </h2>
             <p className="text-base mt-2" style={{ color: secondaryText }}>
@@ -157,7 +159,7 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
             </p>
             {!isOnlineBatch && (
               <p className="text-sm mt-1 text-orange-400 flex items-center gap-2">
-                 <FaMapMarkerAlt /> {batch.classLocation}, {batch.cityCode}
+                <FaMapMarkerAlt /> {batch.classLocation}, {batch.cityCode}
               </p>
             )}
           </div>
@@ -213,13 +215,13 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
                 }
 
                 return (
-                  <div 
+                  <div
                     key={session._id}
                     className="p-5 rounded-xl border transition hover:bg-white/5 flex flex-col md:flex-row gap-5 items-start md:items-center"
                     style={{ borderColor }}
                   >
                     {/* Session Number */}
-                    <div 
+                    <div
                       className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg"
                       style={{ backgroundColor: "rgba(255,255,255,0.1)", color: "var(--accent-teal)" }}
                     >
@@ -229,16 +231,16 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
                     {/* Details */}
                     <div className="flex-grow">
                       <h4 className="font-bold text-lg">{session.topic || "Untitled Session"}</h4>
-                      
+
                       <div className="flex flex-wrap items-center gap-4 mt-2 text-sm" style={{ color: secondaryText }}>
                         <span className="flex items-center gap-1.5">
-                            <FaCalendarAlt className="opacity-70" />
-                            {session.date ? new Date(session.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : "Date TBA"}
+                          <FaCalendarAlt className="opacity-70" />
+                          {session.date ? new Date(session.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' }) : "Date TBA"}
                         </span>
 
                         <span className="flex items-center gap-1.5">
-                            <FaClock className="opacity-70" />
-                            {session.start_time || "--:--"} - {session.end_time || "--:--"}
+                          <FaClock className="opacity-70" />
+                          {session.start_time || "--:--"} - {session.end_time || "--:--"}
                         </span>
                       </div>
                     </div>
@@ -251,8 +253,18 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
                         - Else if offline -> show location (meeting_link used as location)
                         - Else (online & hidden) -> Upcoming
                       */}
+
+                      {/* Activity Button */}
+                      <button
+                        onClick={() => window.open(`/student/activity/batch-session/${session._id}`, '_blank')}
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition hover:scale-105 shadow-md"
+                        style={{ backgroundColor: "black" }}
+                      >
+                        <FaRocket /> Activity
+                      </button>
+
                       {noCredit ? (
-                        <button 
+                        <button
                           disabled
                           className="flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-semibold border cursor-not-allowed"
                           style={{ borderColor, color: "red", opacity: 0.9 }}
@@ -260,9 +272,9 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
                           Not Enough Credit
                         </button>
                       ) : (hasValidLink && !linkHidden) ? (
-                        <a 
-                          href={session.meeting_link} 
-                          target="_blank" 
+                        <a
+                          href={session.meeting_link}
+                          target="_blank"
                           rel="noreferrer"
                           className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition hover:brightness-110"
                           style={{ backgroundColor: "var(--accent-teal)" }}
@@ -270,15 +282,15 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
                           <FaVideo /> Join Class
                         </a>
                       ) : (!isOnlineBatch) ? (
-                        <div 
+                        <div
                           className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border opacity-90"
                           style={{ borderColor, color: secondaryText }}
                         >
-                          <FaMapMarkerAlt className="text-orange-500"/> {session.meeting_link || "Location TBA"}
+                          <FaMapMarkerAlt className="text-orange-500" /> {session.meeting_link || "Location TBA"}
                         </div>
                       ) : (
-                        <button 
-                          disabled 
+                        <button
+                          disabled
                           className="flex-1 md:flex-none px-4 py-2 rounded-lg text-sm font-semibold border opacity-30 cursor-not-allowed"
                           style={{ borderColor }}
                         >
@@ -294,7 +306,7 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
         </div>
 
         <div className="p-6 border-t text-right" style={{ borderColor }}>
-          <button 
+          <button
             onClick={onClose}
             className="px-6 py-2 rounded-lg font-semibold transition bg-[var(--border-dark)] hover:bg-opacity-80 text-white"
           >
@@ -303,7 +315,7 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
         </div>
 
       </div>
-    </div>
+    </div >
   );
 };
 
@@ -311,7 +323,7 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
 // --- Main Page Component ---
 const StudentMyBatches = () => {
   const { isDark } = useOutletContext(); // Assuming context provides isDark
-  
+
   const [batches, setBatches] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -320,47 +332,47 @@ const StudentMyBatches = () => {
   const [isSessionsLoading, setIsSessionsLoading] = useState(false);
 
   // 1. Fetch user's batches (Live & Upcoming)
-useEffect(() => {
-  const fetchBatches = async () => {
-    setIsLoading(true);
-    try {
-      const response = await getMyLiveBatches();
+  useEffect(() => {
+    const fetchBatches = async () => {
+      setIsLoading(true);
+      try {
+        const response = await getMyLiveBatches();
 
-      if (response?.success && Array.isArray(response.data)) {
-        const today = new Date();
+        if (response?.success && Array.isArray(response.data)) {
+          const today = new Date();
 
-        const normalized = response.data.map(b => {
-          const start = new Date(b.startDate);
+          const normalized = response.data.map(b => {
+            const start = new Date(b.startDate);
 
-          return {
-            _id: b.batch_obj_id,          // ✅ required for keys & API calls
-            batchId: b.batchName,         // ✅ used in UI
-            level: b.level,
-            cohort: b.level,              // optional: reuse if cohort not provided
-            startDate: b.startDate,
-            batchType: b.batchType,
-            description: b.description,
-            classLocation: b.classLocation || null,
-            cityCode: b.cityCode || null,
+            return {
+              _id: b.batch_obj_id,          // ✅ required for keys & API calls
+              batchId: b.batchName,         // ✅ used in UI
+              level: b.level,
+              cohort: b.level,              // optional: reuse if cohort not provided
+              startDate: b.startDate,
+              batchType: b.batchType,
+              description: b.description,
+              classLocation: b.classLocation || null,
+              cityCode: b.cityCode || null,
 
-            isLive: start <= today,
-            isUpcoming: start > today
-          };
-        });
+              isLive: start <= today,
+              isUpcoming: start > today
+            };
+          });
 
-        setBatches(normalized);
-      } else {
-        console.error("Invalid response format", response);
+          setBatches(normalized);
+        } else {
+          console.error("Invalid response format", response);
+        }
+      } catch (error) {
+        console.error("Error fetching batches:", error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Error fetching batches:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  fetchBatches();
-}, []);
+    fetchBatches();
+  }, []);
 
 
 
@@ -371,26 +383,27 @@ useEffect(() => {
     setBatchSessions([]);
 
     try {
-        const response = await getSessiosnForBatchStudent(batch._id);
-        
-        if (response && response.success && Array.isArray(response.data)) {
-          const normalized = response.data.map(s => ({
-            ...s,
-            topic: s.title,                   
-            start_time: s.startTime,          
-            end_time: s.endTime,              
-            meeting_link: s.meetingLinkOrLocation, 
-            // recording removed intentionally per request
-          }));
+      const response = await getSessiosnForBatchStudent(batch._id);
 
-          setBatchSessions(normalized);
-        } else {
-          console.error("Invalid sessions response", response);
-        }
+      if (response && response.success && Array.isArray(response.data)) {
+        const normalized = response.data.map(s => ({
+          ...s,
+          topic: s.title,
+          start_time: s.startTime,
+          end_time: s.endTime,
+          meeting_link: s.meetingLinkOrLocation,
+          hasActivity: s.hasActivity
+          // recording removed intentionally per request
+        }));
+
+        setBatchSessions(normalized);
+      } else {
+        console.error("Invalid sessions response", response);
+      }
     } catch (error) {
-        console.error("Error fetching sessions:", error);
+      console.error("Error fetching sessions:", error);
     } finally {
-        setIsSessionsLoading(false);
+      setIsSessionsLoading(false);
     }
   };
 
@@ -401,7 +414,7 @@ useEffect(() => {
     <div className="min-h-screen pb-20">
 
       {/* Header */}
-      <div 
+      <div
         className="relative rounded-3xl overflow-hidden p-8 md:p-12 text-white shadow-2xl mb-12"
         style={{
           background: "linear-gradient(90deg, #4F46E5 0%, #9333EA 100%)",
@@ -422,7 +435,7 @@ useEffect(() => {
         </div>
       ) : (
         <div className="space-y-12">
-          
+
           {/* Live Section */}
           <section>
             <div className="flex items-center gap-3 mb-6">
@@ -438,11 +451,11 @@ useEffect(() => {
             {liveBatches.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {liveBatches.map(batch => (
-                  <BatchCard 
-                    key={batch._id} 
-                    batch={batch} 
-                    isDark={isDark} 
-                    onClick={() => handleBatchClick(batch)} 
+                  <BatchCard
+                    key={batch._id}
+                    batch={batch}
+                    isDark={isDark}
+                    onClick={() => handleBatchClick(batch)}
                   />
                 ))}
               </div>
@@ -468,11 +481,11 @@ useEffect(() => {
             {upcomingBatches.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {upcomingBatches.map(batch => (
-                  <BatchCard 
-                    key={batch._id} 
-                    batch={batch} 
-                    isDark={isDark} 
-                    onClick={() => handleBatchClick(batch)} 
+                  <BatchCard
+                    key={batch._id}
+                    batch={batch}
+                    isDark={isDark}
+                    onClick={() => handleBatchClick(batch)}
                   />
                 ))}
               </div>
@@ -486,7 +499,7 @@ useEffect(() => {
       )}
 
       {/* Modal */}
-      <BatchDetailsModal 
+      <BatchDetailsModal
         isOpen={!!selectedBatch}
         onClose={() => setSelectedBatch(null)}
         batch={selectedBatch}

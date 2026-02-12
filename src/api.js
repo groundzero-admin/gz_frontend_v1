@@ -2273,3 +2273,386 @@ export const importTemplateIntoBatch = async (template_obj_id, batch_obj_id) => 
     return { success: false, message: "Network error importing template." };
   }
 };
+
+// ==========================================
+//    ACTIVITY / WORKSHEET SYSTEM APIS
+// ==========================================
+
+// --- Template Sections ---
+export const createSection = async (templateSessionId, sectionName, order) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/template-session/${templateSessionId}/section`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ sectionName, order }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("createSection error:", error);
+    return { success: false, message: "Network error creating section." };
+  }
+};
+
+export const listSections = async (templateSessionId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/template-session/${templateSessionId}/sections`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("listSections error:", error);
+    return { success: false, message: "Network error listing sections." };
+  }
+};
+
+export const updateSection = async (sectionId, sectionName, order) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/section/${sectionId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ sectionName, order }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("updateSection error:", error);
+    return { success: false, message: "Network error updating section." };
+  }
+};
+
+export const deleteSection = async (sectionId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/section/${sectionId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("deleteSection error:", error);
+    return { success: false, message: "Network error deleting section." };
+  }
+};
+
+// --- Template Activities ---
+export const createActivity = async (sectionId, data) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/section/${sectionId}/activity`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("createActivity error:", error);
+    return { success: false, message: "Network error creating activity." };
+  }
+};
+
+export const listActivities = async (sectionId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/section/${sectionId}/activities`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("listActivities error:", error);
+    return { success: false, message: "Network error listing activities." };
+  }
+};
+
+export const getActivity = async (activityId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/activity/${activityId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("getActivity error:", error);
+    return { success: false, message: "Network error fetching activity." };
+  }
+};
+
+export const updateActivity = async (activityId, data) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/activity/${activityId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("updateActivity error:", error);
+    return { success: false, message: "Network error updating activity." };
+  }
+};
+
+export const deleteActivity = async (activityId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/activity/${activityId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("deleteActivity error:", error);
+    return { success: false, message: "Network error deleting activity." };
+  }
+};
+
+// --- Batch Sections ---
+export const createBatchSection = async (batchSessionId, sectionName, order) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch-session/${batchSessionId}/section`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ sectionName, order }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("createBatchSection error:", error);
+    return { success: false, message: "Network error creating batch section." };
+  }
+};
+
+export const listBatchSections = async (batchSessionId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch-session/${batchSessionId}/sections`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("listBatchSections error:", error);
+    return { success: false, message: "Network error listing batch sections." };
+  }
+};
+
+export const updateBatchSection = async (batchSectionId, sectionName, order) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch-section/${batchSectionId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ sectionName, order }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("updateBatchSection error:", error);
+    return { success: false, message: "Network error updating batch section." };
+  }
+};
+
+export const deleteBatchSection = async (batchSectionId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch-section/${batchSectionId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("deleteBatchSection error:", error);
+    return { success: false, message: "Network error deleting batch section." };
+  }
+};
+
+// --- Batch Activities ---
+export const createBatchActivity = async (batchSectionId, data) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch-section/${batchSectionId}/activity`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("createBatchActivity error:", error);
+    return { success: false, message: "Network error creating batch activity." };
+  }
+};
+
+export const listBatchActivities = async (batchSectionId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch-section/${batchSectionId}/activities`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("listBatchActivities error:", error);
+    return { success: false, message: "Network error listing batch activities." };
+  }
+};
+
+export const getBatchActivity = async (activityId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch-activity/${activityId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("getBatchActivity error:", error);
+    return { success: false, message: "Network error fetching batch activity." };
+  }
+};
+
+export const updateBatchActivity = async (activityId, data) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch-activity/${activityId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("updateBatchActivity error:", error);
+    return { success: false, message: "Network error updating batch activity." };
+  }
+};
+
+export const deleteBatchActivity = async (activityId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch-activity/${activityId}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("deleteBatchActivity error:", error);
+    return { success: false, message: "Network error deleting batch activity." };
+  }
+};
+
+// --- Student Activity APIs ---
+export const listStudentBatchSections = async (batchSessionId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/student/batch-session/${batchSessionId}/sections`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("listStudentBatchSections error:", error);
+    return { success: false, message: "Network error listing sections for student." };
+  }
+};
+
+export const listStudentBatchActivities = async (batchSectionId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/student/batch-section/${batchSectionId}/activities`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("listStudentBatchActivities error:", error);
+    return { success: false, message: "Network error listing activities for student." };
+  }
+};
+
+export const submitActivityResponse = async (data) => {
+  try {
+    const response = await fetch(`${BASE_URL}/student/activity/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("submitActivityResponse error:", error);
+    return { success: false, message: "Network error submitting response." };
+  }
+};
+
+export const getStudentResponse = async (activityId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/student/activity-response/${activityId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("getStudentResponse error:", error);
+    return { success: false, message: "Network error getting student response." };
+  }
+};
+
+// --- Admin Review APIs ---
+export const getSessionResponses = async (batchSessionId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch-session/${batchSessionId}/responses`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("getSessionResponses error:", error);
+    return { success: false, message: "Network error getting session responses." };
+  }
+};
+
+export const getActivityResponses = async (activityId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch-activity/${activityId}/responses`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("getActivityResponses error:", error);
+    return { success: false, message: "Network error getting activity responses." };
+  }
+};
+
+export const getStudentSessionResponses = async (batchSessionId, studentId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch-session/${batchSessionId}/student/${studentId}/responses`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("getStudentSessionResponses error:", error);
+    return { success: false, message: "Network error getting student session responses." };
+  }
+};
+
+export const getMySessionResponses = async (batchSessionId) => {
+  try {
+    const response = await fetch(`${BASE_URL}/student/batch-session/${batchSessionId}/my-responses`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("getMySessionResponses error:", error);
+    return { success: false, message: "Network error getting your responses." };
+  }
+};
