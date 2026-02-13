@@ -61,6 +61,31 @@ const SimpleCalculator = ({ onClose }) => {
     );
 };
 
+const DummyAIAgent = ({ onClose, shiftLeft }) => {
+    return (
+        <div className={`fixed bottom-24 z-40 w-80 bg-white rounded-2xl shadow-2xl border overflow-hidden transition-all ${shiftLeft ? 'right-[290px]' : 'right-6'}`}>
+            <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-4 text-white flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <MessageSquare size={20} />
+                    <span className="font-bold">AI Tutor</span>
+                </div>
+                <button onClick={onClose} className="p-1 hover:bg-white/20 rounded"><X size={16} /></button>
+            </div>
+            <div className="p-4 h-64 overflow-y-auto bg-gray-50">
+                <div className="bg-white p-3 rounded-xl shadow-sm mb-3">
+                    <p className="text-sm text-gray-600">👋 Hi! I'm your AI tutor. How can I help you with this question?</p>
+                </div>
+                <div className="text-center text-gray-400 text-xs mt-8">
+                    <p>Ask me anything about the question!</p>
+                </div>
+            </div>
+            <div className="p-3 border-t bg-white">
+                <input type="text" placeholder="Type a message..." className="w-full p-2 border rounded-lg text-sm outline-none focus:border-purple-400" />
+            </div>
+        </div>
+    );
+};
+
 // ──────────────────────────────────────────
 //  Per-Question Media Carousel (Exact Port)
 // ──────────────────────────────────────────
@@ -498,9 +523,9 @@ const QuestionView = ({
     const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
     const [answers, setAnswers] = useState({});
     const [showCalculator, setShowCalculator] = useState(false);
+    const [showAgentChat, setShowAgentChat] = useState(false);
     const [gradingResult, setGradingResult] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showAI, setShowAI] = useState(false);
 
     // Auto-fill previously submitted answers
     useEffect(() => {
@@ -518,7 +543,7 @@ const QuestionView = ({
         }
         setCurrentQuestionIdx(0);
         setGradingResult(null);
-        setShowAI(false);
+        setShowAgentChat(false);
     }, [activity._id]);
 
     const questions = activity.practiceData?.questions || [];
@@ -556,7 +581,6 @@ const QuestionView = ({
             if (res.success) {
                 const grade = res.data?.grade;
                 setGradingResult(grade);
-                setShowAI(true);
                 onUpdateResponses(activity._id, { grade });
             } else {
                 alert("Submission failed: " + res.message);
@@ -564,14 +588,12 @@ const QuestionView = ({
         } catch (err) {
             console.error(err);
             setGradingResult({ score: 0, feedback: "Error submitting.", tip: "Please try again." });
-            setShowAI(true);
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleContinue = () => {
-        setShowAI(false);
         setGradingResult(null);
         if (currentQuestionIdx < totalQ - 1) {
             setCurrentQuestionIdx(prev => prev + 1);
@@ -582,7 +604,6 @@ const QuestionView = ({
     };
 
     const handleRetry = () => {
-        setShowAI(false);
         setGradingResult(null);
         // Keep current question, let them re-answer
     };
@@ -699,38 +720,89 @@ const QuestionView = ({
                             qIndex={currentQuestionIdx}
                             response={answers[currentQuestionIdx]}
                             onInput={handleInput}
-                            readOnly={isSubmitting}
+                            readOnly={isSubmitting || !!gradingResult}
                         />
                     )}
 
-
+                    {/* Inline Grading Result */}
+                    {gradingResult && (
+                        <div className="mt-6 bg-white rounded-2xl border-2 border-gray-100 shadow-lg overflow-hidden animate-[fadeIn_0.3s_ease-out]">
+                            {/* Score Header */}
+                            <div className={`p-5 flex items-center justify-between ${gradingResult.score >= 5
+                                    ? 'bg-gradient-to-r from-teal-500 to-emerald-500'
+                                    : 'bg-gradient-to-r from-red-500 to-orange-500'
+                                }`}>
+                                <div className="flex items-center gap-3 text-white">
+                                    <div className="p-2 bg-white/20 rounded-xl"><GraduationCap size={22} /></div>
+                                    <div>
+                                        <h3 className="font-bold text-base">AI Evaluation</h3>
+                                        <p className="text-white/70 text-xs">Analysis Complete</p>
+                                    </div>
+                                </div>
+                                <div className="text-right text-white">
+                                    <span className="text-3xl font-black">{gradingResult.score}</span>
+                                    <span className="text-white/60 text-lg">/10</span>
+                                </div>
+                            </div>
+                            {/* Feedback Body */}
+                            <div className="p-5 space-y-4">
+                                <div>
+                                    <span className="text-teal-500 font-bold text-xs uppercase tracking-wide block mb-1">AI Feedback</span>
+                                    <p className="text-gray-700 italic">"{gradingResult.feedback}"</p>
+                                </div>
+                                {(gradingResult.tip || currentQ?.postAnswerTip) && (
+                                    <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100 flex gap-3">
+                                        <div className="p-2 bg-yellow-400 text-white rounded-lg h-fit">💡</div>
+                                        <div>
+                                            <span className="text-yellow-600 font-bold text-xs uppercase block mb-1">Pro Tip</span>
+                                            <p className="text-yellow-800 text-sm">{gradingResult.tip || currentQ?.postAnswerTip}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                {gradingResult.score < 5 ? (
+                                    <button
+                                        onClick={handleRetry}
+                                        className="w-full bg-red-500 text-white py-4 rounded-xl font-bold hover:bg-red-600 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <RotateCcw size={20} /> Try Again
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleContinue}
+                                        className="w-full bg-teal-500 text-white py-4 rounded-xl font-bold hover:bg-teal-600 transition-all"
+                                    >
+                                        {currentQuestionIdx < totalQ - 1 ? 'Next Question →' : 'Complete Activity ✓'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Footer: Submit / Next */}
-            {!showAI && !isSubmitting && (
+            {/* Footer: Submit / Grading */}
+            {!gradingResult && (
                 <div className="fixed bottom-0 left-0 w-full bg-white border-t px-6 py-4 z-10">
                     <div className="max-w-2xl mx-auto">
                         <button
                             onClick={handleSubmit}
-                            disabled={!hasAnswer(currentQuestionIdx)}
-                            className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${hasAnswer(currentQuestionIdx)
-                                ? 'bg-teal-500 text-white hover:bg-teal-600 shadow-lg'
-                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            disabled={!hasAnswer(currentQuestionIdx) || isSubmitting}
+                            className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 ${isSubmitting
+                                ? 'bg-teal-500 text-white cursor-wait'
+                                : hasAnswer(currentQuestionIdx)
+                                    ? 'bg-teal-500 text-white hover:bg-teal-600 shadow-lg'
+                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                 }`}
                         >
-                            Submit Answer
+                            {isSubmitting ? (
+                                <>
+                                    <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                                    Grading...
+                                </>
+                            ) : (
+                                'Submit Answer'
+                            )}
                         </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Grading Spinner */}
-            {isSubmitting && (
-                <div className="fixed bottom-0 left-0 w-full bg-white border-t px-6 py-4 z-10">
-                    <div className="max-w-2xl mx-auto flex items-center justify-center gap-4 py-4">
-                        <div className="w-6 h-6 border-4 border-teal-200 border-t-teal-500 rounded-full animate-spin" />
-                        <span className="font-bold text-gray-600">AI is grading your answer...</span>
                     </div>
                 </div>
             )}
@@ -738,8 +810,25 @@ const QuestionView = ({
             {/* Calculator */}
             {showCalculator && <SimpleCalculator onClose={() => setShowCalculator(false)} />}
 
+            {/* AI Agent Chat Panel */}
+            {activity.showAgent && showAgentChat && (
+                <DummyAIAgent
+                    onClose={() => setShowAgentChat(false)}
+                    shiftLeft={activity.allowCalculator && showCalculator}
+                />
+            )}
+
             {/* Floating Tool Buttons */}
             <div className="fixed bottom-24 right-6 z-40 flex gap-3">
+                {activity.showAgent && (
+                    <button
+                        onClick={() => setShowAgentChat(!showAgentChat)}
+                        className={`p-4 rounded-full shadow-xl hover:scale-110 transition-all ${showAgentChat ? 'bg-purple-600 text-white' : 'bg-white text-purple-600 border-2 border-purple-200'
+                            }`}
+                    >
+                        <MessageSquare size={24} />
+                    </button>
+                )}
                 {activity.allowCalculator && (
                     <button
                         onClick={() => setShowCalculator(!showCalculator)}
@@ -750,58 +839,6 @@ const QuestionView = ({
                     </button>
                 )}
             </div>
-
-            {/* AI Grading Modal (Exact Prototype Style) */}
-            {showAI && gradingResult && (
-                <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm flex items-center justify-center p-6">
-                    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
-                        <div className="bg-gradient-to-r from-teal-500 to-teal-400 p-6 text-white flex justify-between items-center">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-white/20 rounded-xl"><GraduationCap size={24} /></div>
-                                <div>
-                                    <h3 className="font-bold text-lg">AI Evaluation</h3>
-                                    <p className="text-teal-100 text-xs">Analysis Complete</p>
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <span className="text-3xl font-black">{gradingResult.score}</span>
-                                <span className="text-teal-200 text-lg">/10</span>
-                            </div>
-                        </div>
-                        <div className="p-6 space-y-4">
-                            <div>
-                                <span className="text-teal-500 font-bold text-xs uppercase tracking-wide block mb-1">AI Feedback</span>
-                                <p className="text-gray-700 italic">"{gradingResult.feedback}"</p>
-                            </div>
-                            {(gradingResult.tip || currentQ?.postAnswerTip) && (
-                                <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100 flex gap-3">
-                                    <div className="p-2 bg-yellow-400 text-white rounded-lg h-fit">💡</div>
-                                    <div>
-                                        <span className="text-yellow-600 font-bold text-xs uppercase block mb-1">Pro Tip</span>
-                                        <p className="text-yellow-800 text-sm">{gradingResult.tip || currentQ?.postAnswerTip}</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {gradingResult.score < 5 ? (
-                                <button
-                                    onClick={handleRetry}
-                                    className="w-full bg-red-500 text-white py-4 rounded-xl font-bold hover:bg-red-600 transition-all flex items-center justify-center gap-2"
-                                >
-                                    <RotateCcw size={20} /> Try Again
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={handleContinue}
-                                    className="w-full bg-teal-500 text-white py-4 rounded-xl font-bold hover:bg-teal-600 transition-all"
-                                >
-                                    {currentQuestionIdx < totalQ - 1 ? 'Next Question →' : 'Complete Activity ✓'}
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
