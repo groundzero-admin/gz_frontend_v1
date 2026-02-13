@@ -317,7 +317,7 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
 //  Step 1: Section Cards
 // ──────────────────────────────────────────
 
-const SectionCardsView = ({ sections, responses, onSelectSection }) => {
+const SectionCardsView = ({ sections, responses, onSelectSection, sessionInfo }) => {
     const getSectionStatus = (section) => {
         const acts = section.activities || [];
         if (acts.length === 0) return { label: 'No activities', color: 'text-gray-400' };
@@ -330,8 +330,20 @@ const SectionCardsView = ({ sections, responses, onSelectSection }) => {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <div className="max-w-5xl mx-auto w-full px-6 pt-10 pb-4">
-                <h1 className="text-2xl font-black text-gray-900">Session Activities</h1>
-                <p className="text-sm text-gray-500 mt-1">Select a section to begin working</p>
+                {sessionInfo?.title ? (
+                    <>
+                        <h1 className="text-2xl font-black text-gray-900">{sessionInfo.title}</h1>
+                        {sessionInfo.description && (
+                            <p className="text-sm text-gray-500 mt-1">{sessionInfo.description}</p>
+                        )}
+                        <p className="text-xs text-teal-600 font-bold mt-2 uppercase tracking-wider">Select a section to begin working</p>
+                    </>
+                ) : (
+                    <>
+                        <h1 className="text-2xl font-black text-gray-900">Session Activities</h1>
+                        <p className="text-sm text-gray-500 mt-1">Select a section to begin working</p>
+                    </>
+                )}
             </div>
             <div className="max-w-5xl mx-auto w-full px-6 pb-12">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -375,7 +387,7 @@ const SectionCardsView = ({ sections, responses, onSelectSection }) => {
 //  Step 2: Activity List within Section
 // ──────────────────────────────────────────
 
-const ActivityListView = ({ section, responses, allActivities, onSelectActivity, onBack }) => {
+const ActivityListView = ({ section, responses, allActivities, onSelectActivity, onBack, sections, onMoveToNextSection }) => {
     const acts = section.activities || [];
     const completedCount = acts.filter(a => responses[a._id]?.grade?.score >= 5).length;
 
@@ -441,11 +453,32 @@ const ActivityListView = ({ section, responses, allActivities, onSelectActivity,
                         <h4 className="font-bold text-gray-900">Progress</h4>
                         <span className="text-sm text-gray-400">{completedCount} / {acts.length} completed</span>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2.5">
-                        <div
-                            className="bg-gradient-to-r from-teal-400 to-emerald-500 h-2.5 rounded-full transition-all duration-700"
-                            style={{ width: `${acts.length > 0 ? (completedCount / acts.length) * 100 : 0}%` }}
-                        />
+                    <div className="flex items-center gap-3">
+                        <div className="flex-1 bg-gray-100 rounded-full h-2.5">
+                            <div
+                                className={`h-2.5 rounded-full transition-all duration-700 ${acts.length > 0 && completedCount === acts.length
+                                    ? 'bg-gradient-to-r from-emerald-400 to-green-500'
+                                    : 'bg-gradient-to-r from-teal-400 to-emerald-500'
+                                    }`}
+                                style={{ width: `${acts.length > 0 ? (completedCount / acts.length) * 100 : 0}%` }}
+                            />
+                        </div>
+                        {acts.length > 0 && completedCount === acts.length && (() => {
+                            const currentIdx = sections?.findIndex(s => s._id === section._id);
+                            const hasNext = currentIdx !== -1 && currentIdx < (sections?.length || 0) - 1;
+                            return hasNext ? (
+                                <button
+                                    onClick={() => onMoveToNextSection && onMoveToNextSection(sections[currentIdx + 1])}
+                                    className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition text-sm font-bold whitespace-nowrap shadow-md"
+                                >
+                                    Next Section <ArrowRight size={14} />
+                                </button>
+                            ) : (
+                                <span className="flex items-center gap-1.5 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold whitespace-nowrap">
+                                    <CheckCircle size={14} /> All Done!
+                                </span>
+                            );
+                        })()}
                     </div>
                 </div>
             </div>
@@ -468,6 +501,25 @@ const QuestionView = ({
     const [gradingResult, setGradingResult] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showAI, setShowAI] = useState(false);
+
+    // Auto-fill previously submitted answers
+    useEffect(() => {
+        const existingResp = responses[activity._id];
+        if (existingResp && Array.isArray(existingResp.responses)) {
+            const prefilled = {};
+            existingResp.responses.forEach((ans, idx) => {
+                if (ans !== null && ans !== undefined) {
+                    prefilled[idx] = ans;
+                }
+            });
+            setAnswers(prefilled);
+        } else {
+            setAnswers({});
+        }
+        setCurrentQuestionIdx(0);
+        setGradingResult(null);
+        setShowAI(false);
+    }, [activity._id]);
 
     const questions = activity.practiceData?.questions || [];
     const totalQ = questions.length;
@@ -766,6 +818,7 @@ const StudentActivityPage = () => {
     const [sections, setSections] = useState([]);
     const [responses, setResponses] = useState({});
     const [loading, setLoading] = useState(true);
+    const [sessionInfo, setSessionInfo] = useState(null);
 
     const [step, setStep] = useState('sections');
     const [selectedSection, setSelectedSection] = useState(null);
@@ -799,6 +852,14 @@ const StudentActivityPage = () => {
                 };
             }));
             setSections(sectionsWithActs);
+
+            // Store session info for header display
+            if (sectRes.data?.batchSession) {
+                setSessionInfo({
+                    title: sectRes.data.batchSession.title || '',
+                    description: sectRes.data.batchSession.description || '',
+                });
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -866,6 +927,10 @@ const StudentActivityPage = () => {
                 allActivities={allActivities}
                 onSelectActivity={handleSelectActivity}
                 onBack={handleBackToSections}
+                sections={sections}
+                onMoveToNextSection={(nextSection) => {
+                    setSelectedSection(nextSection);
+                }}
             />
         );
     }
@@ -875,6 +940,7 @@ const StudentActivityPage = () => {
             sections={sections}
             responses={responses}
             onSelectSection={handleSelectSection}
+            sessionInfo={sessionInfo}
         />
     );
 };
