@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -8,11 +8,12 @@ import ListItem from '@tiptap/extension-list-item';
 import {
     FaArrowLeft, FaSave, FaPlus, FaTrash, FaImage, FaVideo, FaCode,
     FaBold, FaItalic, FaListUl, FaListOl, FaQuoteRight, FaHeading, FaTimes,
-    FaCheck, FaGlobe, FaChevronRight
+    FaCheck, FaGlobe, FaChevronRight, FaUpload, FaSpinner
 } from "react-icons/fa";
 import {
     listActivities, createActivity, getActivity, updateActivity, deleteActivity,
-    listBatchActivities, createBatchActivity, getBatchActivity, updateBatchActivity, deleteBatchActivity
+    listBatchActivities, createBatchActivity, getBatchActivity, updateBatchActivity, deleteBatchActivity,
+    uploadMedia
 } from "../api.js";
 
 // ──────────────────────────────────────────
@@ -74,7 +75,9 @@ const AdminActivityEditor = () => {
     const [isCreatingNew, setIsCreatingNew] = useState(false);
     const [isLoadingAct, setIsLoadingAct] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [uploadingMedia, setUploadingMedia] = useState(null); // { qIdx, type } when uploading
     const [breadcrumb, setBreadcrumb] = useState({ sectionName: '', sessionTitle: '', batchOrTemplateName: '', sessionId: '' });
+    const fileInputRefs = useRef({});
 
     const defaultQuestion = {
         qType: 'mcq',
@@ -287,6 +290,35 @@ const AdminActivityEditor = () => {
         setForm({ ...form, practiceData: { ...form.practiceData, questions: newQs } });
     };
 
+    // Cloudinary file upload handler
+    const handleFileUpload = async (qIdx, mediaType, file) => {
+        if (!file) return;
+        setUploadingMedia({ qIdx, type: mediaType });
+        try {
+            const res = await uploadMedia(file, mediaType);
+            if (res.success) {
+                const newQs = [...form.practiceData.questions];
+                if (!newQs[qIdx].media) newQs[qIdx].media = [];
+                newQs[qIdx].media.push({ url: res.data.url, mediaType: res.data.mediaType });
+                setForm({ ...form, practiceData: { ...form.practiceData, questions: newQs } });
+            } else {
+                alert('Upload failed: ' + (res.message || 'Unknown error'));
+            }
+        } catch (err) {
+            console.error('Upload error', err);
+            alert('Upload failed.');
+        } finally {
+            setUploadingMedia(null);
+        }
+    };
+
+    const triggerFileInput = (qIdx, mediaType) => {
+        const key = `${qIdx}-${mediaType}`;
+        if (fileInputRefs.current[key]) {
+            fileInputRefs.current[key].click();
+        }
+    };
+
     // ──────────────────────────────────────
     //  Render
     // ──────────────────────────────────────
@@ -465,19 +497,41 @@ const AdminActivityEditor = () => {
                                                         <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1">
                                                             <FaImage size={10} /> Question Media
                                                         </label>
-                                                        <div className="flex gap-2">
+                                                        <div className="flex gap-2 flex-wrap">
                                                             <button onClick={() => addMediaToQuestion(idx, 'image')}
                                                                 className="bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm font-bold text-[10px] flex gap-1 items-center hover:bg-blue-50 hover:border-blue-200 transition-all">
-                                                                <FaImage size={10} /> IMG
+                                                                <FaImage size={10} /> IMG URL
                                                             </button>
                                                             <button onClick={() => addMediaToQuestion(idx, 'video')}
                                                                 className="bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm font-bold text-[10px] flex gap-1 items-center hover:bg-purple-50 hover:border-purple-200 transition-all">
-                                                                <FaVideo size={10} /> VIDEO
+                                                                <FaVideo size={10} /> VIDEO URL
                                                             </button>
                                                             <button onClick={() => addMediaToQuestion(idx, 'embed')}
                                                                 className="bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm font-bold text-[10px] flex gap-1 items-center hover:bg-green-50 hover:border-green-200 transition-all">
                                                                 <FaGlobe size={10} /> EMBED
                                                             </button>
+                                                            <div className="w-px bg-gray-200 mx-0.5" />
+                                                            <button onClick={() => triggerFileInput(idx, 'image')}
+                                                                disabled={uploadingMedia?.qIdx === idx && uploadingMedia?.type === 'image'}
+                                                                className="bg-blue-600 text-white px-3 py-1 rounded-lg shadow-sm font-bold text-[10px] flex gap-1 items-center hover:bg-blue-700 transition-all disabled:opacity-50">
+                                                                {uploadingMedia?.qIdx === idx && uploadingMedia?.type === 'image'
+                                                                    ? <><FaSpinner size={10} className="animate-spin" /> Uploading...</>
+                                                                    : <><FaUpload size={10} /> Upload Image</>}
+                                                            </button>
+                                                            <button onClick={() => triggerFileInput(idx, 'video')}
+                                                                disabled={uploadingMedia?.qIdx === idx && uploadingMedia?.type === 'video'}
+                                                                className="bg-purple-600 text-white px-3 py-1 rounded-lg shadow-sm font-bold text-[10px] flex gap-1 items-center hover:bg-purple-700 transition-all disabled:opacity-50">
+                                                                {uploadingMedia?.qIdx === idx && uploadingMedia?.type === 'video'
+                                                                    ? <><FaSpinner size={10} className="animate-spin" /> Uploading...</>
+                                                                    : <><FaUpload size={10} /> Upload Video</>}
+                                                            </button>
+                                                            {/* Hidden file inputs */}
+                                                            <input type="file" accept="image/*" className="hidden"
+                                                                ref={el => fileInputRefs.current[`${idx}-image`] = el}
+                                                                onChange={e => { handleFileUpload(idx, 'image', e.target.files[0]); e.target.value = ''; }} />
+                                                            <input type="file" accept="video/*" className="hidden"
+                                                                ref={el => fileInputRefs.current[`${idx}-video`] = el}
+                                                                onChange={e => { handleFileUpload(idx, 'video', e.target.files[0]); e.target.value = ''; }} />
                                                         </div>
                                                     </div>
                                                     {q.media && q.media.length > 0 ? (

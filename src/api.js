@@ -2670,3 +2670,21 @@ export const listAllSessionActivities = async (batchSessionId) => {
     return { success: false, message: "Network error listing session activities." };
   }
 };
+
+// --- Cloudinary Media Upload ---
+export const uploadMedia = async (file, mediaType) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('mediaType', mediaType);
+    const response = await fetch(`${BASE_URL}/admin/upload-media`, {
+      method: 'POST',
+      credentials: 'include',
+      body: formData,
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("uploadMedia error:", error);
+    return { success: false, message: "Network error uploading media." };
+  }
+};
