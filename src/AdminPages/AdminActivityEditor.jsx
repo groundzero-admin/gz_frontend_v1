@@ -81,6 +81,8 @@ const AdminActivityEditor = () => {
         prompt: '',
         aiPrompt: 'Grade based on correctness.',
         postAnswerTip: '',
+        showGrade: true,
+        answer_embed_url: '',
         options: ['', ''],
         correctAnswer: '',
         correctAnswers: [],
@@ -441,6 +443,7 @@ const AdminActivityEditor = () => {
                                                             <option value="multi_input">Multi-Step Input</option>
                                                             <option value="fill_blanks">Fill Blanks</option>
                                                             <option value="fact_trick">Fact / Trick / Opinion</option>
+                                                            <option value="no_response">No Response (View Only)</option>
                                                         </select>
                                                     </div>
                                                     <button onClick={() => removeQuestion(idx)} className="text-gray-300 hover:text-red-500 p-1"><FaTrash size={14} /></button>
@@ -700,6 +703,29 @@ const AdminActivityEditor = () => {
                                                             onChange={e => updateQuestion(idx, 'postAnswerTip', e.target.value)}
                                                             placeholder="Helpful explanation shown after submission..."
                                                         />
+                                                    </div>
+                                                </div>
+
+                                                {/* ──── Per-Question Settings ──── */}
+                                                <div className="flex flex-wrap gap-6 items-center mt-4 border-t pt-4">
+                                                    <label className="flex items-center gap-2 cursor-pointer text-sm">
+                                                        <input type="checkbox" checked={q.showGrade !== false}
+                                                            onChange={e => updateQuestion(idx, 'showGrade', e.target.checked)} />
+                                                        <span className="font-bold text-gray-600">Show Grade to Student</span>
+                                                    </label>
+                                                    <div className="flex-1 min-w-[200px]">
+                                                        <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Answer Embed URL</label>
+                                                        <input className="w-full p-2 bg-gray-50 rounded-lg border outline-none focus:border-black text-sm font-medium"
+                                                            placeholder="https://embed-url..."
+                                                            value={q.answer_embed_url || ''}
+                                                            onChange={e => updateQuestion(idx, 'answer_embed_url', e.target.value)} />
+                                                    </div>
+                                                    <div className="min-w-[150px]">
+                                                        <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Embed Label</label>
+                                                        <input className="w-full p-2 bg-gray-50 rounded-lg border outline-none focus:border-black text-sm font-medium"
+                                                            placeholder="e.g., Solution Video"
+                                                            value={q.answer_embed_label || ''}
+                                                            onChange={e => updateQuestion(idx, 'answer_embed_label', e.target.value)} />
                                                     </div>
                                                 </div>
                                             </div>

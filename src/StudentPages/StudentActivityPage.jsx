@@ -193,147 +193,165 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
             <MediaCarousel mediaItems={mediaItems} />
 
             {/* Answer Section */}
-            <div className="bg-white rounded-2xl p-6 border border-teal-100 shadow-sm">
-                <h4 className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-4">Write your answer here</h4>
+            {qData.qType === 'no_response' ? null : (
+                <div className="bg-white rounded-2xl p-6 border border-teal-100 shadow-sm">
+                    <h4 className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-4">Write your answer here</h4>
 
-                {/* MCQ - Single correct */}
-                {qData.qType === 'mcq' && (
-                    <div className="grid gap-4">
-                        {(qData.options || []).map((opt, i) => (
-                            <button key={i} onClick={() => update(opt)} disabled={readOnly}
-                                className={`p-6 rounded-2xl border-4 font-bold text-lg text-left transition-all ${response === opt
-                                    ? 'border-teal-500 bg-teal-50 text-teal-700 shadow-md'
-                                    : 'bg-white border-gray-100 text-gray-500 hover:border-teal-200'
-                                    }`}>
-                                {opt}
-                            </button>
-                        ))}
-                    </div>
-                )}
-
-                {/* MSQ - Multiple correct with checkboxes */}
-                {qData.qType === 'msq' && (
-                    <div className="grid gap-4">
-                        {(qData.options || []).map((opt, i) => {
-                            const selected = Array.isArray(response) ? response.includes(opt) : false;
-                            return (
-                                <button key={i} onClick={() => {
-                                    if (readOnly) return;
-                                    const current = Array.isArray(response) ? [...response] : [];
-                                    const newSelection = selected ? current.filter(a => a !== opt) : [...current, opt];
-                                    onInput(newSelection, qIndex);
-                                }} disabled={readOnly}
-                                    className={`p-6 rounded-2xl border-4 font-bold text-lg text-left transition-all flex items-center gap-4 ${selected
-                                        ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-md'
-                                        : 'bg-white border-gray-100 text-gray-500 hover:border-blue-200'
+                    {/* MCQ - Single correct */}
+                    {qData.qType === 'mcq' && (
+                        <div className="grid gap-4">
+                            {(qData.options || []).map((opt, i) => (
+                                <button key={i} onClick={() => update(opt)} disabled={readOnly}
+                                    className={`p-6 rounded-2xl border-4 font-bold text-lg text-left transition-all ${response === opt
+                                        ? 'border-teal-500 bg-teal-50 text-teal-700 shadow-md'
+                                        : 'bg-white border-gray-100 text-gray-500 hover:border-teal-200'
                                         }`}>
-                                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300'
-                                        }`}>
-                                        {selected && <Check size={14} strokeWidth={3} />}
-                                    </div>
                                     {opt}
                                 </button>
-                            );
-                        })}
-                        <p className="text-center text-xs font-bold text-blue-400 uppercase tracking-widest mt-2">Select all that apply</p>
-                    </div>
-                )}
-
-                {/* Fact / Trick / Opinion */}
-                {qData.qType === 'fact_trick' && (
-                    <div className="grid grid-cols-3 gap-4">
-                        {(qData.options || ['Fact', 'Trick', 'Opinion']).slice(0, 3).map((opt, i) => {
-                            const icons = [<Check size={32} />, <AlertTriangle size={32} />, <HelpCircle size={32} />];
-                            const colors = ['bg-green-100 text-green-700', 'bg-red-100 text-red-700', 'bg-blue-100 text-blue-700'];
-                            const isSelected = response === opt;
-                            return (
-                                <button key={i} onClick={() => update(opt)} disabled={readOnly}
-                                    className={`p-6 rounded-[2rem] border-4 flex flex-col items-center justify-center gap-4 transition-all h-48 ${isSelected
-                                        ? 'border-teal-500 bg-white shadow-xl scale-105 z-10'
-                                        : 'border-gray-100 bg-gray-50 hover:bg-white'
-                                        }`}>
-                                    <div className={`p-3 rounded-full ${colors[i % 3]}`}>{icons[i % 3]}</div>
-                                    <span className="font-black text-sm text-center uppercase leading-tight text-gray-700">{opt || 'Option'}</span>
-                                </button>
-                            );
-                        })}
-                    </div>
-                )}
-
-                {/* Single Input */}
-                {qData.qType === 'single_input' && (
-                    <div className="space-y-3">
-                        <label className="text-sm font-black text-teal-400 uppercase tracking-widest ml-2">{qData.inputLabel}</label>
-                        <div className={`border-2 rounded-xl overflow-hidden bg-white transition-all ${readOnly ? 'bg-gray-50 border-gray-200 cursor-not-allowed' : 'border-gray-200 focus-within:border-teal-400 focus-within:shadow-lg'
-                            }`}>
-                            <textarea
-                                className="w-full outline-none px-5 py-4 text-gray-800 text-lg leading-relaxed resize-none"
-                                placeholder={readOnly ? "NOT ANSWERED" : "Type your answer here..."}
-                                rows={Math.max(3, Math.ceil((qData.maxChars || 500) / 100))}
-                                maxLength={qData.maxChars || 500}
-                                value={response || ''}
-                                onChange={e => update(e.target.value)}
-                                disabled={readOnly}
-                                style={{ minHeight: (qData.maxChars || 500) <= 100 ? '80px' : `${80 + Math.ceil(((qData.maxChars || 500) - 100) / 100) * 40}px` }}
-                            />
+                            ))}
                         </div>
-                        <div className="text-right text-xs font-bold text-gray-300">{(response || '').length} / {qData.maxChars || 500}</div>
-                    </div>
-                )}
+                    )}
 
-                {/* Multi-Step Input */}
-                {qData.qType === 'multi_input' && (
-                    <div className="grid gap-8">
-                        {(qData.multiFields || []).map((field, fIdx) => (
-                            <div key={fIdx} className="space-y-3">
-                                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-2 flex justify-between">
-                                    <span>{field.label || `Step ${fIdx + 1}`}</span>
-                                    <span>{(response && response[fIdx]?.length) || 0} / {field.maxChars || 100}</span>
-                                </label>
-                                <div className={`border-2 rounded-xl overflow-hidden bg-white transition-all ${readOnly ? 'bg-gray-50 border-gray-200 cursor-not-allowed' : 'border-gray-200 focus-within:border-teal-400 focus-within:shadow-lg'
-                                    }`}>
-                                    <textarea
-                                        className="w-full outline-none px-5 py-4 text-gray-800 text-lg leading-relaxed resize-none"
-                                        placeholder={readOnly ? "NOT ANSWERED" : "Type your answer here..."}
-                                        maxLength={field.maxChars || 100}
-                                        value={(response && response[fIdx]) || ''}
-                                        onChange={e => update(e.target.value, fIdx)}
-                                        disabled={readOnly}
-                                        style={{ minHeight: (field.maxChars || 100) <= 100 ? '80px' : `${80 + Math.ceil(((field.maxChars || 100) - 100) / 100) * 40}px` }}
-                                    />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                {/* Fill in the Blanks — exact prototype regex */}
-                {qData.qType === 'fill_blanks' && (
-                    <div className="leading-[3.5rem] text-xl text-gray-700 font-medium">
-                        {(qData.fillBlankText || '').split(/(\[\$.*?\])/).map((part, i, arr) => {
-                            if (part.startsWith('[$')) {
-                                const max = part.match(/\d+/)?.[0] || '10';
-                                const idx = arr.slice(0, i).filter(p => p.startsWith('[$')).length;
-                                const val = response ? response[idx] : '';
+                    {/* MSQ - Multiple correct with checkboxes */}
+                    {qData.qType === 'msq' && (
+                        <div className="grid gap-4">
+                            {(qData.options || []).map((opt, i) => {
+                                const selected = Array.isArray(response) ? response.includes(opt) : false;
                                 return (
-                                    <input
-                                        key={i}
-                                        maxLength={parseInt(max, 10)}
-                                        disabled={readOnly}
-                                        value={val || ''}
-                                        onChange={e => update(e.target.value, idx)}
-                                        className={`inline-block border-b-4 w-40 mx-2 px-3 text-center outline-none rounded-t-lg font-bold transition-colors ${readOnly && !val
-                                            ? 'border-red-300 bg-red-100/50 text-red-900'
-                                            : 'border-teal-300 bg-teal-50 text-teal-900 focus:bg-teal-100 focus:border-teal-600'
-                                            }`}
-                                    />
+                                    <button key={i} onClick={() => {
+                                        if (readOnly) return;
+                                        const current = Array.isArray(response) ? [...response] : [];
+                                        const newSelection = selected ? current.filter(a => a !== opt) : [...current, opt];
+                                        onInput(newSelection, qIndex);
+                                    }} disabled={readOnly}
+                                        className={`p-6 rounded-2xl border-4 font-bold text-lg text-left transition-all flex items-center gap-4 ${selected
+                                            ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-md'
+                                            : 'bg-white border-gray-100 text-gray-500 hover:border-blue-200'
+                                            }`}>
+                                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300'
+                                            }`}>
+                                            {selected && <Check size={14} strokeWidth={3} />}
+                                        </div>
+                                        {opt}
+                                    </button>
                                 );
-                            }
-                            return <span key={i}>{part}</span>;
-                        })}
+                            })}
+                            <p className="text-center text-xs font-bold text-blue-400 uppercase tracking-widest mt-2">Select all that apply</p>
+                        </div>
+                    )}
+
+                    {/* Fact / Trick / Opinion */}
+                    {qData.qType === 'fact_trick' && (
+                        <div className="grid grid-cols-3 gap-4">
+                            {(qData.options || ['Fact', 'Trick', 'Opinion']).slice(0, 3).map((opt, i) => {
+                                const icons = [<Check size={32} />, <AlertTriangle size={32} />, <HelpCircle size={32} />];
+                                const colors = ['bg-green-100 text-green-700', 'bg-red-100 text-red-700', 'bg-blue-100 text-blue-700'];
+                                const isSelected = response === opt;
+                                return (
+                                    <button key={i} onClick={() => update(opt)} disabled={readOnly}
+                                        className={`p-6 rounded-[2rem] border-4 flex flex-col items-center justify-center gap-4 transition-all h-48 ${isSelected
+                                            ? 'border-teal-500 bg-white shadow-xl scale-105 z-10'
+                                            : 'border-gray-100 bg-gray-50 hover:bg-white'
+                                            }`}>
+                                        <div className={`p-3 rounded-full ${colors[i % 3]}`}>{icons[i % 3]}</div>
+                                        <span className="font-black text-sm text-center uppercase leading-tight text-gray-700">{opt || 'Option'}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Single Input */}
+                    {qData.qType === 'single_input' && (
+                        <div className="space-y-3">
+                            <label className="text-sm font-black text-teal-400 uppercase tracking-widest ml-2">{qData.inputLabel}</label>
+                            <div className={`border-2 rounded-xl overflow-hidden bg-white transition-all ${readOnly ? 'bg-gray-50 border-gray-200 cursor-not-allowed' : 'border-gray-200 focus-within:border-teal-400 focus-within:shadow-lg'
+                                }`}>
+                                <textarea
+                                    className="w-full outline-none px-5 py-4 text-gray-800 text-lg leading-relaxed resize-none"
+                                    placeholder={readOnly ? "NOT ANSWERED" : "Type your answer here..."}
+                                    rows={Math.max(3, Math.ceil((qData.maxChars || 500) / 100))}
+                                    maxLength={qData.maxChars || 500}
+                                    value={response || ''}
+                                    onChange={e => update(e.target.value)}
+                                    disabled={readOnly}
+                                    style={{ minHeight: (qData.maxChars || 500) <= 100 ? '80px' : `${80 + Math.ceil(((qData.maxChars || 500) - 100) / 100) * 40}px` }}
+                                />
+                            </div>
+                            <div className="text-right text-xs font-bold text-gray-300">{(response || '').length} / {qData.maxChars || 500}</div>
+                        </div>
+                    )}
+
+                    {/* Multi-Step Input */}
+                    {qData.qType === 'multi_input' && (
+                        <div className="grid gap-8">
+                            {(qData.multiFields || []).map((field, fIdx) => (
+                                <div key={fIdx} className="space-y-3">
+                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-2 flex justify-between">
+                                        <span>{field.label || `Step ${fIdx + 1}`}</span>
+                                        <span>{(response && response[fIdx]?.length) || 0} / {field.maxChars || 100}</span>
+                                    </label>
+                                    <div className={`border-2 rounded-xl overflow-hidden bg-white transition-all ${readOnly ? 'bg-gray-50 border-gray-200 cursor-not-allowed' : 'border-gray-200 focus-within:border-teal-400 focus-within:shadow-lg'
+                                        }`}>
+                                        <textarea
+                                            className="w-full outline-none px-5 py-4 text-gray-800 text-lg leading-relaxed resize-none"
+                                            placeholder={readOnly ? "NOT ANSWERED" : "Type your answer here..."}
+                                            maxLength={field.maxChars || 100}
+                                            value={(response && response[fIdx]) || ''}
+                                            onChange={e => update(e.target.value, fIdx)}
+                                            disabled={readOnly}
+                                            style={{ minHeight: (field.maxChars || 100) <= 100 ? '80px' : `${80 + Math.ceil(((field.maxChars || 100) - 100) / 100) * 40}px` }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Fill in the Blanks — exact prototype regex */}
+                    {qData.qType === 'fill_blanks' && (
+                        <div className="leading-[3.5rem] text-xl text-gray-700 font-medium">
+                            {(qData.fillBlankText || '').split(/(\[\$.*?\])/).map((part, i, arr) => {
+                                if (part.startsWith('[$')) {
+                                    const max = part.match(/\d+/)?.[0] || '10';
+                                    const idx = arr.slice(0, i).filter(p => p.startsWith('[$')).length;
+                                    const val = response ? response[idx] : '';
+                                    return (
+                                        <input
+                                            key={i}
+                                            maxLength={parseInt(max, 10)}
+                                            disabled={readOnly}
+                                            value={val || ''}
+                                            onChange={e => update(e.target.value, idx)}
+                                            className={`inline-block border-b-4 w-40 mx-2 px-3 text-center outline-none rounded-t-lg font-bold transition-colors ${readOnly && !val
+                                                ? 'border-red-300 bg-red-100/50 text-red-900'
+                                                : 'border-teal-300 bg-teal-50 text-teal-900 focus:bg-teal-100 focus:border-teal-600'
+                                                }`}
+                                        />
+                                    );
+                                }
+                                return <span key={i}>{part}</span>;
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Answer Embed URL iframe */}
+            {qData.answer_embed_url && (
+                <div className="mt-4 rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white">
+                    <div className="px-4 py-2 bg-gray-50 border-b flex items-center gap-2">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">{qData.answer_embed_label || 'Reference'}</span>
                     </div>
-                )}
-            </div>
+                    <iframe
+                        src={qData.answer_embed_url}
+                        className="w-full h-64 border-0"
+                        loading="lazy"
+                        allowFullScreen
+                        title="Answer Embed"
+                    />
+                </div>
+            )}
         </div>
     );
 };
@@ -561,6 +579,8 @@ const QuestionView = ({
     };
 
     const hasAnswer = (idx) => {
+        const q = questions[idx];
+        if (q?.qType === 'no_response') return true;
         const ans = answers[idx];
         if (!ans) return false;
         if (Array.isArray(ans)) return ans.some(v => !!v);
@@ -728,21 +748,25 @@ const QuestionView = ({
                     {gradingResult && (
                         <div className="mt-6 bg-white rounded-2xl border-2 border-gray-100 shadow-lg overflow-hidden animate-[fadeIn_0.3s_ease-out]">
                             {/* Score Header */}
-                            <div className={`p-5 flex items-center justify-between ${gradingResult.score >= 5
+                            <div className={`p-5 flex items-center justify-between ${currentQ?.showGrade === false
+                                ? 'bg-gradient-to-r from-purple-500 to-indigo-500'
+                                : gradingResult.score >= 5
                                     ? 'bg-gradient-to-r from-teal-500 to-emerald-500'
                                     : 'bg-gradient-to-r from-red-500 to-orange-500'
                                 }`}>
                                 <div className="flex items-center gap-3 text-white">
                                     <div className="p-2 bg-white/20 rounded-xl"><GraduationCap size={22} /></div>
                                     <div>
-                                        <h3 className="font-bold text-base">AI Evaluation</h3>
+                                        <h3 className="font-bold text-base">{currentQ?.showGrade === false ? 'AI Feedback' : 'AI Evaluation'}</h3>
                                         <p className="text-white/70 text-xs">Analysis Complete</p>
                                     </div>
                                 </div>
-                                <div className="text-right text-white">
-                                    <span className="text-3xl font-black">{gradingResult.score}</span>
-                                    <span className="text-white/60 text-lg">/10</span>
-                                </div>
+                                {currentQ?.showGrade !== false && (
+                                    <div className="text-right text-white">
+                                        <span className="text-3xl font-black">{gradingResult.score}</span>
+                                        <span className="text-white/60 text-lg">/10</span>
+                                    </div>
+                                )}
                             </div>
                             {/* Feedback Body */}
                             <div className="p-5 space-y-4">
@@ -759,7 +783,7 @@ const QuestionView = ({
                                         </div>
                                     </div>
                                 )}
-                                {gradingResult.score < 5 ? (
+                                {(gradingResult.score < 5 && currentQ?.showGrade !== false) ? (
                                     <button
                                         onClick={handleRetry}
                                         className="w-full bg-red-500 text-white py-4 rounded-xl font-bold hover:bg-red-600 transition-all flex items-center justify-center gap-2"
@@ -780,29 +804,38 @@ const QuestionView = ({
                 </div>
             </div>
 
-            {/* Footer: Submit / Grading */}
+            {/* Footer: Submit / Grading / Next (no_response) */}
             {!gradingResult && (
                 <div className="fixed bottom-0 left-0 w-full bg-white border-t px-6 py-4 z-10">
                     <div className="max-w-2xl mx-auto">
-                        <button
-                            onClick={handleSubmit}
-                            disabled={!hasAnswer(currentQuestionIdx) || isSubmitting}
-                            className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 ${isSubmitting
-                                ? 'bg-teal-500 text-white cursor-wait'
-                                : hasAnswer(currentQuestionIdx)
-                                    ? 'bg-teal-500 text-white hover:bg-teal-600 shadow-lg'
-                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                }`}
-                        >
-                            {isSubmitting ? (
-                                <>
-                                    <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                                    Grading...
-                                </>
-                            ) : (
-                                'Submit Answer'
-                            )}
-                        </button>
+                        {currentQ?.qType === 'no_response' ? (
+                            <button
+                                onClick={handleContinue}
+                                className="w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 bg-teal-500 text-white hover:bg-teal-600 shadow-lg"
+                            >
+                                {currentQuestionIdx < totalQ - 1 ? 'Next Question →' : 'Complete Activity ✓'}
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleSubmit}
+                                disabled={!hasAnswer(currentQuestionIdx) || isSubmitting}
+                                className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 ${isSubmitting
+                                    ? 'bg-teal-500 text-white cursor-wait'
+                                    : hasAnswer(currentQuestionIdx)
+                                        ? 'bg-teal-500 text-white hover:bg-teal-600 shadow-lg'
+                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                    }`}
+                            >
+                                {isSubmitting ? (
+                                    <>
+                                        <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                                        Grading...
+                                    </>
+                                ) : (
+                                    'Submit Answer'
+                                )}
+                            </button>
+                        )}
                     </div>
                 </div>
             )}

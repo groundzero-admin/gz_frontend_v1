@@ -255,13 +255,32 @@ const BatchDetailsModal = ({ isOpen, onClose, batch, sessions, isLoadingSessions
                       */}
 
                       {/* Activity Button */}
-                      <button
-                        onClick={() => window.open(`/student/activity/batch-session/${session._id}`, '_blank')}
-                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition hover:scale-105 shadow-md"
-                        style={{ backgroundColor: "black" }}
-                      >
-                        <FaRocket /> Activity
-                      </button>
+                      {(() => {
+                        let activityEnabled = true;
+                        if (session.date && session.start_time) {
+                          try {
+                            const sDate = new Date(session.date);
+                            const [tStr, mod] = session.start_time.split(" ");
+                            let [h, m] = tStr.split(":").map(Number);
+                            if (mod === "PM" && h !== 12) h += 12;
+                            if (mod === "AM" && h === 12) h = 0;
+                            sDate.setHours(h, m, 0, 0);
+                            if (new Date() < sDate) activityEnabled = false;
+                          } catch (e) { /* parsing fail → keep enabled */ }
+                        }
+                        return (
+                          <button
+                            onClick={() => activityEnabled && window.open(`/student/activity/batch-session/${session._id}`, '_blank')}
+                            disabled={!activityEnabled}
+                            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition shadow-md ${activityEnabled
+                                ? 'bg-emerald-500 hover:bg-emerald-600 hover:scale-105 cursor-pointer'
+                                : 'bg-gray-300 cursor-not-allowed opacity-60'
+                              }`}
+                          >
+                            <FaRocket /> Activity
+                          </button>
+                        );
+                      })()}
 
                       {noCredit ? (
                         <button

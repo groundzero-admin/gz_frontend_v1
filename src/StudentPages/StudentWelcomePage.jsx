@@ -105,31 +105,46 @@ const SessionCard = ({ session, status, isDark }) => {
   };
 
   const getActionButton = () => {
+    // Compute whether session has started (activity only enabled after session start time)
+    let activityEnabled = true;
+    if (session.date && session.startTime) {
+      try {
+        const sDate = new Date(session.date);
+        const [tStr, mod] = session.startTime.split(" ");
+        let [h, m] = tStr.split(":").map(Number);
+        if (mod === "PM" && h !== 12) h += 12;
+        if (mod === "AM" && h === 12) h = 0;
+        sDate.setHours(h, m, 0, 0);
+        if (new Date() < sDate) activityEnabled = false;
+      } catch (e) { /* parsing fail → keep enabled */ }
+    }
+
+    const activityBtnClass = activityEnabled
+      ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'
+      : 'bg-gray-300 text-white cursor-not-allowed opacity-60';
+
     if (status === 'upcoming') {
-      if (session.sessionType === 'OFFLINE') return null;
       return (
         <div className="flex flex-col xl:flex-row gap-2 w-full">
-          <a
-            href={session.meetingLinkOrLocation || "#"}
-            target={session.meetingLinkOrLocation ? "_blank" : "_self"}
-            rel="noopener noreferrer"
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold shadow-lg
-              ${session.sessionType === 'ONLINE'
-                ? "bg-cyan-500 hover:bg-cyan-400 text-black shadow-cyan-500/20"
-                : "bg-purple-600 hover:bg-purple-500 text-white shadow-purple-500/20"
-              }
-              ${!session.meetingLinkOrLocation ? 'opacity-50 cursor-not-allowed pointer-events-none grayscale' : ''}
-            `}
-          >
-            {session.sessionType === 'ONLINE' ? <Video className="w-4 h-4" /> : <MapPin className="w-4 h-4" />}
-            {session.sessionType === 'ONLINE' ? "Open GMeet" : "View Location"}
-          </a>
+          {session.sessionType === 'ONLINE' && (
+            <a
+              href={session.meetingLinkOrLocation || "#"}
+              target={session.meetingLinkOrLocation ? "_blank" : "_self"}
+              rel="noopener noreferrer"
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold shadow-lg
+                bg-cyan-500 hover:bg-cyan-400 text-black shadow-cyan-500/20
+                ${!session.meetingLinkOrLocation ? 'opacity-50 cursor-not-allowed pointer-events-none grayscale' : ''}
+              `}
+            >
+              <Video className="w-4 h-4" />
+              Open GMeet
+            </a>
+          )}
 
           <button
-            onClick={() => window.open(`/student/activity/batch-session/${session._id}`, '_blank')}
-            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold border
-              ${isDark ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black"}
-            `}
+            onClick={() => activityEnabled && window.open(`/student/activity/batch-session/${session._id}`, '_blank')}
+            disabled={!activityEnabled}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold shadow-lg ${activityBtnClass}`}
           >
             <Rocket className="w-4 h-4" />
             Activity
@@ -139,11 +154,11 @@ const SessionCard = ({ session, status, isDark }) => {
     }
 
     if (status === 'completed') {
-      if (session.sessionType === 'OFFLINE') return null;
       return (
         <button
-          onClick={() => window.open(`/student/activity/batch-session/${session._id}`, '_blank')}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border border-emerald-500/20 rounded-xl transition-all duration-300 text-sm font-bold"
+          onClick={() => activityEnabled && window.open(`/student/activity/batch-session/${session._id}`, '_blank')}
+          disabled={!activityEnabled}
+          className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold shadow-lg ${activityBtnClass}`}
         >
           <Rocket className="w-4 h-4" />
           Activity
@@ -163,17 +178,14 @@ const SessionCard = ({ session, status, isDark }) => {
             <CalendarPlus className="w-4 h-4" />
             Catch Up
           </a>
-          {session.sessionType !== 'OFFLINE' && (
-            <button
-              onClick={() => window.open(`/student/activity/batch-session/${session._id}`, '_blank')}
-              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold border
-                  ${isDark ? "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10 hover:text-white" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-black"}
-              `}
-            >
-              <Rocket className="w-4 h-4" />
-              Activity
-            </button>
-          )}
+          <button
+            onClick={() => activityEnabled && window.open(`/student/activity/batch-session/${session._id}`, '_blank')}
+            disabled={!activityEnabled}
+            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl transition-all duration-300 text-sm font-bold shadow-lg ${activityBtnClass}`}
+          >
+            <Rocket className="w-4 h-4" />
+            Activity
+          </button>
         </div>
       );
     }
