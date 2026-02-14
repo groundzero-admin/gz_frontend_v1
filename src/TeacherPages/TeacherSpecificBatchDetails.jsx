@@ -3,8 +3,8 @@ import { useOutletContext, useParams, useNavigate } from 'react-router-dom';
 import { getBatchAndSessionDetailsForTeacher } from "../api.js";
 
 // --- ICONS ---
-import { 
-  FaArrowLeft, FaCalendarAlt, FaClock, FaMapMarkerAlt, FaLink, 
+import {
+  FaArrowLeft, FaCalendarAlt, FaClock, FaMapMarkerAlt, FaLink,
   FaUserGraduate, FaEnvelope, FaIdBadge, FaCommentDots,
   FaChevronUp, FaChevronDown, FaChalkboard, FaCopy, FaExternalLinkAlt,
   FaInfoCircle
@@ -54,7 +54,7 @@ const SessionCard = ({ session, isDark }) => {
 
         {/* Title & Time */}
         <div className="flex-grow">
-           <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start">
             <h4 className="font-bold text-lg leading-tight mb-1">
               {session.title}
             </h4>
@@ -62,7 +62,7 @@ const SessionCard = ({ session, isDark }) => {
               #{session.session_number}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-2 text-xs font-medium opacity-70">
             <FaClock />
             {session.startTime} - {session.endTime}
@@ -74,20 +74,20 @@ const SessionCard = ({ session, isDark }) => {
 
       {/* LINKS SECTION */}
       <div className="mt-auto space-y-3 pt-4 border-t" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>
-        
+
         {/* 1. Meeting Link / Location */}
         {session.meetingLinkOrLocation && (
           <div className="flex items-center justify-between p-2 rounded-lg bg-black/5 dark:bg-white/5">
             <div className="flex items-center gap-2 text-xs overflow-hidden">
               {isUrl ? <FaLink className="text-blue-400 flex-shrink-0" /> : <FaMapMarkerAlt className="text-red-400 flex-shrink-0" />}
               <span className="truncate opacity-80" title={session.meetingLinkOrLocation}>
-                 {isUrl ? "Meeting Link" : session.meetingLinkOrLocation}
+                {isUrl ? "Meeting Link" : session.meetingLinkOrLocation}
               </span>
             </div>
-            
+
             {isUrl && (
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={() => copyToClipboard(session.meetingLinkOrLocation)}
                   className="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10"
                   title="Copy Link"
@@ -107,32 +107,32 @@ const SessionCard = ({ session, isDark }) => {
           </div>
         )}
 
-        {/* 2. Google Classroom Link */}
-        {session.googleClassroomLink && (
-           <div className="flex items-center justify-between p-2 rounded-lg bg-black/5 dark:bg-white/5">
-             <div className="flex items-center gap-2 text-xs overflow-hidden">
-               <FaChalkboard className="text-amber-500 flex-shrink-0" />
-               <span className="truncate opacity-80">Classroom Material</span>
-             </div>
-             
-             <div className="flex gap-2">
-                <button 
-                  onClick={() => copyToClipboard(session.googleClassroomLink)}
-                  className="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10"
-                  title="Copy Link"
-                >
-                  <FaCopy size={12} />
-                </button>
-                <a
-                  href={session.googleClassroomLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="p-1.5 rounded bg-amber-600 text-white hover:bg-amber-700 flex items-center gap-1 text-[10px] font-bold px-2"
-                >
-                  OPEN <FaExternalLinkAlt size={8} />
-                </a>
-              </div>
-           </div>
+        {/* Google Classroom Link - Hidden for now */}
+        {false && session.googleClassroomLink && (
+          <div className="flex items-center justify-between p-2 rounded-lg bg-black/5 dark:bg-white/5">
+            <div className="flex items-center gap-2 text-xs overflow-hidden">
+              <FaChalkboard className="text-amber-500 flex-shrink-0" />
+              <span className="truncate opacity-80">Classroom Material</span>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => copyToClipboard(session.googleClassroomLink)}
+                className="p-1.5 rounded hover:bg-black/10 dark:hover:bg-white/10"
+                title="Copy Link"
+              >
+                <FaCopy size={12} />
+              </button>
+              <a
+                href={session.googleClassroomLink}
+                target="_blank"
+                rel="noreferrer"
+                className="p-1.5 rounded bg-amber-600 text-white hover:bg-amber-700 flex items-center gap-1 text-[10px] font-bold px-2"
+              >
+                OPEN <FaExternalLinkAlt size={8} />
+              </a>
+            </div>
+          </div>
         )}
 
       </div>
@@ -170,9 +170,9 @@ const StudentRow = ({ student, isDark }) => {
               <FaIdBadge /> {student.student_number}
             </span>
             {student.joinedAt && (
-                <span className="flex items-center gap-1 opacity-60">
-                    Joined: {new Date(student.joinedAt).toLocaleDateString()}
-                </span>
+              <span className="flex items-center gap-1 opacity-60">
+                Joined: {new Date(student.joinedAt).toLocaleDateString()}
+              </span>
             )}
           </div>
         </div>
@@ -210,9 +210,9 @@ const TeacherSpecificBatchDetailPage = () => {
       const response = await getBatchAndSessionDetailsForTeacher(batchId);
 
       if (response.success) {
-         setBatchData(response.data);
+        setBatchData(response.data);
       } else {
-         console.error(response.message);
+        console.error(response.message);
       }
 
       setIsLoading(false);
@@ -230,64 +230,63 @@ const TeacherSpecificBatchDetailPage = () => {
 
       {/* HEADER SECTION (Expanded Info) */}
       <div className="flex flex-col gap-6 mb-8">
-        
+
         {/* Navigation & Title */}
         <div className="flex items-center gap-4">
-            <button
+          <button
             onClick={() => navigate("/teacher/dashboard/batches")}
             className="p-3 rounded-full transition"
             style={{ backgroundColor: `var(${isDark ? "--card-dark" : "--border-light"})` }}
-            >
+          >
             <FaArrowLeft />
-            </button>
-            <h1 className="text-3xl font-bold">Batch Details</h1>
+          </button>
+          <h1 className="text-3xl font-bold">Batch Details</h1>
         </div>
 
         {/* Batch Info Card */}
-        <div 
-            className="p-6 rounded-2xl border shadow-sm"
-            style={{ 
-                backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
-                borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` 
-            }}
+        <div
+          className="p-6 rounded-2xl border shadow-sm"
+          style={{
+            backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
+            borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`
+          }}
         >
-            <div className="flex flex-wrap justify-between items-start gap-4">
-                <div>
-                    <div className="flex items-center gap-3 mb-2">
-                        <h2 className="text-2xl font-extrabold text-[var(--accent-teal)]">
-                            {batchData.batchName} {/* Using batchName from JSON */}
-                        </h2>
-                        <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${
-                            batchData.batchType === "ONLINE" ? "bg-blue-100 text-blue-800" : "bg-orange-100 text-orange-800"
-                        }`}>
-                            {batchData.batchType}
-                        </span>
-                    </div>
-                    
-                    <p className="opacity-70 text-sm max-w-2xl mb-4 leading-relaxed">
-                        {batchData.description}
-                    </p>
+          <div className="flex flex-wrap justify-between items-start gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-2xl font-extrabold text-[var(--accent-teal)]">
+                  {batchData.batchName} {/* Using batchName from JSON */}
+                </h2>
+                <span className={`text-xs px-2 py-1 rounded font-bold uppercase ${batchData.batchType === "ONLINE" ? "bg-blue-100 text-blue-800" : "bg-orange-100 text-orange-800"
+                  }`}>
+                  {batchData.batchType}
+                </span>
+              </div>
 
-                    <div className="flex flex-wrap gap-4 text-sm font-medium opacity-80">
-                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/5">
-                             <span className="opacity-50 uppercase text-[10px]">Level</span>
-                             <span>{batchData.level}</span>
-                         </div>
-                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/5">
-                             <span className="opacity-50 uppercase text-[10px]">Started</span>
-                             <span>{new Date(batchData.startDate).toLocaleDateString()}</span>
-                         </div>
-                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/5">
-                             <span className="opacity-50 uppercase text-[10px]">Students</span>
-                             <span>{batchData.students?.length || 0}</span>
-                         </div>
-                         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/5">
-                             <span className="opacity-50 uppercase text-[10px]">Sessions</span>
-                             <span>{batchData.sessions?.length || 0}</span>
-                         </div>
-                    </div>
+              <p className="opacity-70 text-sm max-w-2xl mb-4 leading-relaxed">
+                {batchData.description}
+              </p>
+
+              <div className="flex flex-wrap gap-4 text-sm font-medium opacity-80">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/5">
+                  <span className="opacity-50 uppercase text-[10px]">Level</span>
+                  <span>{batchData.level}</span>
                 </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/5">
+                  <span className="opacity-50 uppercase text-[10px]">Started</span>
+                  <span>{new Date(batchData.startDate).toLocaleDateString()}</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/5">
+                  <span className="opacity-50 uppercase text-[10px]">Students</span>
+                  <span>{batchData.students?.length || 0}</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/5 dark:bg-white/5">
+                  <span className="opacity-50 uppercase text-[10px]">Sessions</span>
+                  <span>{batchData.sessions?.length || 0}</span>
+                </div>
+              </div>
             </div>
+          </div>
         </div>
 
       </div>
@@ -320,7 +319,7 @@ const TeacherSpecificBatchDetailPage = () => {
                 ))
               ) : (
                 <div className="col-span-full p-8 text-center opacity-50 border border-dashed rounded-xl">
-                    No sessions scheduled yet.
+                  No sessions scheduled yet.
                 </div>
               )}
             </div>

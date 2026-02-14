@@ -310,7 +310,7 @@ const StudentAskToAIPage = () => {
       const response = await askGeneralQuestion(threadId, textToSend);
       let botReply = "Communication interrupted.";
       if (response.success) {
-        botReply = response.data.answer || "I received your message but couldn't generate a response.";
+        botReply = response.data.answer || "I'm sorry, I couldn't generate a valid response.";
       } else {
         botReply = response.message;
       }

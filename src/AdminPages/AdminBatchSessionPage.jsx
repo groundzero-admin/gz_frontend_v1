@@ -513,7 +513,8 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSession, batch
             />
           </div>
 
-          {isOnline && (
+          {/* Google Classroom Link - Hidden for now */}
+          {false && isOnline && (
             <div>
               <label className="block text-sm font-medium mb-1 flex items-center gap-2">
                 <FaChalkboardTeacher /> Google Classroom Link <span className="opacity-50 font-normal">(Optional)</span>
@@ -671,7 +672,8 @@ const SessionCard = ({ session, isDark, onClick, batchType, onDelete }) => {
               />
             )}
 
-            {session.googleClassroomLink && (
+            {/* Google Classroom Link - Hidden for now */}
+            {false && session.googleClassroomLink && (
               <LinkActionButton
                 url={session.googleClassroomLink}
                 label="Classroom"
