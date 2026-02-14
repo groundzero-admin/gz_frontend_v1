@@ -601,7 +601,7 @@ const SessionCard = ({ session, isDark, onClick, batchType, onDelete }) => {
 
   return (
     <div
-      onClick={onClick}
+      onDoubleClick={onClick}
       className="p-5 rounded-xl border flex items-start gap-4 transition-all hover:shadow-lg cursor-pointer h-full relative group"
       style={{
         backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
@@ -621,16 +621,16 @@ const SessionCard = ({ session, isDark, onClick, batchType, onDelete }) => {
         </button>
       </div>
 
-      <div className="absolute bottom-2 right-2 flex gap-2 z-10 opacity-0 group-hover:opacity-100 transition">
+      <div className="absolute bottom-3 right-3 flex gap-2 z-10">
         <button
           onClick={(e) => { e.stopPropagation(); navigate(`/admin/dashboard/batch-session/${session._id}/sections`); }}
-          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-black text-white hover:opacity-80 transition flex items-center gap-1 shadow-sm"
+          className="px-4 py-2 rounded-lg text-xs font-bold bg-black text-white hover:bg-gray-800 transition flex items-center gap-1 shadow-md z-20"
         >
           <FaLayerGroup /> Content
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); navigate(`/admin/dashboard/batch-session/${session._id}/review`); }}
-          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:opacity-80 transition flex items-center gap-1 shadow-sm"
+          className="px-4 py-2 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition flex items-center gap-1 shadow-md z-20"
         >
           <FaCheck /> Review
         </button>

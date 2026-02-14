@@ -78,17 +78,35 @@ const Sidebar = ({ userData, onLogout, isDark, onToggleTheme, isSidebarOpen, set
 
         {/* Navigation Links */}
         <ul className="flex flex-col gap-2 flex-grow">
-          {sidebarLinks.map((link) => (
-            <SidebarLink
-              key={link.to}
-              to={link.to}
-              icon={link.icon}
-              label={link.label}
-              isActive={currentPath.startsWith(link.to)}
+          {sidebarLinks.map((link) => {
+            let isActive = currentPath.startsWith(link.to);
 
-              isDark={isDark}
-            />
-          ))}
+            // Special Case: Highlight "Batches" when in a batch session sub-page
+            if (link.to === "/admin/dashboard/batches" && currentPath.includes("/admin/dashboard/batch-session/")) {
+              isActive = true;
+            }
+
+            // Special Case: Highlight "Batch Templates" when in a template session sub-page
+            if (link.to === "/admin/dashboard/templates" && (currentPath.includes("/admin/dashboard/template-session/") || currentPath.includes("/admin/dashboard/template-section/"))) {
+              isActive = true;
+            }
+            // Also cover batch section sub-pages for Batches
+            if (link.to === "/admin/dashboard/batches" && (currentPath.includes("/admin/dashboard/batch-section/") || currentPath.includes("/admin/dashboard/batch-session/"))) {
+              isActive = true;
+            }
+
+
+            return (
+              <SidebarLink
+                key={link.to}
+                to={link.to}
+                icon={link.icon}
+                label={link.label}
+                isActive={isActive}
+                isDark={isDark}
+              />
+            );
+          })}
         </ul>
 
         {/* Theme Toggle Button */}

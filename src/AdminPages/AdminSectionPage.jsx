@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import {
     FaArrowLeft,
     FaPlus,
@@ -19,6 +19,7 @@ import {
 } from "../api.js";
 
 const AdminSectionPage = () => {
+    const { isDark } = useOutletContext();
     const { templateSessionId, batchSessionId } = useParams();
     const navigate = useNavigate();
     const isTemplateMode = !!templateSessionId;
@@ -107,14 +108,28 @@ const AdminSectionPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
-            <div className="max-w-4xl mx-auto">
+        <div
+            className="flex flex-col min-h-[calc(100vh)] w-[calc(100%+3rem)] md:w-[calc(100%+5rem)] -m-6 md:-m-10 p-6 font-sans transition-colors duration-300"
+            style={{
+                backgroundColor: `var(${isDark ? "--bg-dark" : "--bg-light"})`,
+                color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`
+            }}
+        >
+            <div className="max-w-4xl mx-auto w-full pt-6">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={() => navigate(-1)}
-                            className="p-2 rounded-full hover:bg-gray-200 transition"
+                            onClick={() => {
+                                if (isTemplateMode && sessionDetails?.template_obj_id?._id) {
+                                    navigate(`/admin/dashboard/templates/${sessionDetails.template_obj_id._id}`);
+                                } else if (!isTemplateMode && sessionDetails?.batch_obj_id?._id) {
+                                    navigate(`/admin/dashboard/batches/${sessionDetails.batch_obj_id._id}`);
+                                } else {
+                                    navigate(-1);
+                                }
+                            }}
+                            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 transition"
                         >
                             <FaArrowLeft />
                         </button>
@@ -140,7 +155,7 @@ const AdminSectionPage = () => {
                     </div>
                     <button
                         onClick={() => openModal()}
-                        className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition"
+                        className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition shadow-lg"
                     >
                         <FaPlus /> Add Section
                     </button>
@@ -152,42 +167,55 @@ const AdminSectionPage = () => {
                 ) : error ? (
                     <div className="bg-red-50 text-red-600 p-4 rounded-lg">{error}</div>
                 ) : sections.length === 0 ? (
-                    <div className="bg-white p-12 rounded-2xl shadow-sm text-center border border-dashed border-gray-300">
-                        <p className="text-gray-500 mb-4">No sections found.</p>
+                    <div
+                        className="p-12 rounded-2xl shadow-sm text-center border dashed transition-colors"
+                        style={{
+                            backgroundColor: `var(${isDark ? "--card-dark" : "#ffffff"})`,
+                            borderColor: `var(${isDark ? "--border-dark" : "#e5e7eb"})`
+                        }}
+                    >
+                        <p className="opacity-50 mb-4">No sections found.</p>
                         <button onClick={() => openModal()} className="text-blue-600 hover:underline">Create your first section</button>
                     </div>
                 ) : (
                     <div className="grid gap-4">
                         {sections.map((section) => (
-                            <div key={section._id} className="bg-white p-6 rounded-xl shadow-sm border hover:shadow-md transition flex items-center justify-between group">
+                            <div
+                                key={section._id}
+                                className="p-6 rounded-xl shadow-sm border hover:shadow-md transition flex items-center justify-between group"
+                                style={{
+                                    backgroundColor: `var(${isDark ? "--card-dark" : "#ffffff"})`,
+                                    borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`
+                                }}
+                            >
                                 <div
                                     className="flex-1 cursor-pointer"
                                     onClick={() => handleNavigateToActivities(section._id)}
                                 >
                                     <div className="flex items-center gap-3">
                                         <h3 className="text-lg font-bold">{section.sectionName}</h3>
-                                        <span className="text-xs px-2 py-1 bg-gray-100 rounded text-gray-500">Order: {section.order}</span>
+                                        <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded opacity-70">Order: {section.order}</span>
                                         {isTemplateMode ? null : (
                                             // Show if it's synced or custom
-                                            <span className={`text-xs px-2 py-1 rounded ${section.templateSection_ref ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'}`}>
+                                            <span className={`text-xs px-2 py-1 rounded ${section.templateSection_ref ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' : 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300'}`}>
                                                 {section.templateSection_ref ? 'Synced' : 'Custom'}
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-sm text-gray-400 mt-1 flex items-center gap-1 group-hover:text-blue-500 transition">
+                                    <p className="text-sm opacity-60 mt-1 flex items-center gap-1 group-hover:text-blue-500 transition">
                                         <FaList className="text-xs" /> Click to manage activities
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => openModal(section)}
-                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition"
+                                        className="p-2 opacity-50 hover:opacity-100 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition"
                                     >
                                         <FaEdit />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(section._id)}
-                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition"
+                                        className="p-2 opacity-50 hover:opacity-100 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition"
                                     >
                                         <FaTrash />
                                     </button>
@@ -201,33 +229,42 @@ const AdminSectionPage = () => {
             {/* Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-md rounded-2xl p-6 shadow-2xl">
+                    <div
+                        className="w-full max-w-md rounded-2xl p-6 shadow-2xl transition-colors"
+                        style={{
+                            backgroundColor: `var(${isDark ? "--card-dark" : "#ffffff"})`,
+                            color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`,
+                            border: `1px solid var(${isDark ? "--border-dark" : "transparent"})`
+                        }}
+                    >
                         <h2 className="text-xl font-bold mb-4">{editingSection ? 'Edit Section' : 'New Section'}</h2>
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium mb-1">Section Name</label>
+                                <label className="block text-sm font-medium mb-1 opacity-80">Section Name</label>
                                 <input
                                     type="text"
                                     value={formData.sectionName}
                                     onChange={e => setFormData({ ...formData, sectionName: e.target.value })}
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-black outline-none"
+                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white outline-none bg-transparent"
+                                    style={{ borderColor: `var(${isDark ? "--border-dark" : "#e5e7eb"})` }}
                                     autoFocus
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium mb-1">Order</label>
+                                <label className="block text-sm font-medium mb-1 opacity-80">Order</label>
                                 <input
                                     type="number"
                                     value={formData.order}
                                     onChange={e => setFormData({ ...formData, order: Number(e.target.value) })}
-                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-black outline-none"
+                                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-black dark:focus:ring-white outline-none bg-transparent"
+                                    style={{ borderColor: `var(${isDark ? "--border-dark" : "#e5e7eb"})` }}
                                 />
                             </div>
                         </div>
                         <div className="flex justify-end gap-2 mt-6">
                             <button
                                 onClick={() => setIsModalOpen(false)}
-                                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                                className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
                             >
                                 Cancel
                             </button>

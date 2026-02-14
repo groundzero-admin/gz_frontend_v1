@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Color } from '@tiptap/extension-color';
@@ -22,9 +22,9 @@ import {
 
 const MenuBar = ({ editor }) => {
     if (!editor) return null;
-    const isActive = (type, opts) => editor.isActive(type, opts) ? 'bg-gray-200 text-black' : 'text-gray-500 hover:bg-gray-100';
+    const isActive = (type, opts) => editor.isActive(type, opts) ? 'bg-gray-200 text-black' : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-gray-400';
     return (
-        <div className="flex flex-wrap gap-1 p-2 border-b bg-gray-50 rounded-t-lg">
+        <div className="flex flex-wrap gap-1 p-2 border-b bg-gray-50 dark:bg-gray-800 dark:border-gray-700 rounded-t-lg transition-colors">
             <button onClick={() => editor.chain().focus().toggleBold().run()} className={`p-1.5 rounded ${isActive('bold')}`} title="Bold"><FaBold size={14} /></button>
             <button onClick={() => editor.chain().focus().toggleItalic().run()} className={`p-1.5 rounded ${isActive('italic')}`} title="Italic"><FaItalic size={14} /></button>
             <div className="w-px bg-gray-300 mx-1" />
@@ -51,9 +51,9 @@ const RichTextEditor = ({ content, onChange, placeholder }) => {
         }
     }, [content, editor]);
     return (
-        <div className="border rounded-lg bg-white overflow-hidden focus-within:ring-2 focus-within:ring-black">
+        <div className="border rounded-lg bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 overflow-hidden focus-within:ring-2 focus-within:ring-black dark:focus-within:ring-white transition-colors">
             <MenuBar editor={editor} />
-            <EditorContent editor={editor} placeholder={placeholder} />
+            <EditorContent editor={editor} placeholder={placeholder} className="dark:text-gray-200" />
         </div>
     );
 };
@@ -63,6 +63,7 @@ const RichTextEditor = ({ content, onChange, placeholder }) => {
 // ──────────────────────────────────────────
 
 const AdminActivityEditor = () => {
+    const { isDark } = useOutletContext();
     const { templateSessionId, sectionId, activityId: routeActivityId, batchSectionId } = useParams();
     const navigate = useNavigate();
 
@@ -324,10 +325,22 @@ const AdminActivityEditor = () => {
     // ──────────────────────────────────────
 
     return (
-        <div className="flex h-screen bg-gray-50 overflow-hidden font-sans text-gray-800">
+        <div
+            className="flex h-[calc(100vh)] w-[calc(100%+3rem)] md:w-[calc(100%+5rem)] -m-6 md:-m-10 overflow-hidden font-sans transition-colors duration-300"
+            style={{
+                backgroundColor: `var(${isDark ? "--bg-dark" : "--bg-light"})`, // Was bg-gray-50
+                color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`
+            }}
+        >
             {/* Sidebar */}
-            <div className="w-80 bg-white border-r flex flex-col">
-                <div className="p-4 border-b space-y-3">
+            <div
+                className="w-80 border-r flex flex-col transition-colors duration-300"
+                style={{
+                    backgroundColor: `var(${isDark ? "--bg-dark" : "#ffffff"})`,
+                    borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`
+                }}
+            >
+                <div className="p-4 border-b space-y-3" style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}>
                     <div className="flex items-center justify-between">
                         <button onClick={() => {
                             if (breadcrumb.sessionId) {
@@ -338,36 +351,36 @@ const AdminActivityEditor = () => {
                             } else {
                                 navigate(-1);
                             }
-                        }} className="p-2 hover:bg-gray-100 rounded-full" title="Back to Sections">
+                        }} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition" title="Back to Sections">
                             <FaArrowLeft />
                         </button>
                         <h2 className="font-bold text-lg">Activities</h2>
-                        <button onClick={handleCreateNew} className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-800 text-sm font-medium transition">
+                        <button onClick={handleCreateNew} className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white rounded-lg hover:bg-gray-800 text-sm font-medium transition shadow-lg">
                             <FaPlus size={10} /> Add Activity
                         </button>
                     </div>
                     {/* Breadcrumb */}
                     {breadcrumb.batchOrTemplateName && (
-                        <div className="flex items-center gap-1 text-xs text-gray-500 bg-gray-50 px-3 py-2 rounded-lg overflow-hidden">
-                            <span className="font-semibold text-gray-700 truncate max-w-[80px]" title={breadcrumb.batchOrTemplateName}>{breadcrumb.batchOrTemplateName}</span>
-                            <FaChevronRight size={8} className="text-gray-300 flex-shrink-0" />
-                            <span className="truncate max-w-[80px]" title={breadcrumb.sessionTitle}>{breadcrumb.sessionTitle}</span>
-                            <FaChevronRight size={8} className="text-gray-300 flex-shrink-0" />
-                            <span className="font-semibold text-black truncate max-w-[80px]" title={breadcrumb.sectionName}>{breadcrumb.sectionName}</span>
+                        <div className="flex flex-wrap items-center gap-2 text-sm mb-1 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                            <span className="font-bold text-gray-800" title={breadcrumb.batchOrTemplateName}>{breadcrumb.batchOrTemplateName}</span>
+                            <FaChevronRight size={10} className="text-gray-400 flex-shrink-0" />
+                            <span className="font-bold text-gray-800" title={breadcrumb.sessionTitle}>{breadcrumb.sessionTitle}</span>
+                            <FaChevronRight size={10} className="text-gray-400 flex-shrink-0" />
+                            <span className="font-extrabold text-blue-600 bg-white px-2 py-0.5 rounded border border-blue-100 shadow-sm" title={breadcrumb.sectionName}>{breadcrumb.sectionName}</span>
                         </div>
                     )}
                 </div>
-                <div className="flex-1 overflow-y-auto p-2 space-y-2">
-                    {sidebarLoading ? <p className="p-4 text-center text-gray-400">Loading...</p> : activities.map(act => (
+                <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+                    {sidebarLoading ? <p className="p-4 text-center opacity-50">Loading...</p> : activities.map(act => (
                         <div
                             key={act._id}
                             onClick={() => setSelectedActId(act._id)}
-                            className={`p-3 rounded-lg cursor-pointer flex justify-between items-center group transition ${selectedActId === act._id ? 'bg-black text-white' : 'hover:bg-gray-100'}`}
+                            className={`p-3 rounded-lg cursor-pointer flex justify-between items-center group transition border ${selectedActId === act._id ? 'bg-black text-white border-black' : 'hover:bg-gray-100 dark:hover:bg-gray-800 border-transparent'}`}
                         >
                             <span className="truncate w-48 font-medium">{act.title}</span>
                             <button
                                 onClick={(e) => { e.stopPropagation(); handleDelete(act._id); }}
-                                className={`p-1.5 rounded opacity-0 group-hover:opacity-100 transition ${selectedActId === act._id ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-white text-gray-500'}`}
+                                className={`p-1.5 rounded opacity-0 group-hover:opacity-100 transition ${selectedActId === act._id ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-white dark:hover:bg-gray-700 text-gray-500'}`}
                             >
                                 <FaTrash size={12} />
                             </button>
@@ -396,12 +409,18 @@ const AdminActivityEditor = () => {
                 ) : (
                     <>
                         {/* Toolbar */}
-                        <div className="h-16 bg-white border-b flex items-center justify-between px-8">
+                        <div
+                            className="h-16 border-b flex items-center justify-between px-8"
+                            style={{
+                                backgroundColor: `var(${isDark ? "--bg-dark" : "#ffffff"})`,
+                                borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`
+                            }}
+                        >
                             <h1 className="text-xl font-bold">{selectedActId ? 'Edit Activity' : 'New Activity'}</h1>
                             <button
                                 onClick={handleSave}
                                 disabled={isSaving}
-                                className="flex items-center gap-2 px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition"
+                                className="flex items-center gap-2 px-6 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition shadow-lg"
                             >
                                 <FaSave /> {isSaving ? 'Saving...' : 'Save Activity'}
                             </button>
@@ -412,9 +431,15 @@ const AdminActivityEditor = () => {
                             <div className="max-w-4xl mx-auto space-y-8 pb-20">
 
                                 {/* ──── Basic Info ──── */}
-                                <div className="bg-white p-6 rounded-xl shadow-sm border space-y-4">
+                                <div
+                                    className="p-6 rounded-xl shadow-sm border space-y-4"
+                                    style={{
+                                        backgroundColor: `var(${isDark ? "--card-dark" : "#ffffff"})`,
+                                        borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`
+                                    }}
+                                >
                                     <div>
-                                        <label className="block text-sm font-bold mb-1">Configuration</label>
+                                        <label className="block text-sm font-bold mb-1 opacity-70">Configuration</label>
                                         <div className="flex gap-4 flex-wrap">
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input type="radio" checked={form.type === 'practice'} onChange={() => setForm({ ...form, type: 'practice' })} /> Practice (Questions)
@@ -422,7 +447,7 @@ const AdminActivityEditor = () => {
                                             <label className="flex items-center gap-2 cursor-pointer">
                                                 <input type="radio" checked={form.type === 'reading'} onChange={() => setForm({ ...form, type: 'reading' })} /> Reading (Link)
                                             </label>
-                                            <div className="w-px bg-gray-200 mx-2" />
+                                            <div className="w-px bg-gray-200 dark:bg-gray-700 mx-2" />
                                             <label className="flex items-center gap-2 cursor-pointer text-sm">
                                                 <input type="checkbox" checked={form.allowCalculator} onChange={e => setForm({ ...form, allowCalculator: e.target.checked })} /> Calculator
                                             </label>
@@ -433,9 +458,10 @@ const AdminActivityEditor = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-bold mb-1">Activity Title</label>
+                                        <label className="block text-sm font-bold mb-1 opacity-70">Activity Title</label>
                                         <input
-                                            className="w-full text-2xl font-bold border-b-2 border-gray-200 focus:border-black outline-none py-2"
+                                            className="w-full text-2xl font-bold border-b-2 outline-none py-2 bg-transparent"
+                                            style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}
                                             placeholder="e.g., Intro to Algebra"
                                             value={form.title}
                                             onChange={e => setForm({ ...form, title: e.target.value })}
@@ -444,10 +470,17 @@ const AdminActivityEditor = () => {
 
                                     {form.type === 'reading' && (
                                         <div>
-                                            <label className="block text-sm font-bold mb-1">Document Link / URL</label>
-                                            <input className="w-full p-2 border rounded-lg bg-gray-50" placeholder="https://..."
+                                            <label className="block text-sm font-bold mb-1 opacity-70">Document Link / URL</label>
+                                            <input
+                                                className="w-full p-2 border rounded-lg"
+                                                placeholder="https://..."
                                                 value={form.readingData.link}
-                                                onChange={e => setForm({ ...form, readingData: { link: e.target.value } })} />
+                                                onChange={e => setForm({ ...form, readingData: { link: e.target.value } })}
+                                                style={{
+                                                    backgroundColor: `var(${isDark ? "rgba(0,0,0,0.2)" : "#f9fafb"})`,
+                                                    borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`
+                                                }}
+                                            />
                                         </div>
                                     )}
 
@@ -458,16 +491,28 @@ const AdminActivityEditor = () => {
                                 {form.type === 'practice' && (
                                     <div className="space-y-6">
                                         {form.practiceData.questions.map((q, idx) => (
-                                            <div key={idx} className="bg-white p-6 rounded-xl shadow-sm border relative group hover:border-gray-300 transition-colors">
+                                            <div
+                                                key={idx}
+                                                className="p-6 rounded-xl shadow-sm border relative group transition-colors"
+                                                style={{
+                                                    backgroundColor: `var(${isDark ? "--card-dark" : "#ffffff"})`,
+                                                    borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`
+                                                }}
+                                            >
 
                                                 {/* Header */}
                                                 <div className="flex justify-between items-start mb-4">
                                                     <div className="flex items-center gap-3">
-                                                        <span className="bg-black text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">{idx + 1}</span>
+                                                        <span className="bg-black text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-md">{idx + 1}</span>
                                                         <select
                                                             value={q.qType}
                                                             onChange={e => updateQuestion(idx, 'qType', e.target.value)}
-                                                            className="font-bold bg-gray-100 px-3 py-1.5 rounded-lg outline-none cursor-pointer text-sm"
+                                                            className="font-bold px-3 py-1.5 rounded-lg outline-none cursor-pointer text-sm border"
+                                                            style={{
+                                                                backgroundColor: `var(${isDark ? "rgba(255,255,255,0.05)" : "#f3f4f6"})`,
+                                                                color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`,
+                                                                borderColor: `var(${isDark ? "--border-dark" : "transparent"})`
+                                                            }}
                                                         >
                                                             <option value="mcq">Multiple Choice (Single)</option>
                                                             <option value="msq">Multiple Select (Multi)</option>
@@ -483,7 +528,7 @@ const AdminActivityEditor = () => {
 
                                                 {/* Prompt */}
                                                 <div className="mb-4">
-                                                    <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Question Prompt</label>
+                                                    <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Question Prompt</label>
                                                     <RichTextEditor
                                                         content={q.prompt}
                                                         onChange={val => updateQuestion(idx, 'prompt', val)}
@@ -492,18 +537,26 @@ const AdminActivityEditor = () => {
                                                 </div>
 
                                                 {/* ──── Per-Question Media Section ──── */}
-                                                <div className="mb-4 p-4 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                                                <div
+                                                    className="mb-4 p-4 rounded-xl border-2 border-dashed"
+                                                    style={{
+                                                        backgroundColor: `var(${isDark ? "rgba(0,0,0,0.2)" : "#f9fafb"})`,
+                                                        borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`
+                                                    }}
+                                                >
                                                     <div className="flex justify-between items-center mb-3">
                                                         <label className="text-xs font-bold text-gray-500 uppercase flex items-center gap-1">
                                                             <FaImage size={10} /> Question Media
                                                         </label>
                                                         <div className="flex gap-2 flex-wrap">
                                                             <button onClick={() => addMediaToQuestion(idx, 'image')}
-                                                                className="bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm font-bold text-[10px] flex gap-1 items-center hover:bg-blue-50 hover:border-blue-200 transition-all">
+                                                                className="px-3 py-1 rounded-lg border shadow-sm font-bold text-[10px] flex gap-1 items-center hover:opacity-80 transition-all"
+                                                                style={{ backgroundColor: `var(${isDark ? "--bg-dark" : "#ffffff"})`, borderColor: `var(${isDark ? "--border-dark" : "#e5e7eb"})`, color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
                                                                 <FaImage size={10} /> IMG URL
                                                             </button>
                                                             <button onClick={() => addMediaToQuestion(idx, 'video')}
-                                                                className="bg-white px-3 py-1 rounded-lg border border-gray-200 shadow-sm font-bold text-[10px] flex gap-1 items-center hover:bg-purple-50 hover:border-purple-200 transition-all">
+                                                                className="px-3 py-1 rounded-lg border shadow-sm font-bold text-[10px] flex gap-1 items-center hover:opacity-80 transition-all"
+                                                                style={{ backgroundColor: `var(${isDark ? "--bg-dark" : "#ffffff"})`, borderColor: `var(${isDark ? "--border-dark" : "#e5e7eb"})`, color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})` }}>
                                                                 <FaVideo size={10} /> VIDEO URL
                                                             </button>
                                                             <button onClick={() => addMediaToQuestion(idx, 'embed')}
@@ -545,7 +598,7 @@ const AdminActivityEditor = () => {
                                                                         {m.mediaType}
                                                                     </div>
                                                                     <input
-                                                                        className="flex-1 p-1.5 bg-transparent outline-none font-medium text-sm text-gray-700"
+                                                                        className="flex-1 p-1.5 bg-transparent outline-none font-medium text-sm text-gray-700 dark:text-gray-200"
                                                                         placeholder="Paste URL..."
                                                                         value={m.url}
                                                                         onChange={e => updateQuestionMedia(idx, mIdx, e.target.value)}
@@ -564,26 +617,26 @@ const AdminActivityEditor = () => {
 
                                                 {/* ──── MCQ Options ──── */}
                                                 {q.qType === 'mcq' && (
-                                                    <div className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                                    <div className="mb-4 p-4 rounded-xl border" style={{ backgroundColor: isDark ? 'rgba(0,0,0,0.2)' : '#f9fafb', borderColor: isDark ? 'var(--border-dark)' : '#f3f4f6' }}>
                                                         <div className="flex justify-between items-center mb-3">
-                                                            <span className="text-xs font-bold text-gray-500 uppercase">MCQ Options (click ✓ for correct)</span>
+                                                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">MCQ Options (click ✓ for correct)</span>
                                                             <button onClick={() => updateQuestion(idx, 'options', [...(q.options || []), ''])}
-                                                                className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100">+ Add Option</button>
+                                                                className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 dark:text-blue-400 px-3 py-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50">+ Add Option</button>
                                                         </div>
                                                         <div className="space-y-2">
                                                             {(q.options || []).map((opt, oi) => (
                                                                 <div key={oi} className="flex gap-2 items-center">
                                                                     <button onClick={() => updateQuestion(idx, 'correctAnswer', opt)}
-                                                                        className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${q.correctAnswer === opt && opt !== '' ? 'bg-green-500 border-green-500 text-white' : 'bg-white border-gray-200 text-gray-300 hover:border-green-300'
+                                                                        className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${q.correctAnswer === opt && opt !== '' ? 'bg-green-500 border-green-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-300 hover:border-green-300'
                                                                             }`}><FaCheck size={10} /></button>
-                                                                    <input className="flex-1 p-2 bg-white rounded-lg border border-gray-200 text-sm font-medium outline-none focus:border-black"
+                                                                    <input className="flex-1 p-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 text-sm font-medium outline-none focus:border-black dark:focus:border-white dark:text-gray-200"
                                                                         placeholder={`Option ${oi + 1}`}
                                                                         value={opt}
                                                                         onChange={e => { const n = [...q.options]; n[oi] = e.target.value; updateQuestion(idx, 'options', n); }}
                                                                     />
                                                                     {q.options.length > 2 && (
                                                                         <button onClick={() => { const n = q.options.filter((_, i) => i !== oi); if (q.correctAnswer === opt) updateQuestion(idx, 'correctAnswer', ''); updateQuestion(idx, 'options', n); }}
-                                                                            className="w-6 h-6 rounded-full bg-red-50 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white"><FaTimes size={10} /></button>
+                                                                            className="w-6 h-6 rounded-full bg-red-50 dark:bg-red-900/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white"><FaTimes size={10} /></button>
                                                                     )}
                                                                 </div>
                                                             ))}
@@ -593,11 +646,11 @@ const AdminActivityEditor = () => {
 
                                                 {/* ──── MSQ Options (Multiple Correct) ──── */}
                                                 {q.qType === 'msq' && (
-                                                    <div className="mb-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                                    <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-800">
                                                         <div className="flex justify-between items-center mb-3">
-                                                            <span className="text-xs font-bold text-blue-600 uppercase">MSQ Options — Select ALL Correct</span>
+                                                            <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase">MSQ Options — Select ALL Correct</span>
                                                             <button onClick={() => updateQuestion(idx, 'options', [...(q.options || []), ''])}
-                                                                className="text-xs font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-full hover:bg-blue-200">+ Add Option</button>
+                                                                className="text-xs font-bold text-blue-600 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/40 px-3 py-1 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800">+ Add Option</button>
                                                         </div>
                                                         <div className="space-y-2">
                                                             {(q.options || []).map((opt, oi) => {
@@ -610,9 +663,9 @@ const AdminActivityEditor = () => {
                                                                             const newCorrect = isCorrect ? current.filter(a => a !== opt) : [...current, opt];
                                                                             updateQuestion(idx, 'correctAnswers', newCorrect);
                                                                         }}
-                                                                            className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${isCorrect ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white border-gray-200 text-gray-300 hover:border-blue-300'
+                                                                            className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${isCorrect ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-300 hover:border-blue-300'
                                                                                 }`}><FaCheck size={10} /></button>
-                                                                        <input className="flex-1 p-2 bg-white rounded-lg border border-blue-100 text-sm font-medium outline-none focus:border-blue-400"
+                                                                        <input className="flex-1 p-2 bg-white dark:bg-gray-800 rounded-lg border border-blue-100 dark:border-blue-800 text-sm font-medium outline-none focus:border-blue-400 dark:text-gray-200"
                                                                             placeholder={`Option ${oi + 1}`}
                                                                             value={opt}
                                                                             onChange={e => { const n = [...q.options]; n[oi] = e.target.value; updateQuestion(idx, 'options', n); }}
@@ -624,30 +677,30 @@ const AdminActivityEditor = () => {
                                                                                 updateQuestion(idx, 'correctAnswers', nc);
                                                                                 updateQuestion(idx, 'options', n);
                                                                             }}
-                                                                                className="w-6 h-6 rounded-full bg-red-50 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white"><FaTimes size={10} /></button>
+                                                                                className="w-6 h-6 rounded-full bg-red-50 dark:bg-red-900/20 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white"><FaTimes size={10} /></button>
                                                                         )}
                                                                     </div>
                                                                 );
                                                             })}
                                                         </div>
-                                                        <p className="text-[10px] text-blue-500 mt-2 text-center font-bold uppercase tracking-widest">Click checkmarks to select ALL correct answers</p>
+                                                        <p className="text-[10px] text-blue-500 dark:text-blue-400 mt-2 text-center font-bold uppercase tracking-widest">Click checkmarks to select ALL correct answers</p>
                                                     </div>
                                                 )}
 
                                                 {/* ──── Fact / Trick / Opinion ──── */}
                                                 {q.qType === 'fact_trick' && (
-                                                    <div className="mb-4 p-4 bg-amber-50 rounded-xl border border-amber-200">
-                                                        <span className="text-xs font-bold text-amber-600 uppercase block mb-3">Fact / Trick / Opinion</span>
+                                                    <div className="mb-4 p-4 bg-amber-50 dark:bg-orange-900/10 rounded-xl border border-amber-200 dark:border-orange-800">
+                                                        <span className="text-xs font-bold text-amber-600 dark:text-orange-400 uppercase block mb-3">Fact / Trick / Opinion</span>
                                                         <div className="space-y-2">
                                                             {['Fact', 'Trick', 'Opinion'].map((label, i) => (
                                                                 <div key={i} className="flex gap-2 items-center">
                                                                     <button onClick={() => updateQuestion(idx, 'correctAnswer', q.options?.[i] || label)}
-                                                                        className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${q.correctAnswer === (q.options?.[i] || label) && q.options?.[i] !== '' ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white border-gray-200 text-gray-300 hover:border-amber-300'
+                                                                        className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${q.correctAnswer === (q.options?.[i] || label) && q.options?.[i] !== '' ? 'bg-amber-500 border-amber-500 text-white' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-300 hover:border-amber-300'
                                                                             }`}><FaCheck size={10} /></button>
-                                                                    <div className="flex-1 p-2 bg-white rounded-lg border border-amber-100 flex items-center gap-3">
-                                                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${i === 0 ? 'bg-green-100 text-green-600' : i === 1 ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                                                                    <div className="flex-1 p-2 bg-white dark:bg-gray-800 rounded-lg border border-amber-100 dark:border-orange-900 flex items-center gap-3">
+                                                                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase ${i === 0 ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : i === 1 ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
                                                                             }`}>{label}</span>
-                                                                        <input className="flex-1 bg-transparent outline-none font-medium text-sm" placeholder={`${label} text...`}
+                                                                        <input className="flex-1 bg-transparent outline-none font-medium text-sm dark:text-gray-200" placeholder={`${label} text...`}
                                                                             value={q.options?.[i] || ''}
                                                                             onChange={e => {
                                                                                 const newOpts = [...(q.options || ['', '', ''])];
@@ -660,7 +713,7 @@ const AdminActivityEditor = () => {
                                                                 </div>
                                                             ))}
                                                         </div>
-                                                        <p className="text-[10px] text-amber-500 mt-2 text-center font-bold uppercase tracking-widest">Click checkmark to mark the correct category</p>
+                                                        <p className="text-[10px] text-amber-500 dark:text-orange-400 mt-2 text-center font-bold uppercase tracking-widest">Click checkmark to mark the correct category</p>
                                                     </div>
                                                 )}
 
@@ -668,14 +721,14 @@ const AdminActivityEditor = () => {
                                                 {q.qType === 'single_input' && (
                                                     <div className="mb-4 flex gap-4">
                                                         <div className="flex-1">
-                                                            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Input Label</label>
-                                                            <input className="w-full p-2 bg-gray-50 rounded-lg border outline-none focus:border-black text-sm font-medium"
+                                                            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Input Label</label>
+                                                            <input className="w-full p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border dark:border-gray-700 outline-none focus:border-black dark:focus:border-white text-sm font-medium dark:text-gray-200"
                                                                 placeholder="e.g., Your Answer" value={q.inputLabel || ''}
                                                                 onChange={e => updateQuestion(idx, 'inputLabel', e.target.value)} />
                                                         </div>
                                                         <div className="w-24">
-                                                            <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Max Chars</label>
-                                                            <input className="w-full p-2 bg-gray-50 rounded-lg border outline-none focus:border-black text-sm font-bold text-center"
+                                                            <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Max Chars</label>
+                                                            <input className="w-full p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border dark:border-gray-700 outline-none focus:border-black dark:focus:border-white text-sm font-bold text-center dark:text-gray-200"
                                                                 type="number" value={q.maxChars || 500}
                                                                 onChange={e => updateQuestion(idx, 'maxChars', parseInt(e.target.value, 10) || 500)} />
                                                         </div>
@@ -710,25 +763,25 @@ const AdminActivityEditor = () => {
 
                                                 {/* ──── Fill in the Blanks ──── */}
                                                 {q.qType === 'fill_blanks' && (
-                                                    <div className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                                        <label className="text-xs font-bold text-gray-500 uppercase mb-2 block">
-                                                            Blank Text — Use <code className="bg-gray-200 px-1 rounded text-[10px]">[$N]</code> for blanks (N = max chars)
+                                                    <div className="mb-4 p-4 bg-gray-50 dark:bg-[rgba(0,0,0,0.2)] rounded-xl border border-gray-100 dark:border-gray-700">
+                                                        <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2 block">
+                                                            Blank Text — Use <code className="bg-gray-200 dark:bg-gray-700 dark:text-gray-300 px-1 rounded text-[10px]">[$N]</code> for blanks (N = max chars)
                                                         </label>
                                                         <textarea
-                                                            className="w-full bg-white p-3 rounded-lg border outline-none font-mono text-sm text-gray-600 min-h-[80px] focus:border-black"
+                                                            className="w-full bg-white dark:bg-gray-800 p-3 rounded-lg border dark:border-gray-700 outline-none font-mono text-sm text-gray-600 dark:text-gray-300 min-h-[80px] focus:border-black dark:focus:border-white"
                                                             placeholder="Ex: The capital of France is [$5]. Its currency is the [$4]."
                                                             value={q.fillBlankText || ''}
                                                             onChange={e => updateQuestion(idx, 'fillBlankText', e.target.value)}
                                                         />
                                                         {/* Live Preview */}
                                                         {q.fillBlankText && (
-                                                            <div className="mt-3 p-3 bg-white rounded-lg border border-gray-100">
+                                                            <div className="mt-3 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
                                                                 <p className="text-[10px] font-bold text-gray-400 mb-1 uppercase">Preview</p>
-                                                                <div className="text-sm text-gray-700 leading-8">
+                                                                <div className="text-sm text-gray-700 dark:text-gray-300 leading-8">
                                                                     {q.fillBlankText.split(/(\[\$.*?\])/).map((part, pi) => {
                                                                         if (part.startsWith('[$')) {
                                                                             const max = part.match(/\d+/)?.[0] || '?';
-                                                                            return <span key={pi} className="inline-block mx-1 px-3 py-0.5 bg-teal-50 border-b-2 border-teal-400 rounded-t text-teal-700 font-bold text-xs">_{max} chars_</span>;
+                                                                            return <span key={pi} className="inline-block mx-1 px-3 py-0.5 bg-teal-50 dark:bg-teal-900/30 border-b-2 border-teal-400 rounded-t text-teal-700 dark:text-teal-400 font-bold text-xs">_{max} chars_</span>;
                                                                         }
                                                                         return <span key={pi}>{part}</span>;
                                                                     })}
@@ -739,20 +792,20 @@ const AdminActivityEditor = () => {
                                                 )}
 
                                                 {/* ──── AI Grading Config ──── */}
-                                                <div className="grid grid-cols-2 gap-4 mt-4 border-t pt-4">
+                                                <div className="grid grid-cols-2 gap-4 mt-4 border-t dark:border-gray-700 pt-4">
                                                     <div>
-                                                        <label className="text-xs font-bold text-purple-600 uppercase mb-1 block">AI Grading Prompt</label>
+                                                        <label className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase mb-1 block">AI Grading Prompt</label>
                                                         <textarea
-                                                            className="w-full p-2 border border-purple-100 rounded-lg bg-purple-50 text-xs min-h-[80px] outline-none focus:border-purple-300"
+                                                            className="w-full p-2 border border-purple-100 dark:border-purple-800 rounded-lg bg-purple-50 dark:bg-purple-900/10 text-xs min-h-[80px] outline-none focus:border-purple-300 dark:focus:border-purple-500 dark:text-gray-200"
                                                             value={q.aiPrompt || ''}
                                                             onChange={e => updateQuestion(idx, 'aiPrompt', e.target.value)}
                                                             placeholder="Instructions for the AI grader..."
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="text-xs font-bold text-blue-600 uppercase mb-1 block">Post-Answer Tip/Feedback</label>
+                                                        <label className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase mb-1 block">Post-Answer Tip/Feedback</label>
                                                         <textarea
-                                                            className="w-full p-2 border border-blue-100 rounded-lg bg-blue-50 text-xs min-h-[80px] outline-none focus:border-blue-300"
+                                                            className="w-full p-2 border border-blue-100 dark:border-blue-800 rounded-lg bg-blue-50 dark:bg-blue-900/10 text-xs min-h-[80px] outline-none focus:border-blue-300 dark:focus:border-blue-500 dark:text-gray-200"
                                                             value={q.postAnswerTip || ''}
                                                             onChange={e => updateQuestion(idx, 'postAnswerTip', e.target.value)}
                                                             placeholder="Helpful explanation shown after submission..."
@@ -761,22 +814,22 @@ const AdminActivityEditor = () => {
                                                 </div>
 
                                                 {/* ──── Per-Question Settings ──── */}
-                                                <div className="flex flex-wrap gap-6 items-center mt-4 border-t pt-4">
+                                                <div className="flex flex-wrap gap-6 items-center mt-4 border-t dark:border-gray-700 pt-4">
                                                     <label className="flex items-center gap-2 cursor-pointer text-sm">
                                                         <input type="checkbox" checked={q.showGrade !== false}
                                                             onChange={e => updateQuestion(idx, 'showGrade', e.target.checked)} />
-                                                        <span className="font-bold text-gray-600">Show Grade to Student</span>
+                                                        <span className="font-bold text-gray-600 dark:text-gray-400">Show Grade to Student</span>
                                                     </label>
                                                     <div className="flex-1 min-w-[200px]">
-                                                        <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Answer Embed URL</label>
-                                                        <input className="w-full p-2 bg-gray-50 rounded-lg border outline-none focus:border-black text-sm font-medium"
+                                                        <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Answer Embed URL</label>
+                                                        <input className="w-full p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border dark:border-gray-700 outline-none focus:border-black dark:focus:border-white text-sm font-medium dark:text-gray-200"
                                                             placeholder="https://embed-url..."
                                                             value={q.answer_embed_url || ''}
                                                             onChange={e => updateQuestion(idx, 'answer_embed_url', e.target.value)} />
                                                     </div>
                                                     <div className="min-w-[150px]">
-                                                        <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Embed Label</label>
-                                                        <input className="w-full p-2 bg-gray-50 rounded-lg border outline-none focus:border-black text-sm font-medium"
+                                                        <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Embed Label</label>
+                                                        <input className="w-full p-2 bg-gray-50 dark:bg-gray-800 rounded-lg border dark:border-gray-700 outline-none focus:border-black dark:focus:border-white text-sm font-medium dark:text-gray-200"
                                                             placeholder="e.g., Solution Video"
                                                             value={q.answer_embed_label || ''}
                                                             onChange={e => updateQuestion(idx, 'answer_embed_label', e.target.value)} />
@@ -788,7 +841,7 @@ const AdminActivityEditor = () => {
                                         {/* Add Question Button */}
                                         <button
                                             onClick={addQuestion}
-                                            className="w-full py-6 border-2 border-dashed border-gray-300 rounded-xl text-gray-400 font-bold text-lg hover:bg-gray-50 hover:border-black hover:text-black transition-all flex items-center justify-center gap-2"
+                                            className="w-full py-6 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl text-gray-400 dark:text-gray-500 font-bold text-lg hover:bg-gray-50 dark:hover:bg-white/5 hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-all flex items-center justify-center gap-2"
                                         >
                                             <FaPlus /> ADD QUESTION
                                         </button>

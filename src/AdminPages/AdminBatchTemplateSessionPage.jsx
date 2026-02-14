@@ -208,7 +208,7 @@ const TemplateSessionCard = ({ session, isDark, onClick, onDelete }) => {
     const navigate = useNavigate();
     return (
         <div
-            onClick={onClick}
+            onDoubleClick={onClick}
             className="p-5 rounded-xl border flex items-start gap-4 transition-all hover:shadow-lg cursor-pointer h-full relative group"
             style={{
                 backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
@@ -229,10 +229,10 @@ const TemplateSessionCard = ({ session, isDark, onClick, onDelete }) => {
                 </button>
             </div>
 
-            <div className="absolute bottom-2 right-2">
+            <div className="absolute bottom-3 right-3 z-10">
                 <button
                     onClick={(e) => { e.stopPropagation(); navigate(`/admin/dashboard/template-session/${session._id}/sections`); }}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-black text-white hover:opacity-80 transition flex items-center gap-1 shadow-sm"
+                    className="px-4 py-2 rounded-lg text-xs font-bold bg-black text-white hover:bg-gray-800 transition flex items-center gap-1 shadow-md z-20"
                 >
                     <FaEdit /> Manage Content
                 </button>
