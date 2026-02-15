@@ -560,7 +560,7 @@ const QuestionView = ({
             setAnswers({});
         }
         setCurrentQuestionIdx(0);
-        setGradingResult(null);
+        setGradingResult(existingResp?.grade || null);
         setShowAgentChat(false);
     }, [activity._id]);
 
