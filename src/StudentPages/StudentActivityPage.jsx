@@ -2,14 +2,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { Color } from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
 import ListItem from '@tiptap/extension-list-item';
 import {
-    ArrowLeft, ArrowRight, CheckCircle, Lock, Play, RotateCcw,
+    ArrowLeft, ArrowRight, CheckCircle, Play, RotateCcw,
     Calculator as CalcIcon, MessageSquare, X, GraduationCap,
     ChevronLeft, ChevronRight, ExternalLink, Check, AlertTriangle,
-    HelpCircle, Image as ImageIcon, Video, Monitor
+    HelpCircle
 } from 'lucide-react';
 import {
     listStudentBatchSections, listStudentBatchActivities,
@@ -17,25 +17,18 @@ import {
 } from "../api.js";
 
 // ──────────────────────────────────────────
+//  HELPER: ID Normalizer (Crucial for Fix)
+// ──────────────────────────────────────────
+const normalizeId = (id) => {
+    if (!id) return null;
+    if (typeof id === 'string') return id;
+    if (typeof id === 'object' && id._id) return id._id.toString();
+    return id.toString();
+};
+
+// ──────────────────────────────────────────
 //  Utility Components
 // ──────────────────────────────────────────
-
-const ReadOnlyEditor = ({ content }) => {
-    const editor = useEditor({
-        extensions: [StarterKit, TextStyle, Color, ListItem],
-        content: content || '',
-        editable: false,
-        editorProps: {
-            attributes: { class: 'prose prose-lg max-w-none text-gray-800 [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_li]:my-1' },
-        },
-    });
-    useEffect(() => {
-        if (editor && content !== editor.getHTML()) {
-            editor.commands.setContent(content || '');
-        }
-    }, [content, editor]);
-    return <EditorContent editor={editor} />;
-};
 
 const SimpleCalculator = ({ onClose }) => {
     const [input, setInput] = useState('');
@@ -87,9 +80,8 @@ const DummyAIAgent = ({ onClose, shiftLeft }) => {
 };
 
 // ──────────────────────────────────────────
-//  Per-Question Media Carousel (Exact Port)
+//  Per-Question Media Carousel
 // ──────────────────────────────────────────
-
 const MediaCarousel = ({ mediaItems }) => {
     const [mediaIndex, setMediaIndex] = useState(0);
     if (!mediaItems || mediaItems.length === 0) return null;
@@ -99,8 +91,6 @@ const MediaCarousel = ({ mediaItems }) => {
 
     const renderMedia = () => {
         if (!current?.url) return null;
-
-        // YouTube detection
         const isYouTube = current.url.includes('youtu');
 
         if (current.mediaType === 'image') {
@@ -109,7 +99,6 @@ const MediaCarousel = ({ mediaItems }) => {
         if (current.mediaType === 'video' && !isYouTube) {
             return <video src={current.url} controls className="w-full h-auto max-h-[400px]" />;
         }
-        // embed, youtube, or anything else → iframe
         return (
             <div className="aspect-video w-full">
                 <iframe src={current.url} className="w-full h-full border-0" title="embed" allowFullScreen
@@ -122,8 +111,6 @@ const MediaCarousel = ({ mediaItems }) => {
         <div className="mb-6 relative">
             <div className="w-full rounded-2xl overflow-hidden border-4 border-gray-100 shadow-lg bg-black relative">
                 {renderMedia()}
-
-                {/* Navigation Arrows */}
                 {hasMultiple && (
                     <>
                         <button
@@ -141,8 +128,6 @@ const MediaCarousel = ({ mediaItems }) => {
                     </>
                 )}
             </div>
-
-            {/* Dot Indicators */}
             {hasMultiple && (
                 <div className="flex justify-center gap-2 mt-4">
                     {mediaItems.map((_, i) => (
@@ -159,9 +144,8 @@ const MediaCarousel = ({ mediaItems }) => {
 };
 
 // ──────────────────────────────────────────
-//  Question Block Renderer (Faithful Prototype Port)
+//  Question Block Renderer
 // ──────────────────────────────────────────
-
 const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
     if (!qData) {
         return <div className="p-6 bg-gray-100 rounded-xl text-gray-400 text-center">No question loaded</div>;
@@ -182,22 +166,18 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
 
     return (
         <div className="space-y-6">
-            {/* Question Prompt */}
             <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                <div className="prose prose-lg max-w-none text-gray-800 [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_li]:my-1"
+                <div className="prose prose-lg max-w-none text-gray-800"
                     dangerouslySetInnerHTML={{ __html: qData.prompt || '<p>Question...</p>' }}
                 />
             </div>
 
-            {/* Per-Question Media Carousel */}
             <MediaCarousel mediaItems={mediaItems} />
 
-            {/* Answer Section */}
-            {qData.qType === 'no_response' ? null : (
+            {qData.qType !== 'no_response' && (
                 <div className="bg-white rounded-2xl p-6 border border-teal-100 shadow-sm">
                     <h4 className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-4">Write your answer here</h4>
 
-                    {/* MCQ - Single correct */}
                     {qData.qType === 'mcq' && (
                         <div className="grid gap-4">
                             {(qData.options || []).map((opt, i) => (
@@ -212,7 +192,6 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                         </div>
                     )}
 
-                    {/* MSQ - Multiple correct with checkboxes */}
                     {qData.qType === 'msq' && (
                         <div className="grid gap-4">
                             {(qData.options || []).map((opt, i) => {
@@ -236,11 +215,9 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                                     </button>
                                 );
                             })}
-                            <p className="text-center text-xs font-bold text-blue-400 uppercase tracking-widest mt-2">Select all that apply</p>
                         </div>
                     )}
 
-                    {/* Fact / Trick / Opinion */}
                     {qData.qType === 'fact_trick' && (
                         <div className="grid grid-cols-3 gap-4">
                             {(qData.options || ['Fact', 'Trick', 'Opinion']).slice(0, 3).map((opt, i) => {
@@ -261,7 +238,6 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                         </div>
                     )}
 
-                    {/* Single Input */}
                     {qData.qType === 'single_input' && (
                         <div className="space-y-3">
                             <label className="text-sm font-black text-teal-400 uppercase tracking-widest ml-2">{qData.inputLabel}</label>
@@ -275,14 +251,12 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                                     value={response || ''}
                                     onChange={e => update(e.target.value)}
                                     disabled={readOnly}
-                                    style={{ minHeight: (qData.maxChars || 500) <= 100 ? '80px' : `${80 + Math.ceil(((qData.maxChars || 500) - 100) / 100) * 40}px` }}
                                 />
                             </div>
                             <div className="text-right text-xs font-bold text-gray-300">{(response || '').length} / {qData.maxChars || 500}</div>
                         </div>
                     )}
 
-                    {/* Multi-Step Input */}
                     {qData.qType === 'multi_input' && (
                         <div className="grid gap-8">
                             {(qData.multiFields || []).map((field, fIdx) => (
@@ -300,7 +274,6 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                                             value={(response && response[fIdx]) || ''}
                                             onChange={e => update(e.target.value, fIdx)}
                                             disabled={readOnly}
-                                            style={{ minHeight: (field.maxChars || 100) <= 100 ? '80px' : `${80 + Math.ceil(((field.maxChars || 100) - 100) / 100) * 40}px` }}
                                         />
                                     </div>
                                 </div>
@@ -308,20 +281,19 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                         </div>
                     )}
 
-                    {/* Fill in the Blanks — exact prototype regex */}
                     {qData.qType === 'fill_blanks' && (
                         <div className="leading-[3.5rem] text-xl text-gray-700 font-medium">
                             {(qData.fillBlankText || '').split(/(\[\$.*?\])/).map((part, i, arr) => {
                                 if (part.startsWith('[$')) {
                                     const max = part.match(/\d+/)?.[0] || '10';
                                     const idx = arr.slice(0, i).filter(p => p.startsWith('[$')).length;
-                                    const val = response ? response[idx] : '';
+                                    const val = (response && response[idx]) ? response[idx] : '';
                                     return (
                                         <input
                                             key={i}
                                             maxLength={parseInt(max, 10)}
                                             disabled={readOnly}
-                                            value={val || ''}
+                                            value={val}
                                             onChange={e => update(e.target.value, idx)}
                                             className={`inline-block border-b-4 w-40 mx-2 px-3 text-center outline-none rounded-t-lg font-bold transition-colors ${readOnly && !val
                                                 ? 'border-red-300 bg-red-100/50 text-red-900'
@@ -337,7 +309,6 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                 </div>
             )}
 
-            {/* Answer Embed URL iframe */}
             {qData.answer_embed_url && (
                 <div className="mt-4 rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white">
                     <div className="px-4 py-2 bg-gray-50 border-b flex items-center gap-2">
@@ -364,10 +335,18 @@ const SectionCardsView = ({ sections, responses, onSelectSection, sessionInfo })
     const getSectionStatus = (section) => {
         const acts = section.activities || [];
         if (acts.length === 0) return { label: 'No activities', color: 'text-gray-400' };
-        const completed = acts.filter(a => responses[a._id]?.grade?.score >= 5).length;
+        
+        // Count how many activities have a grade score >= 5 using SAFE ID LOOKUP
+const completed = acts.filter(a => {
+    const id = normalizeId(a._id);
+    const score = Number(responses[id]?.grade?.score || 0);
+    return score >= 5;
+}).length;
+
+        
         if (completed === acts.length) return { label: 'Completed', color: 'text-emerald-600' };
         if (completed > 0) return { label: 'In Progress', color: 'text-amber-600' };
-        return { label: 'Tap to start', color: 'text-gray-400' };
+        return { label: 'Tap to start', color: 'text-teal-600' };
     };
 
     return (
@@ -393,7 +372,14 @@ const SectionCardsView = ({ sections, responses, onSelectSection, sessionInfo })
                     {sections.map((section, idx) => {
                         const status = getSectionStatus(section);
                         const acts = section.activities || [];
-                        const completed = acts.filter(a => responses[a._id]?.grade?.score >= 5).length;
+                        const completed = acts.filter(a => {
+                            const id = normalizeId(a._id);
+                            const r = responses[id];
+                          const score = Number(responses[id]?.grade?.score || 0);
+return score >= 5;
+
+                        }).length;
+                        
                         return (
                             <div
                                 key={section._id}
@@ -432,15 +418,14 @@ const SectionCardsView = ({ sections, responses, onSelectSection, sessionInfo })
 
 const ActivityListView = ({ section, responses, allActivities, onSelectActivity, onBack, sections, onMoveToNextSection }) => {
     const acts = section.activities || [];
-    const completedCount = acts.filter(a => responses[a._id]?.grade?.score >= 5).length;
+    
+    // SAFE COMPLETED COUNT
+const completedCount = acts.filter(a => {
+    const id = normalizeId(a._id);
+    const score = Number(responses[id]?.grade?.score || 0);
+    return score >= 5;
+}).length;
 
-    const isLocked = (act) => {
-        const idx = allActivities.findIndex(a => a._id === act._id);
-        if (idx <= 0) return false;
-        const prevAct = allActivities[idx - 1];
-        const prevResp = responses[prevAct._id];
-        return !prevResp || (prevResp.grade?.score || 0) < 5;
-    };
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -454,38 +439,33 @@ const ActivityListView = ({ section, responses, allActivities, onSelectActivity,
                         Section {(section.order ?? 0) + 1}
                     </span>
                     <h2 className="text-2xl font-black text-gray-900 mt-3 uppercase">{section.sectionName}</h2>
-                    <p className="text-sm text-gray-500 mt-1">Complete all activities below to finish this mission</p>
+                    <p className="text-sm text-gray-500 mt-1">Complete the activities below</p>
                 </div>
 
                 <div className="space-y-3">
                     {acts.map((act, idx) => {
-                        const locked = isLocked(act);
-                        const resp = responses[act._id];
-                        const passed = resp && resp.grade?.score >= 5;
+                        const id = normalizeId(act._id);
+                        const resp = responses[id];
+                  const passed = Number(resp?.grade?.score || 0) >= 5;
+
 
                         return (
                             <div
                                 key={act._id}
-                                onClick={() => !locked && onSelectActivity(act)}
-                                className={`bg-white rounded-xl p-4 border flex items-center gap-4 transition-all ${locked
-                                    ? 'border-gray-100 opacity-50 cursor-not-allowed'
-                                    : 'border-gray-100 cursor-pointer hover:shadow-md hover:border-teal-200'
-                                    }`}
+                                onClick={() => onSelectActivity(act)}
+                                className={`bg-white rounded-xl p-4 border flex items-center gap-4 transition-all cursor-pointer hover:shadow-md hover:border-teal-200 border-gray-100`}
                             >
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${passed ? 'bg-teal-500 text-white'
-                                    : locked ? 'bg-gray-100 text-gray-400'
-                                        : 'bg-teal-50 text-teal-600'
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${passed ? 'bg-teal-500 text-white' : 'bg-teal-50 text-teal-600'
                                     }`}>
-                                    {passed ? <CheckCircle size={20} /> : locked ? <Lock size={16} /> : <Play size={16} />}
+                                    {passed ? <CheckCircle size={20} /> : <Play size={16} />}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="text-xs text-gray-400 uppercase font-bold flex items-center gap-2">
                                         Activity {idx + 1}
-                                        {!locked && !passed && <span className="bg-pink-500 text-white px-2 py-0.5 rounded text-[8px]">NEXT</span>}
                                     </div>
                                     <h4 className="font-bold text-gray-900 truncate">{act.title}</h4>
                                 </div>
-                                {!locked && !passed && <ArrowRight size={18} className="text-gray-300 flex-shrink-0" />}
+                                {!passed && <ArrowRight size={18} className="text-gray-300 flex-shrink-0" />}
                             </div>
                         );
                     })}
@@ -530,7 +510,7 @@ const ActivityListView = ({ section, responses, allActivities, onSelectActivity,
 };
 
 // ──────────────────────────────────────────
-//  Step 3: Question View (Full Prototype Port)
+//  Step 3: Question View
 // ──────────────────────────────────────────
 
 const QuestionView = ({
@@ -542,12 +522,17 @@ const QuestionView = ({
     const [answers, setAnswers] = useState({});
     const [showCalculator, setShowCalculator] = useState(false);
     const [showAgentChat, setShowAgentChat] = useState(false);
+    
+    // Core state for UI
     const [gradingResult, setGradingResult] = useState(null);
+    const [previousBest, setPreviousBest] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Auto-fill previously submitted answers
+    // Initial load logic: Hydrate answers, but hide grade card initially
     useEffect(() => {
-        const existingResp = responses[activity._id];
+        const id = normalizeId(activity._id);
+        const existingResp = responses[id];
+
         if (existingResp && Array.isArray(existingResp.responses)) {
             const prefilled = {};
             existingResp.responses.forEach((ans, idx) => {
@@ -556,18 +541,32 @@ const QuestionView = ({
                 }
             });
             setAnswers(prefilled);
+            
+            // Store previous grade for header badge, but force result card closed
+            if (existingResp.grade) {
+                setPreviousBest(existingResp.grade);
+                setGradingResult(null); 
+            }
         } else {
             setAnswers({});
+            setGradingResult(null);
+            setPreviousBest(null);
         }
         setCurrentQuestionIdx(0);
-        setGradingResult(existingResp?.grade || null);
         setShowAgentChat(false);
-    }, [activity._id]);
+    }, [activity._id]); // Intentionally omitting 'responses' to prevent auto-hiding during updates
 
     const questions = activity.practiceData?.questions || [];
     const totalQ = questions.length;
     const currentQ = questions[currentQuestionIdx];
-    const progress = totalQ > 0 ? ((currentQuestionIdx + 1) / totalQ) * 100 : 0;
+
+    const answeredCount = Object.keys(answers).filter(k => {
+        const val = answers[k];
+        if (Array.isArray(val)) return val.length > 0;
+        return val !== null && val !== undefined && String(val).trim() !== '';
+    }).length;
+
+    const progress = totalQ > 0 ? (answeredCount / totalQ) * 100 : 0;
 
     const handleInput = (val, qIdx) => {
         if (typeof qIdx === 'number') {
@@ -582,26 +581,37 @@ const QuestionView = ({
         const q = questions[idx];
         if (q?.qType === 'no_response') return true;
         const ans = answers[idx];
-        if (!ans) return false;
+        if (ans === null || ans === undefined) return false;
         if (Array.isArray(ans)) return ans.some(v => !!v);
         if (typeof ans === 'object') return Object.values(ans).some(v => !!v);
-        return !!ans;
+        return String(ans).trim().length > 0;
     };
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
-            const responseData = questions.map((q, idx) => answers[idx] ?? null);
+            const responseData = questions.map((_, idx) => answers[idx] ?? null);
+            
             const res = await submitActivityResponse({
                 batchActivity_obj_id: activity._id,
                 batchSession_obj_id: effectiveSessionId,
                 responses: responseData,
                 questionIndex: currentQuestionIdx
             });
+
             if (res.success) {
                 const grade = res.data?.grade;
-                setGradingResult(grade);
-                onUpdateResponses(activity._id, { grade });
+                
+                // Show grading card immediately
+                setGradingResult(grade); 
+                setPreviousBest(grade);
+                
+                // Update parent state safely
+                onUpdateResponses(normalizeId(activity._id), { 
+                    ...responses[normalizeId(activity._id)],
+                    responses: responseData, 
+                    grade 
+                });
             } else {
                 alert("Submission failed: " + res.message);
             }
@@ -614,18 +624,16 @@ const QuestionView = ({
     };
 
     const handleContinue = () => {
-        setGradingResult(null);
+        setGradingResult(null); 
         if (currentQuestionIdx < totalQ - 1) {
             setCurrentQuestionIdx(prev => prev + 1);
         } else {
-            // All questions done → back to activity list
             onBack();
         }
     };
 
     const handleRetry = () => {
         setGradingResult(null);
-        // Keep current question, let them re-answer
     };
 
     // Reading type
@@ -656,7 +664,7 @@ const QuestionView = ({
                                     responses: [{ answer: 'read', isCorrect: true }]
                                 }).then(res => {
                                     if (res.success) {
-                                        onUpdateResponses(activity._id, { grade: { score: 10 } });
+                                        onUpdateResponses(normalizeId(activity._id), { grade: { score: 10 } });
                                         onBack();
                                     }
                                 });
@@ -674,18 +682,26 @@ const QuestionView = ({
     // Practice type
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col relative">
-            {/* Teal Header */}
+            {/* Header */}
             <div className="bg-gradient-to-r from-teal-500 to-teal-400 px-6 py-5">
-                <button onClick={onBack} className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-medium mb-2 transition">
-                    <ChevronLeft size={18} /> Back to Mission
-                </button>
+                <div className="flex items-center justify-between mb-2">
+                    <button onClick={onBack} className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-medium transition">
+                        <ChevronLeft size={18} /> Back to Mission
+                    </button>
+                    {previousBest && (
+                        <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded text-white text-xs">
+                             <CheckCircle size={12} />
+                             <span>Best: {previousBest.score}/10</span>
+                        </div>
+                    )}
+                </div>
                 <div className="flex items-center gap-2 mb-2">
                     <span className="bg-white/20 text-white text-[10px] font-bold px-2 py-1 rounded">🧩 {activity.type || 'Activity'}</span>
                 </div>
                 <h1 className="text-xl font-bold text-white">{activity.title}</h1>
             </div>
 
-            {/* Question Navigation */}
+            {/* Navigation */}
             <div className="bg-white border-b px-6 py-3">
                 <div className="max-w-2xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -700,12 +716,12 @@ const QuestionView = ({
                         <span className="text-gray-600 font-medium">Question {currentQuestionIdx + 1} of {totalQ}</span>
                         <button
                             onClick={() => {
-                                if (hasAnswer(currentQuestionIdx) && currentQuestionIdx < totalQ - 1) {
+                                if (currentQuestionIdx < totalQ - 1) {
                                     setCurrentQuestionIdx(currentQuestionIdx + 1);
                                 }
                             }}
-                            disabled={!hasAnswer(currentQuestionIdx) || currentQuestionIdx >= totalQ - 1}
-                            className={`p-2 rounded-lg transition-all ${hasAnswer(currentQuestionIdx) && currentQuestionIdx < totalQ - 1
+                            disabled={currentQuestionIdx >= totalQ - 1}
+                            className={`p-2 rounded-lg transition-all ${currentQuestionIdx < totalQ - 1
                                 ? 'bg-teal-100 text-teal-600 hover:bg-teal-200'
                                 : 'bg-gray-100 text-gray-300 cursor-not-allowed'
                                 }`}
@@ -728,6 +744,7 @@ const QuestionView = ({
                     <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
                         <div className="h-full bg-teal-500 transition-all duration-500" style={{ width: `${progress}%` }} />
                     </div>
+                    <span className="text-xs text-gray-500 font-bold">{Math.round(progress)}%</span>
                 </div>
             </div>
 
@@ -740,14 +757,13 @@ const QuestionView = ({
                             qIndex={currentQuestionIdx}
                             response={answers[currentQuestionIdx]}
                             onInput={handleInput}
-                            readOnly={isSubmitting || !!gradingResult}
+                            readOnly={isSubmitting} 
                         />
                     )}
 
                     {/* Inline Grading Result */}
                     {gradingResult && (
                         <div className="mt-6 bg-white rounded-2xl border-2 border-gray-100 shadow-lg overflow-hidden animate-[fadeIn_0.3s_ease-out]">
-                            {/* Score Header */}
                             <div className={`p-5 flex items-center justify-between ${currentQ?.showGrade === false
                                 ? 'bg-gradient-to-r from-purple-500 to-indigo-500'
                                 : gradingResult.score >= 5
@@ -768,7 +784,6 @@ const QuestionView = ({
                                     </div>
                                 )}
                             </div>
-                            {/* Feedback Body */}
                             <div className="p-5 space-y-4">
                                 <div>
                                     <span className="text-teal-500 font-bold text-xs uppercase tracking-wide block mb-1">AI Feedback</span>
@@ -783,28 +798,29 @@ const QuestionView = ({
                                         </div>
                                     </div>
                                 )}
-                                {(gradingResult.score < 5 && currentQ?.showGrade !== false) ? (
-                                    <button
-                                        onClick={handleRetry}
-                                        className="w-full bg-red-500 text-white py-4 rounded-xl font-bold hover:bg-red-600 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        <RotateCcw size={20} /> Try Again
-                                    </button>
-                                ) : (
+                                <div className="flex gap-3">
+                                    {gradingResult.score < 5 && currentQ?.showGrade !== false && (
+                                        <button
+                                            onClick={handleRetry}
+                                            className="flex-1 bg-red-100 text-red-600 py-3 rounded-xl font-bold hover:bg-red-200 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <RotateCcw size={18} /> Retry
+                                        </button>
+                                    )}
                                     <button
                                         onClick={handleContinue}
-                                        className="w-full bg-teal-500 text-white py-4 rounded-xl font-bold hover:bg-teal-600 transition-all"
+                                        className="flex-1 bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-all"
                                     >
-                                        {currentQuestionIdx < totalQ - 1 ? 'Next Question →' : 'Complete Activity ✓'}
+                                        {currentQuestionIdx < totalQ - 1 ? 'Next Question →' : 'Back to Menu'}
                                     </button>
-                                )}
+                                </div>
                             </div>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Footer: Submit / Grading / Next (no_response) */}
+            {/* Footer */}
             {!gradingResult && (
                 <div className="fixed bottom-0 left-0 w-full bg-white border-t px-6 py-4 z-10">
                     <div className="max-w-2xl mx-auto">
@@ -829,7 +845,7 @@ const QuestionView = ({
                                 {isSubmitting ? (
                                     <>
                                         <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                                        Grading...
+                                        Checking...
                                     </>
                                 ) : (
                                     'Submit Answer'
@@ -840,10 +856,8 @@ const QuestionView = ({
                 </div>
             )}
 
-            {/* Calculator */}
+            {/* Calculator & Agent */}
             {showCalculator && <SimpleCalculator onClose={() => setShowCalculator(false)} />}
-
-            {/* AI Agent Chat Panel */}
             {activity.showAgent && showAgentChat && (
                 <DummyAIAgent
                     onClose={() => setShowAgentChat(false)}
@@ -851,7 +865,6 @@ const QuestionView = ({
                 />
             )}
 
-            {/* Floating Tool Buttons */}
             <div className="fixed bottom-24 right-6 z-40 flex gap-3">
                 {activity.showAgent && (
                     <button
@@ -877,13 +890,12 @@ const QuestionView = ({
 };
 
 // ──────────────────────────────────────────
-//  Main Container with 3-Step Flow
+//  Main Container
 // ──────────────────────────────────────────
 
 const StudentActivityPage = () => {
     const { batchId, sessionId, batchSessionId } = useParams();
     const effectiveSessionId = batchSessionId || sessionId;
-    const navigate = useNavigate();
 
     const [sections, setSections] = useState([]);
     const [responses, setResponses] = useState({});
@@ -898,44 +910,58 @@ const StudentActivityPage = () => {
         fetchSessionData();
     }, [effectiveSessionId]);
 
-    const fetchSessionData = async () => {
-        setLoading(true);
-        try {
-            const sectRes = await listStudentBatchSections(effectiveSessionId);
-            if (!sectRes.success) throw new Error("Failed to load sections");
+const fetchSessionData = async () => {
+    setLoading(true);
 
-            const respRes = await getMySessionResponses(effectiveSessionId);
-            const respMap = {};
-            if (respRes.success && respRes.data?.responses) {
-                respRes.data.responses.forEach(r => {
-                    const actId = r.batchActivity_obj_id?._id || r.batchActivity_obj_id;
-                    respMap[actId] = r;
-                });
-            }
-            setResponses(respMap);
+    try {
+        // 1️⃣ Fetch sections + responses in parallel
+        const [sectRes, respRes] = await Promise.all([
+            listStudentBatchSections(effectiveSessionId),
+            getMySessionResponses(effectiveSessionId)
+        ]);
 
-            const sectionsWithActs = await Promise.all((sectRes.data?.sections || []).map(async (sec) => {
+        if (!sectRes.success) throw new Error("Failed to load sections");
+
+        // 2️⃣ Build response map FIRST
+        const respMap = {};
+        if (respRes.success && respRes.data?.responses) {
+            respRes.data.responses.forEach(r => {
+                const id = normalizeId(r.batchActivity_obj_id);
+                if (id) {
+                    respMap[id] = r;
+                }
+            });
+        }
+
+        // 3️⃣ Fetch activities for all sections in parallel
+        const sectionsWithActs = await Promise.all(
+            (sectRes.data?.sections || []).map(async (sec) => {
                 const actRes = await listStudentBatchActivities(sec._id);
                 return {
                     ...sec,
                     activities: actRes.success ? (actRes.data?.activities || []) : []
                 };
-            }));
-            setSections(sectionsWithActs);
+            })
+        );
 
-            // Store session info for header display
-            if (sectRes.data?.batchSession) {
-                setSessionInfo({
-                    title: sectRes.data.batchSession.title || '',
-                    description: sectRes.data.batchSession.description || '',
-                });
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
+        // 4️⃣ IMPORTANT: Set responses FIRST, then sections
+        setResponses(respMap);
+        setSections(sectionsWithActs);
+
+        if (sectRes.data?.batchSession) {
+            setSessionInfo({
+                title: sectRes.data.batchSession.title || '',
+                description: sectRes.data.batchSession.description || '',
+            });
         }
-    };
+
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setLoading(false);
+    }
+};
+
 
     const allActivities = useMemo(() => sections.flatMap(s => s.activities), [sections]);
 
@@ -960,7 +986,8 @@ const StudentActivityPage = () => {
     };
 
     const handleUpdateResponses = (activityId, data) => {
-        setResponses(prev => ({ ...prev, [activityId]: data }));
+        const id = normalizeId(activityId);
+        setResponses(prev => ({ ...prev, [id]: data }));
     };
 
     if (loading) {
