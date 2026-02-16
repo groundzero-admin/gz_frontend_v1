@@ -1,11 +1,25 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getSessionResponses, listBatchSections, listAllSessionActivities } from "../api.js";
 import {
-    ArrowLeft, Search, ChevronDown, ChevronUp,
-    User, BookOpen, MessageSquare, Lightbulb, Star,
-    BarChart2, Users, List, Activity, Clock
+    ArrowLeft, ArrowRight, Search, ChevronDown, ChevronUp,
+    User, List, Activity, Clock, Star,
+    Check, AlertTriangle, HelpCircle, FileText, RefreshCw
 } from 'lucide-react';
+
+// ──────────────────────────────────────────
+//  HELPER: ID Normalizer
+// ──────────────────────────────────────────
+const normalizeId = (id) => {
+    if (!id) return null;
+    if (typeof id === 'string') return id;
+    if (typeof id === 'object' && id._id) return id._id.toString();
+    return id.toString();
+};
+
+// ──────────────────────────────────────────
+//  UI COMPONENTS (Shared)
+// ──────────────────────────────────────────
 
 const ScoreBadge = ({ score }) => {
     const s = score ?? 0;
@@ -19,6 +33,169 @@ const ScoreBadge = ({ score }) => {
     );
 };
 
+const MediaCarousel = ({ mediaItems }) => {
+    const [mediaIndex, setMediaIndex] = useState(0);
+    if (!mediaItems || mediaItems.length === 0) return null;
+
+    const hasMultiple = mediaItems.length > 1;
+    const current = mediaItems[mediaIndex];
+
+    const renderMedia = () => {
+        if (!current?.url) return null;
+        const isYouTube = current.url.includes('youtu');
+
+        if (current.mediaType === 'image') {
+            return <img src={current.url} className="w-full h-auto max-h-[600px] object-contain bg-black" alt="question media" />;
+        }
+        if (current.mediaType === 'video' && !isYouTube) {
+            return <video src={current.url} controls className="w-full h-auto max-h-[600px] bg-black" />;
+        }
+        return (
+            <div className="aspect-video w-full bg-black">
+                <iframe src={current.url} className="w-full h-full border-0" title="embed" allowFullScreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
+            </div>
+        );
+    };
+
+    return (
+        <div className="mb-6 relative group w-full">
+            <div className="w-full rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-900 relative">
+                {renderMedia()}
+                {hasMultiple && (
+                    <>
+                        <button onClick={() => setMediaIndex(prev => prev === 0 ? mediaItems.length - 1 : prev - 1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 rounded-full shadow hover:scale-110 transition flex items-center justify-center"><ArrowLeft size={16} /></button>
+                        <button onClick={() => setMediaIndex(prev => prev === mediaItems.length - 1 ? 0 : prev + 1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 rounded-full shadow hover:scale-110 transition flex items-center justify-center"><ArrowRight size={16} /></button>
+                    </>
+                )}
+            </div>
+            {hasMultiple && (
+                <div className="flex justify-center gap-2 mt-2">
+                    {mediaItems.map((_, i) => (
+                        <div key={i} className={`w-2 h-2 rounded-full transition-all ${i === mediaIndex ? 'bg-teal-500 scale-125' : 'bg-gray-300'}`} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+const QuestionBlock = ({ qData, response, readOnly, hidePrompt }) => {
+    if (!qData) return <div className="p-4 bg-gray-50 text-gray-400 italic text-sm">Question data unavailable</div>;
+
+    const mediaItems = qData.media || [];
+
+    return (
+        <div className="space-y-4 font-sans w-full">
+            {!hidePrompt && (
+                <div className="space-y-4 w-full">
+                    {qData.prompt && (
+                        <div className="prose prose-lg max-w-none text-gray-800 bg-white p-5 rounded-xl border border-gray-200 shadow-sm w-full"
+                            dangerouslySetInnerHTML={{ __html: qData.prompt }}
+                        />
+                    )}
+                    <MediaCarousel mediaItems={mediaItems} />
+                </div>
+            )}
+
+            {qData.qType !== 'no_response' && (
+                <div className={`rounded-xl p-5 border-2 transition-all w-full ${readOnly ? 'bg-gray-50 border-gray-200' : 'bg-white border-teal-100'}`}>
+                    
+                    {readOnly && <div className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">Student Answer</div>}
+
+                    {qData.qType === 'mcq' && (
+                        <div className="grid gap-2 w-full">
+                            {(qData.options || []).map((opt, i) => (
+                                <button key={i} disabled
+                                    className={`p-4 rounded-lg border font-bold text-base text-left flex items-center justify-between w-full ${response === opt
+                                        ? 'border-teal-500 bg-teal-50 text-teal-800 shadow-sm ring-1 ring-teal-500'
+                                        : 'bg-white border-gray-100 text-gray-400 opacity-60'
+                                        }`}>
+                                    <span>{opt}</span>
+                                    {response === opt && <Check size={20} />}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {qData.qType === 'msq' && (
+                        <div className="grid gap-2 w-full">
+                            {(qData.options || []).map((opt, i) => {
+                                const selected = Array.isArray(response) ? response.includes(opt) : false;
+                                return (
+                                    <button key={i} disabled
+                                        className={`p-4 rounded-lg border font-bold text-base text-left flex items-center gap-3 w-full ${selected
+                                            ? 'border-blue-500 bg-blue-50 text-blue-800 shadow-sm ring-1 ring-blue-500'
+                                            : 'bg-white border-gray-100 text-gray-400 opacity-60'
+                                            }`}>
+                                        <div className={`w-5 h-5 rounded border flex items-center justify-center ${selected ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300'}`}>
+                                            {selected && <Check size={12} strokeWidth={4} />}
+                                        </div>
+                                        {opt}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {qData.qType === 'single_input' && (
+                        <div className="space-y-1 w-full">
+                            <label className="text-[10px] font-bold text-teal-600 uppercase tracking-wider ml-1">{qData.inputLabel}</label>
+                            <textarea
+                                className="w-full px-4 py-3 rounded-xl border border-gray-300 bg-white text-gray-800 text-base font-medium resize-none focus:outline-none"
+                                value={response || ''}
+                                disabled
+                                rows={3}
+                                placeholder="(No answer)"
+                            />
+                        </div>
+                    )}
+
+                    {qData.qType === 'multi_input' && (
+                        <div className="grid gap-3 w-full">
+                            {(qData.multiFields || []).map((field, fIdx) => (
+                                <div key={fIdx} className="w-full">
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider ml-1 mb-1 block">{field.label || `Step ${fIdx + 1}`}</label>
+                                    <textarea
+                                        className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-800 text-base font-medium resize-none focus:outline-none"
+                                        value={(response && response[fIdx]) || ''}
+                                        disabled
+                                        rows={1}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {qData.qType === 'fill_blanks' && (
+                        <div className="leading-loose text-lg text-gray-800 font-medium bg-white p-6 rounded-xl border border-gray-200 w-full">
+                            {(qData.fillBlankText || '').split(/(\[\$.*?\])/).map((part, i, arr) => {
+                                if (part.startsWith('[$')) {
+                                    const idx = arr.slice(0, i).filter(p => p.startsWith('[$')).length;
+                                    const val = (response && response[idx]) ? response[idx] : '';
+                                    return (
+                                        <input
+                                            key={i}
+                                            disabled
+                                            value={val}
+                                            className={`inline-block border-b-2 w-32 mx-1 px-1 text-center font-bold text-lg ${val ? 'border-teal-500 text-teal-800 bg-teal-50' : 'border-red-200 text-red-300 bg-red-50'}`}
+                                        />
+                                    );
+                                }
+                                return <span key={i}>{part}</span>;
+                            })}
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
+
+// ──────────────────────────────────────────
+//  MAIN COMPONENT
+// ──────────────────────────────────────────
+
 const AdminActivityReview = () => {
     const { batchId, batchSessionId, sessionId } = useParams();
     const effectiveSessionId = batchSessionId || sessionId;
@@ -29,12 +206,13 @@ const AdminActivityReview = () => {
     const [sessionActivities, setSessionActivities] = useState([]);
     const [sections, setSections] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
     // UI State
     const [viewMode, setViewMode] = useState('student'); // 'student' | 'question' | 'live'
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedCards, setExpandedCards] = useState({});
-    const [selectedActivityId, setSelectedActivityId] = useState(null); // For Question View
+    const [selectedActivityId, setSelectedActivityId] = useState(null); 
 
     useEffect(() => {
         fetchData();
@@ -60,23 +238,31 @@ const AdminActivityReview = () => {
         }
     };
 
-    const toggleExpand = (id) => {
-        setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
+    // ──────────────────────────────────────────
+    //  REFRESH LOGIC
+    // ──────────────────────────────────────────
+    const refreshResponses = async () => {
+        setRefreshing(true);
+        try {
+            const respResult = await getSessionResponses(effectiveSessionId);
+            if (respResult.success) {
+                setResponses(respResult.data?.responses || []);
+            }
+        } catch (err) {
+            console.error("Error refreshing responses:", err);
+        } finally {
+            setTimeout(() => setRefreshing(false), 500);
+        }
     };
 
     // --- Helpers ---
-
-    // Get unique students from responses
     const studentMap = {};
     responses.forEach(r => {
         const student = r.student_obj_id;
-        if (student && student._id) {
-            studentMap[student._id] = student;
-        }
+        if (student && student._id) studentMap[student._id] = student;
     });
     const students = Object.values(studentMap);
 
-    // Group responses by Student
     const getStudentData = () => {
         const grouped = {};
         responses.forEach(resp => {
@@ -87,19 +273,71 @@ const AdminActivityReview = () => {
         return grouped;
     };
 
-    // Calculate Live Status
+    const toggleExpand = (id) => {
+        setExpandedCards(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const groupedSections = useMemo(() => {
+        const grouped = [];
+        const unassigned = [];
+        const sectionMap = {};
+        sections.forEach(sec => {
+            sectionMap[sec._id] = { ...sec, activities: [] };
+            grouped.push(sectionMap[sec._id]);
+        });
+        sessionActivities.forEach(act => {
+            const secId = normalizeId(act.batchSection_obj_id);
+            if (secId && sectionMap[secId]) {
+                sectionMap[secId].activities.push(act);
+            } else {
+                unassigned.push(act);
+            }
+        });
+        if (unassigned.length > 0) grouped.push({ _id: 'unassigned', sectionName: 'Uncategorized', activities: unassigned });
+        return grouped;
+    }, [sections, sessionActivities]);
+
+    useEffect(() => {
+        if (viewMode === 'question' && !selectedActivityId && groupedSections.length > 0) {
+            const firstSectionWithActivities = groupedSections.find(s => s.activities && s.activities.length > 0);
+            if (firstSectionWithActivities) {
+                setSelectedActivityId(firstSectionWithActivities.activities[0]._id);
+            }
+        }
+    }, [viewMode, groupedSections, selectedActivityId]);
+
+
+    const getSelectedActivityData = () => {
+        if (!selectedActivityId) return null;
+        const activity = sessionActivities.find(a => a._id === selectedActivityId);
+        if (!activity) return null;
+
+        const activityResps = responses.filter(r => r.batchActivity_obj_id?._id === selectedActivityId);
+        const questions = activity.practiceData?.questions || [];
+
+        return {
+            activity,
+            questions: questions.map((q, idx) => ({
+                question: q,
+                index: idx,
+                answers: activityResps.map(r => ({
+                    student: r.student_obj_id,
+                    answer: r.responses?.[idx],
+                    grade: r.grade,
+                    submittedAt: r.submittedAt
+                }))
+            }))
+        };
+    };
+
     const getLiveStatus = () => {
         return students.map(student => {
-            // Find all responses for this student
             const studentResps = responses.filter(r => r.student_obj_id?._id === student._id);
-            // Sort by submittedAt desc
             studentResps.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
-
             const lastResp = studentResps[0];
             const completedCount = new Set(studentResps.map(r => r.batchActivity_obj_id?._id)).size;
             const totalActivities = sessionActivities.length;
             const progress = totalActivities > 0 ? (completedCount / totalActivities) * 100 : 0;
-
             return {
                 student,
                 lastActivity: lastResp?.batchActivity_obj_id?.title || 'Not Started',
@@ -109,32 +347,6 @@ const AdminActivityReview = () => {
                 progress
             };
         }).filter(s => s.student.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    };
-
-    // Group by Activity -> Question
-    const getQuestionViewData = () => {
-        // We iterate over *sessionActivities* to show structure even if no responses
-        return sessionActivities.map(activity => {
-            const activityResps = responses.filter(r => r.batchActivity_obj_id?._id === activity._id);
-            const questions = activity.practiceData?.questions || [];
-
-            return {
-                activity,
-                questions: questions.map((q, idx) => {
-                    const answers = activityResps.map(r => {
-                        return {
-                            student: r.student_obj_id,
-                            answer: r.responses?.[idx],
-                            grade: r.grade // Note: grade is usually per-question in new model, but here it's per activity submission in schema?
-                            // Actually schema has one 'grade' object for the submission.
-                            // If we want per-question grading, we'd need to change schema or store array of grades.
-                            // For now, assuming whole activity submission.
-                        };
-                    });
-                    return { question: q, index: idx, answers };
-                })
-            };
-        });
     };
 
 
@@ -149,15 +361,14 @@ const AdminActivityReview = () => {
         );
     }
 
-    const studentData = getStudentData();
-    const liveStatusData = getLiveStatus();
-    const questionViewData = getQuestionViewData();
+    const selectedData = getSelectedActivityData();
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 font-sans text-gray-800 dark:text-gray-100 transition-colors">
+
             {/* Header */}
-            <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-20 shadow-sm transition-colors">
+                <div className="w-full px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
                         <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-xl transition">
                             <ArrowLeft size={20} />
@@ -165,53 +376,62 @@ const AdminActivityReview = () => {
                         <div>
                             <h1 className="text-xl font-bold text-gray-900">Activity Review</h1>
                             <p className="text-sm text-gray-500">
-                                {responses.length} responses • {students.length} students • {sessionActivities.length} activities
+                                {responses.length} responses • {students.length} students
                             </p>
                         </div>
                     </div>
 
-                    {/* View Toggles */}
                     <div className="flex bg-gray-100 p-1 rounded-xl">
-                        <button
-                            onClick={() => setViewMode('student')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'student' ? 'bg-white shadow text-teal-700' : 'text-gray-500 hover:text-gray-700'}`}
-                        >
+                        <button onClick={() => setViewMode('student')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'student' ? 'bg-white shadow text-teal-700' : 'text-gray-500 hover:text-gray-700'}`}>
                             <User size={16} /> Students
                         </button>
-                        <button
-                            onClick={() => setViewMode('question')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'question' ? 'bg-white shadow text-purple-700' : 'text-gray-500 hover:text-gray-700'}`}
-                        >
+                        <button onClick={() => setViewMode('question')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'question' ? 'bg-white shadow text-purple-700' : 'text-gray-500 hover:text-gray-700'}`}>
                             <List size={16} /> Questions
                         </button>
-                        <button
-                            onClick={() => setViewMode('live')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'live' ? 'bg-white shadow text-amber-700' : 'text-gray-500 hover:text-gray-700'}`}
-                        >
+                        <button onClick={() => setViewMode('live')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'live' ? 'bg-white shadow text-amber-700' : 'text-gray-500 hover:text-gray-700'}`}>
                             <Activity size={16} /> Live Status
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-6 py-8">
+            {/* MAIN CONTENT AREA */}
+            <div className={`mx-auto py-8 ${viewMode === 'question' ? 'w-[98%] px-2' : 'max-w-7xl px-6'}`}>
 
-                {/* Search Bar (Global) */}
-                <div className="mb-8 relative max-w-md">
-                    <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                        type="text"
-                        placeholder="Search students..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black/5 transition"
-                    />
-                </div>
+                {/* SEARCH & REFRESH BAR (For Student & Live views) */}
+                {viewMode !== 'question' && (
+                    <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+                        {/* Only show Search in Student View */}
+                        {viewMode === 'student' ? (
+                            <div className="relative max-w-md w-full">
+                                <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search students..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition shadow-sm"
+                                />
+                            </div>
+                        ) : (
+                            <div className="flex-1"></div> // Spacer for Live View
+                        )}
+                        
+                        <button 
+                            onClick={refreshResponses} 
+                            className="flex items-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-700 rounded-xl border border-gray-200 text-sm font-bold transition shadow-sm hover:shadow-md whitespace-nowrap"
+                            disabled={refreshing}
+                        >
+                            <RefreshCw size={16} className={refreshing ? "animate-spin text-teal-500" : "text-gray-400"} />
+                            {refreshing ? "Refreshing..." : "Refresh Data"}
+                        </button>
+                    </div>
+                )}
 
                 {/* ================= STUDENT VIEW ================= */}
                 {viewMode === 'student' && (
                     <div className="space-y-4">
-                        {Object.entries(studentData)
+                        {Object.entries(getStudentData())
                             .filter(([sId, resps]) => {
                                 const name = resps[0]?.student_obj_id?.name || 'Unknown';
                                 return name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -223,45 +443,55 @@ const AdminActivityReview = () => {
 
                                 return (
                                     <div key={studentId} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition">
-                                        <button
-                                            onClick={() => toggleExpand(studentId)}
-                                            className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-gray-50 transition"
-                                        >
+                                        <button onClick={() => toggleExpand(studentId)} className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-gray-50 transition">
                                             <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-lg">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-bold text-lg shadow-teal-200">
                                                     {studentName.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <h3 className="font-bold text-gray-900">{studentName}</h3>
-                                                    <p className="text-xs text-gray-500">{studentResps.length} Activities Completed</p>
+                                                    <h3 className="font-bold text-gray-900 text-lg">{studentName}</h3>
+                                                    <p className="text-sm text-gray-500">{studentResps.length} Activities Submitted</p>
                                                 </div>
                                             </div>
                                             {isExpanded ? <ChevronUp className="text-gray-400" /> : <ChevronDown className="text-gray-400" />}
                                         </button>
 
                                         {isExpanded && (
-                                            <div className="px-6 pb-6 border-t border-gray-100 bg-gray-50/50">
-                                                <div className="grid grid-cols-1 gap-4 mt-6">
-                                                    {studentResps.map((resp, i) => (
-                                                        <div key={i} className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-                                                            <div className="flex justify-between items-start mb-4">
-                                                                <div>
-                                                                    <h4 className="font-bold text-gray-800">{resp.batchActivity_obj_id?.title}</h4>
-                                                                    <p className="text-xs text-gray-400 mt-1 capitalize">{resp.batchActivity_obj_id?.type}</p>
-                                                                </div>
-                                                                <ScoreBadge score={resp.grade?.score} />
-                                                            </div>
-                                                            {/* Answers */}
-                                                            <div className="space-y-2">
-                                                                {resp.responses?.map((ans, idx) => (
-                                                                    <div key={idx} className="text-sm border-l-2 border-gray-200 pl-3 py-1">
-                                                                        <span className="text-xs font-bold text-gray-400 block mb-1">Q{idx + 1}</span>
-                                                                        <p className="text-gray-700">{typeof ans === 'object' ? JSON.stringify(ans) : String(ans)}</p>
+                                            <div className="px-6 pb-8 border-t border-gray-100 bg-gray-50/50">
+                                                <div className="grid grid-cols-1 gap-8 mt-6">
+                                                    {studentResps.map((resp, i) => {
+                                                        const fullActivity = sessionActivities.find(a => normalizeId(a._id) === normalizeId(resp.batchActivity_obj_id?._id));
+                                                        const questions = fullActivity?.practiceData?.questions || [];
+
+                                                        return (
+                                                            <div key={i} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                                                <div className="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                                                                    <div>
+                                                                        <div className="flex items-center gap-2 mb-1">
+                                                                            <span className="px-2 py-0.5 bg-teal-100 text-teal-700 text-[10px] rounded uppercase font-bold">{resp.batchActivity_obj_id?.type}</span>
+                                                                            <span className="text-xs text-gray-400 font-medium">{new Date(resp.submittedAt).toLocaleDateString()}</span>
+                                                                        </div>
+                                                                        <h4 className="font-bold text-xl text-gray-800">{resp.batchActivity_obj_id?.title}</h4>
                                                                     </div>
-                                                                ))}
+                                                                    <ScoreBadge score={resp.grade?.score} />
+                                                                </div>
+                                                                <div className="p-6 space-y-12">
+                                                                    {questions.length > 0 ? (
+                                                                        questions.map((q, qIdx) => (
+                                                                            <div key={qIdx} className="relative pl-8 border-l-2 border-gray-200">
+                                                                                <span className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-gray-200 text-[10px] flex items-center justify-center font-bold text-gray-500">
+                                                                                    {qIdx + 1}
+                                                                                </span>
+                                                                                <QuestionBlock qData={q} response={resp.responses?.[qIdx]} readOnly={true} hidePrompt={false} />
+                                                                            </div>
+                                                                        ))
+                                                                    ) : (
+                                                                        <div className="text-center text-gray-400 italic py-4">Original question data not found.</div>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}
@@ -273,103 +503,131 @@ const AdminActivityReview = () => {
 
                 {/* ================= QUESTION VIEW ================= */}
                 {viewMode === 'question' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Activity List Side Panel */}
-                        <div className="lg:col-span-1 space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
-                            {questionViewData.map((item, idx) => (
-                                <button
-                                    key={item.activity._id}
-                                    onClick={() => setSelectedActivityId(item.activity._id)}
-                                    className={`w-full text-left p-4 rounded-xl border transition-all ${selectedActivityId === item.activity._id
-                                        ? 'bg-purple-50 border-purple-200 shadow-sm ring-1 ring-purple-200'
-                                        : 'bg-white border-gray-100 hover:bg-gray-50 hover:border-gray-200'
-                                        }`}
-                                >
-                                    <h3 className={`font-bold text-sm ${selectedActivityId === item.activity._id ? 'text-purple-700' : 'text-gray-700'}`}>
-                                        {item.activity.title}
-                                    </h3>
-                                    <p className="text-xs text-gray-400 mt-1">{item.questions.length} Questions</p>
-                                </button>
-                            ))}
+                    <div className="grid grid-cols-[280px_1fr] gap-6 h-[calc(100vh-140px)]">
+                        
+                        {/* 1. Sidebar */}
+                        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
+                            <div className="p-4 border-b bg-gray-50/50"><h2 className="font-bold text-gray-700 text-sm">Curriculum</h2></div>
+                            <div className="overflow-y-auto flex-1 p-2 space-y-4 custom-scrollbar">
+                                {groupedSections.map((section) => (
+                                    <div key={section._id}>
+                                        <div className="px-2 mb-2 flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                                            <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-wider">
+                                                Section : {section.sectionName}
+                                            </h3>
+                                        </div>
+                                        <div className="space-y-1">
+                                            {section.activities.map((act) => (
+                                                <button key={act._id} onClick={() => setSelectedActivityId(act._id)} className={`w-full text-left px-3 py-2.5 rounded-lg border transition-all relative overflow-hidden ${selectedActivityId === act._id ? 'bg-purple-50 border-purple-200 shadow-sm text-purple-700' : 'bg-white border-transparent hover:bg-gray-50 text-gray-600'}`}>
+                                                    {selectedActivityId === act._id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500" />}
+                                                    <p className="font-bold text-xs truncate">Activity : {act.title}</p>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
-                        {/* Question Details */}
-                        <div className="lg:col-span-2">
-                            {selectedActivityId ? (
-                                <div className="space-y-8">
-                                    {questionViewData.find(d => d.activity._id === selectedActivityId)?.questions.map((qData, i) => (
-                                        <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                                            <div className="bg-gray-50 px-6 py-4 border-b border-gray-100">
-                                                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Question {i + 1}</span>
-                                                <div className="mt-2 text-gray-800 font-medium" dangerouslySetInnerHTML={{ __html: qData.question.prompt || 'No Prompt' }} />
+                        {/* 2. Main Content */}
+                        <div className="flex flex-col h-full overflow-hidden">
+                            {selectedData ? (
+                                <div className="h-full overflow-y-auto pr-2 pb-20 space-y-8">
+                                    <div className="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm flex items-center justify-between">
+                                        <div>
+                                            <h2 className="text-2xl font-black text-gray-900">{selectedData.activity.title}</h2>
+                                            <div className="flex gap-4 mt-1 text-sm text-gray-500">
+                                                <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded font-bold uppercase text-[10px]">{selectedData.activity.type}</span>
+                                                <span>{selectedData.questions.length} Questions</span>
                                             </div>
-                                            <div className="divide-y divide-gray-50">
-                                                {qData.answers.filter(a => a.student && a.answer).map((ans, ansIdx) => (
-                                                    <div key={ansIdx} className="px-6 py-3 flex items-start gap-4 hover:bg-gray-50/50">
-                                                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0">
-                                                            {ans.student?.name?.charAt(0)}
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <div className="flex justify-between">
-                                                                <p className="text-xs font-bold text-gray-900">{ans.student?.name}</p>
-                                                                {/* <span className="text-xs text-gray-400">{ans.grade?.score}/10</span> */}
-                                                            </div>
-                                                            <p className="text-sm text-gray-700 mt-1">{typeof ans.answer === 'object' ? JSON.stringify(ans.answer) : String(ans.answer)}</p>
-                                                        </div>
+                                        </div>
+                                    </div>
+
+                                    {selectedData.questions.map((qData, i) => (
+                                        <div key={i} className="space-y-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-lg bg-gray-900 text-white flex items-center justify-center font-bold text-sm shadow-md">{i + 1}</div>
+                                                <div className="h-px bg-gray-200 flex-1" />
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Master Question</span>
+                                            </div>
+                                            
+                                            {/* Full Width Master Question */}
+                                            <div className="bg-white rounded-2xl p-1 border border-transparent">
+                                                <QuestionBlock qData={qData.question} readOnly={true} response={null} />
+                                            </div>
+
+                                            <div className="bg-gray-100/80 rounded-3xl p-6 border border-gray-200/50">
+                                                
+                                                {/* Response Header with PER-QUESTION Refresh Button */}
+                                                <div className="flex items-center justify-between mb-5">
+                                                    <h3 className="font-bold text-gray-700 flex items-center gap-2 text-sm">
+                                                        <User size={16} /> Student Responses
+                                                    </h3>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="bg-white px-3 py-1 rounded-full text-xs font-bold text-gray-500 shadow-sm border">
+                                                            {qData.answers.filter(a => a.student && a.answer).length} Answers
+                                                        </span>
+                                                        <button 
+                                                            onClick={refreshResponses} 
+                                                            className="flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-teal-50 text-teal-700 rounded-full border border-teal-200 text-xs font-bold transition shadow-sm hover:shadow-md"
+                                                            disabled={refreshing}
+                                                        >
+                                                            <RefreshCw size={12} className={refreshing ? "animate-spin" : ""} />
+                                                            {refreshing ? "Updating" : "Refresh"}
+                                                        </button>
                                                     </div>
-                                                ))}
-                                                {qData.answers.filter(a => a.student && a.answer).length === 0 && (
-                                                    <div className="p-6 text-center text-sm text-gray-400 italic">No answers yet.</div>
-                                                )}
+                                                </div>
+
+                                                <div className="grid grid-cols-1 gap-6">
+                                                    {qData.answers.filter(a => a.student && a.answer).map((ans, ansIdx) => (
+                                                        <div key={ansIdx} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition group w-full">
+                                                            <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center font-bold text-xs">{ans.student?.name?.charAt(0)}</div>
+                                                                    <div><p className="font-bold text-sm text-gray-900">{ans.student?.name}</p></div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="w-full">
+                                                                <QuestionBlock qData={qData.question} response={ans.answer} readOnly={true} hidePrompt={true} />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             ) : (
-                                <div className="h-full flex items-center justify-center text-gray-400 italic">
-                                    Select an activity to view questions.
+                                <div className="h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                                    <List size={48} className="mb-4 opacity-20" />
+                                    <p className="font-medium">Select an activity</p>
                                 </div>
                             )}
                         </div>
                     </div>
                 )}
 
-                {/* ================= LIVE VIEW ================= */}
+                {/* ================= LIVE STATUS VIEW ================= */}
                 {viewMode === 'live' && (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {liveStatusData.map((stat, i) => (
+                        {getLiveStatus().map((stat, i) => (
                             <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 hover:shadow-md transition">
                                 <div className="flex items-center gap-4 mb-4">
-                                    <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-lg">
-                                        {stat.student?.name?.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-gray-900">{stat.student?.name}</h3>
-                                        <p className="text-xs text-gray-500">{stat.student?.email}</p>
+                                    <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-lg">{stat.student?.name?.charAt(0)}</div>
+                                    <div className="overflow-hidden">
+                                        <h3 className="font-bold text-gray-900 truncate">{stat.student?.name}</h3>
+                                        <p className="text-xs text-gray-500 truncate">{stat.student?.email}</p>
                                     </div>
                                 </div>
-
                                 <div className="space-y-4">
                                     <div>
-                                        <div className="flex justify-between text-xs font-bold text-gray-500 mb-1">
-                                            <span>Progress</span>
-                                            <span>{Math.round(stat.progress)}%</span>
-                                        </div>
-                                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                                            <div className="h-full bg-amber-500 rounded-full" style={{ width: `${stat.progress}%` }} />
-                                        </div>
+                                        <div className="flex justify-between text-xs font-bold text-gray-500 mb-1"><span>Progress</span><span>{Math.round(stat.progress)}%</span></div>
+                                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden"><div className="h-full bg-amber-500 rounded-full transition-all duration-1000" style={{ width: `${stat.progress}%` }} /></div>
                                     </div>
-
                                     <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
                                         <p className="text-xs text-gray-400 uppercase font-bold mb-1">Last Active</p>
-                                        <div className="flex items-center gap-2 text-sm font-medium text-gray-800">
-                                            <Activity size={14} className="text-blue-500" />
-                                            <span className="truncate">{stat.lastActivity}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                                            <Clock size={12} />
-                                            <span>{stat.lastActiveTime ? new Date(stat.lastActiveTime).toLocaleTimeString() : 'Never'}</span>
-                                        </div>
+                                        <div className="flex items-center gap-2 text-sm font-medium text-gray-800"><Activity size={14} className="text-blue-500" /><span className="truncate">{stat.lastActivity}</span></div>
                                     </div>
                                 </div>
                             </div>

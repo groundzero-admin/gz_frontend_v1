@@ -170,7 +170,8 @@ const AdminSectionPage = () => {
                     <div
                         className="p-12 rounded-2xl shadow-sm text-center border dashed transition-colors"
                         style={{
-                            backgroundColor: `var(${isDark ? "--card-dark" : "#ffffff"})`,
+                        backgroundColor: isDark ? "var(--card-dark)" : "#ffffff",
+
                             borderColor: `var(${isDark ? "--border-dark" : "#e5e7eb"})`
                         }}
                     >
@@ -184,7 +185,8 @@ const AdminSectionPage = () => {
                                 key={section._id}
                                 className="p-6 rounded-xl shadow-sm border hover:shadow-md transition flex items-center justify-between group"
                                 style={{
-                                    backgroundColor: `var(${isDark ? "--card-dark" : "#ffffff"})`,
+                                backgroundColor: isDark ? "var(--card-dark)" : "#ffffff",
+
                                     borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`
                                 }}
                             >
@@ -228,11 +230,12 @@ const AdminSectionPage = () => {
 
             {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm  z-50 flex items-center justify-center p-4">
                     <div
                         className="w-full max-w-md rounded-2xl p-6 shadow-2xl transition-colors"
                         style={{
-                            backgroundColor: `var(${isDark ? "--card-dark" : "#ffffff"})`,
+                         backgroundColor: isDark ? "var(--card-dark)" : "#ffffff",
+
                             color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`,
                             border: `1px solid var(${isDark ? "--border-dark" : "transparent"})`
                         }}
