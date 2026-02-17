@@ -602,16 +602,19 @@ const SessionCard = ({ session, isDark, onClick, batchType, onDelete }) => {
   return (
     <div
       onDoubleClick={onClick}
-      className="p-5 rounded-xl border flex items-start gap-4 transition-all hover:shadow-lg cursor-pointer h-full relative group"
+      className="p-5 pb-14 rounded-xl border flex items-start gap-4 transition-all hover:shadow-lg cursor-pointer min-h-[180px] relative group"
       style={{
         backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
         borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`,
       }}
     >
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition flex items-center gap-2">
-        <span className="text-xs font-bold px-2 py-1 rounded bg-black/10 dark:bg-white/10 flex items-center gap-1">
+        <button
+          onClick={(e) => { e.stopPropagation(); onClick(); }}
+          className="text-xs font-bold px-2 py-1 rounded bg-black/10 dark:bg-white/10 flex items-center gap-1 hover:bg-black/20 dark:hover:bg-white/20 transition cursor-pointer"
+        >
           <FaEdit /> Edit
-        </span>
+        </button>
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(session); }}
           className="p-1.5 rounded text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
