@@ -9,7 +9,7 @@ import {
     ArrowLeft, ArrowRight, CheckCircle, Play, RotateCcw,
     Calculator as CalcIcon, MessageSquare, X, GraduationCap,
     ChevronLeft, ChevronRight, ExternalLink, Check, AlertTriangle,
-    HelpCircle, Maximize2, Minimize2
+    HelpCircle, Maximize2, Minimize2, Lock
 } from 'lucide-react';
 import {
     listStudentBatchSections, listStudentBatchActivities,
@@ -543,7 +543,7 @@ const AllSectionsView = ({ sections, responses, sessionInfo, onSelectActivity, s
                         const id = normalizeId(a._id);
                         return !!responses[id]?.grade;
                     }).length;
-                    
+
                     const isFullyDone = completedCount === acts.length && acts.length > 0;
 
                     return (
@@ -551,11 +551,10 @@ const AllSectionsView = ({ sections, responses, sessionInfo, onSelectActivity, s
                             {/* Section Header Row */}
                             <div className="flex items-start gap-6 mb-8">
                                 {/* Timeline Icon */}
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-colors duration-300 ${
-                                    isFullyDone 
-                                    ? 'bg-emerald-500 text-white' 
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-colors duration-300 ${isFullyDone
+                                    ? 'bg-emerald-500 text-white'
                                     : 'bg-indigo-500 text-white'
-                                }`}>
+                                    }`}>
                                     {isFullyDone ? <Check size={20} strokeWidth={3} /> : <span className="font-bold">{secIdx + 1}</span>}
                                 </div>
 
@@ -566,7 +565,7 @@ const AllSectionsView = ({ sections, responses, sessionInfo, onSelectActivity, s
                                     </h2>
                                     <div className="flex items-center gap-3 mt-1">
                                         <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                            <div 
+                                            <div
                                                 className="h-full bg-indigo-500 rounded-full transition-all duration-500"
                                                 style={{ width: `${(completedCount / (acts.length || 1)) * 100}%` }}
                                             />
@@ -597,11 +596,10 @@ const AllSectionsView = ({ sections, responses, sessionInfo, onSelectActivity, s
                                             >
                                                 {/* Badge */}
                                                 <div className="mb-4">
-                                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${
-                                                        act.type === 'reading' 
-                                                        ? 'bg-purple-100 text-purple-600' 
+                                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${act.type === 'reading'
+                                                        ? 'bg-purple-100 text-purple-600'
                                                         : 'bg-emerald-100 text-emerald-600'
-                                                    }`}>
+                                                        }`}>
                                                         {act.type || 'Practice'}
                                                     </span>
                                                 </div>
@@ -616,7 +614,7 @@ const AllSectionsView = ({ sections, responses, sessionInfo, onSelectActivity, s
                                                     <span className="text-[10px] text-gray-400 font-medium">
                                                         {totalQ} Questions
                                                     </span>
-                                                    
+
                                                     {isCompleted ? (
                                                         <div className="w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-sm shadow-emerald-200">
                                                             <Check size={14} strokeWidth={3} />
@@ -865,15 +863,15 @@ const QuestionView = ({
                                 )}
                             </div>
                         </div>
-                    {onGoToMenu && (
-    <button
-        onClick={onGoToMenu}
-        className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow-md transition-all flex items-center gap-2 flex-shrink-0"
-    >
-        <GraduationCap size={14} />
-        All Activities
-    </button>
-)}
+                        {onGoToMenu && (
+                            <button
+                                onClick={onGoToMenu}
+                                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow-md transition-all flex items-center gap-2 flex-shrink-0"
+                            >
+                                <GraduationCap size={14} />
+                                All Activities
+                            </button>
+                        )}
                     </div>
 
                     {/* Bottom row: question nav */}
@@ -1099,6 +1097,7 @@ const StudentActivityPage = () => {
     const [sections, setSections] = useState([]);
     const [responses, setResponses] = useState({});
     const [loading, setLoading] = useState(true);
+    const [unauthorized, setUnauthorized] = useState(false);
     const [sessionInfo, setSessionInfo] = useState(null);
     const [selectedActivity, setSelectedActivity] = useState(null);
 
@@ -1115,7 +1114,14 @@ const StudentActivityPage = () => {
                 getMySessionResponses(effectiveSessionId)
             ]);
 
-            if (!sectRes.success) throw new Error("Failed to load sections");
+            if (!sectRes.success) {
+                // Check for unauthorized
+                if (sectRes.status === 401 || sectRes.message?.toLowerCase().includes('unauthorized') || sectRes.message?.toLowerCase().includes('not logged in') || sectRes.message?.toLowerCase().includes('token')) {
+                    setUnauthorized(true);
+                    return;
+                }
+                throw new Error("Failed to load sections");
+            }
 
             const respMap = {};
             if (respRes.success && respRes.data?.responses) {
@@ -1149,6 +1155,10 @@ const StudentActivityPage = () => {
 
         } catch (err) {
             console.error(err);
+            // Also catch network-level 401s
+            if (err?.response?.status === 401 || err?.status === 401) {
+                setUnauthorized(true);
+            }
         } finally {
             setLoading(false);
         }
@@ -1200,6 +1210,28 @@ const StudentActivityPage = () => {
         const id = normalizeId(activityId);
         setResponses(prev => ({ ...prev, [id]: data }));
     };
+
+    const navigate = useNavigate();
+
+    if (unauthorized) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="flex flex-col items-center gap-4 text-center px-6">
+                    <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
+                        <Lock size={28} className="text-red-500" />
+                    </div>
+                    <h2 className="text-2xl font-bold text-gray-900">You are not logged in</h2>
+                    <p className="text-gray-500 text-sm max-w-sm">Please log in to access your session activities.</p>
+                    <button
+                        onClick={() => navigate('/login')}
+                        className="mt-2 px-8 py-3 bg-teal-500 text-white rounded-xl font-bold hover:bg-teal-600 transition-all shadow-lg"
+                    >
+                        Go to Login
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     if (loading) {
         return (

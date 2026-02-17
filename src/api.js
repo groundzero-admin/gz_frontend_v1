@@ -2244,13 +2244,13 @@ export const updateBatchTemplateSession = async (formData) => {
   }
 };
 
-export const deleteBatchTemplateSession = async (session_obj_id) => {
+export const deleteBatchTemplateSession = async (session_obj_id, cascadeToChildren = false) => {
   try {
     const response = await fetch(`${BASE_URL}/admin/template/session/delete`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ session_obj_id }),
+      body: JSON.stringify({ session_obj_id, cascadeToChildren }),
     });
     return await response.json();
   } catch (error) {

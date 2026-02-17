@@ -7,7 +7,8 @@ import {
     FaTimes,
     FaEdit,
     FaTrash,
-    FaCopy
+    FaCopy,
+    FaExclamationTriangle
 } from "react-icons/fa";
 import {
     getBatchTemplateDetails,
@@ -266,6 +267,159 @@ const TemplateSessionCard = ({ session, isDark, onClick, onDelete }) => {
     );
 };
 
+// --- Delete Confirm Modal ---
+const DeleteConfirmModal = ({ isOpen, session, isDark, onClose, onConfirm }) => {
+    const [step, setStep] = useState(1); // 1 = choose scope, 2 = type DELETE
+    const [cascadeChoice, setCascadeChoice] = useState(false);
+    const [deleteInput, setDeleteInput] = useState('');
+    const [error, setError] = useState('');
+    const [deleting, setDeleting] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            setStep(1);
+            setCascadeChoice(false);
+            setDeleteInput('');
+            setError('');
+            setDeleting(false);
+        }
+    }, [isOpen]);
+
+    if (!isOpen || !session) return null;
+
+    const handleScopeSelect = (cascade) => {
+        setCascadeChoice(cascade);
+        setStep(2);
+    };
+
+    const handleFinalConfirm = async () => {
+        if (deleteInput !== 'DELETE') {
+            setError('You must type DELETE exactly to confirm.');
+            return;
+        }
+        setDeleting(true);
+        await onConfirm(session, cascadeChoice);
+        setDeleting(false);
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+            <div
+                className="w-full max-w-md rounded-2xl shadow-2xl p-0 overflow-hidden"
+                style={{ backgroundColor: `var(${isDark ? '--card-dark' : '--bg-light'})` }}
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="bg-gradient-to-r from-red-500 to-red-600 p-5 flex items-center gap-3 text-white">
+                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                        <FaExclamationTriangle size={18} />
+                    </div>
+                    <div>
+                        <h3 className="font-bold text-lg">Delete Session</h3>
+                        <p className="text-white/80 text-xs">"{session.title}"</p>
+                    </div>
+                    <button onClick={onClose} className="ml-auto p-1 hover:bg-white/20 rounded-lg transition">
+                        <FaTimes />
+                    </button>
+                </div>
+
+                <div className="p-6">
+                    {step === 1 && (
+                        <div className="space-y-4">
+                            <p className="text-sm opacity-80">How would you like to delete this session?</p>
+
+                            <button
+                                onClick={() => handleScopeSelect(false)}
+                                className="w-full p-4 rounded-xl border-2 text-left transition-all hover:border-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/10 group"
+                                style={{ borderColor: `var(${isDark ? '--border-dark' : '--border-light'})` }}
+                            >
+                                <div className="flex items-start gap-3">
+                                    <span className="text-2xl">📝</span>
+                                    <div>
+                                        <h4 className="font-bold text-sm">Delete from Template Only</h4>
+                                        <p className="text-xs opacity-60 mt-1">Remove this session from the template. Child batches that already imported it will keep their copy.</p>
+                                    </div>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={() => handleScopeSelect(true)}
+                                className="w-full p-4 rounded-xl border-2 text-left transition-all hover:border-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 group"
+                                style={{ borderColor: `var(${isDark ? '--border-dark' : '--border-light'})` }}
+                            >
+                                <div className="flex items-start gap-3">
+                                    <span className="text-2xl">🗑️</span>
+                                    <div>
+                                        <h4 className="font-bold text-sm text-red-500">Delete from Template & All Child Batches</h4>
+                                        <p className="text-xs opacity-60 mt-1">Remove this session from the template AND from every batch where it was imported. Student responses may be lost.</p>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    )}
+
+                    {step === 2 && (
+                        <div className="space-y-4">
+                            <div className={`p-3 rounded-lg text-xs font-medium ${cascadeChoice ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400' : 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400'}`}>
+                                {cascadeChoice
+                                    ? '⚠️ This will delete the session from the template AND all child batches.'
+                                    : '📝 This will delete the session from the template only. Child batches keep their copy.'}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold mb-2">Type <span className="text-red-500 font-mono">DELETE</span> to confirm</label>
+                                <input
+                                    type="text"
+                                    value={deleteInput}
+                                    onChange={(e) => { setDeleteInput(e.target.value); setError(''); }}
+                                    placeholder="Type DELETE here"
+                                    className="w-full px-4 py-3 rounded-xl border-2 text-sm font-mono tracking-widest focus:outline-none focus:border-red-400 transition"
+                                    style={{
+                                        backgroundColor: `var(${isDark ? '--bg-dark' : '--bg-light'})`,
+                                        borderColor: error ? '#ef4444' : `var(${isDark ? '--border-dark' : '--border-light'})`,
+                                        color: `var(${isDark ? '--text-dark-primary' : '--text-light-primary'})`
+                                    }}
+                                    autoFocus
+                                    onKeyDown={(e) => e.key === 'Enter' && handleFinalConfirm()}
+                                />
+                                {error && <p className="text-red-500 text-xs mt-1 font-medium">{error}</p>}
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={() => setStep(1)}
+                                    disabled={deleting}
+                                    className="flex-1 py-3 rounded-xl border font-bold text-sm transition hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50"
+                                    style={{ borderColor: `var(${isDark ? '--border-dark' : '--border-light'})` }}
+                                >
+                                    ← Back
+                                </button>
+                                <button
+                                    onClick={handleFinalConfirm}
+                                    disabled={deleteInput !== 'DELETE' || deleting}
+                                    className={`flex-1 py-3 rounded-xl font-bold text-sm text-white transition flex items-center justify-center gap-2 ${deleteInput === 'DELETE' && !deleting
+                                            ? 'bg-red-500 hover:bg-red-600 shadow-lg'
+                                            : 'bg-gray-300 cursor-not-allowed'
+                                        }`}
+                                >
+                                    {deleting ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                            Deleting...
+                                        </>
+                                    ) : (
+                                        'Confirm Delete'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 // --- Main Page ---
 const AdminBatchTemplateSessionPage = () => {
     const { isDark } = useOutletContext();
@@ -278,6 +432,7 @@ const AdminBatchTemplateSessionPage = () => {
 
     const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
     const [editingSession, setEditingSession] = useState(null);
+    const [deleteModalSession, setDeleteModalSession] = useState(null);
 
     const fetchData = async () => {
         setIsLoading(true);
@@ -326,14 +481,13 @@ const AdminBatchTemplateSessionPage = () => {
         return false;
     };
 
-    const handleDeleteSession = async (session) => {
-        const confirmation = window.prompt(`To confirm deletion of template session "${session.title}", please type "DELETE" below:\n\nThis cannot be undone.`);
-        if (confirmation !== "DELETE") {
-            if (confirmation) alert("Deletion cancelled. You must type DELETE exactly.");
-            return;
-        }
+    const handleDeleteSession = (session) => {
+        setDeleteModalSession(session);
+    };
 
-        const response = await deleteBatchTemplateSession(session._id);
+    const handleDeleteConfirm = async (session, cascade) => {
+        const response = await deleteBatchTemplateSession(session._id, cascade);
+        setDeleteModalSession(null);
         alert(response.message);
         if (response.success) fetchData();
     };
@@ -410,6 +564,15 @@ const AdminBatchTemplateSessionPage = () => {
                 isDark={isDark}
                 editingSession={editingSession}
                 existingSessions={sessions}
+            />
+
+            {/* Delete Confirm Modal */}
+            <DeleteConfirmModal
+                isOpen={!!deleteModalSession}
+                session={deleteModalSession}
+                isDark={isDark}
+                onClose={() => setDeleteModalSession(null)}
+                onConfirm={handleDeleteConfirm}
             />
         </div>
     );
