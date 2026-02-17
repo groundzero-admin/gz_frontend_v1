@@ -24,7 +24,7 @@
 .border-gradient {
   position: relative;
   border: 2px solid transparent;
-  background-image: 
+  background-image:
     linear-gradient(var(--button-bg-dark), var(--button-bg-dark)),
     linear-gradient(90deg, var(--accent-teal), var(--accent-purple), var(--accent-teal));
   background-origin: border-box;
@@ -33,7 +33,37 @@
 }
 
 @keyframes borderFlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }

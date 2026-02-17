@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -9,7 +9,7 @@ import {
     ArrowLeft, ArrowRight, CheckCircle, Play, RotateCcw,
     Calculator as CalcIcon, MessageSquare, X, GraduationCap,
     ChevronLeft, ChevronRight, ExternalLink, Check, AlertTriangle,
-    HelpCircle
+    HelpCircle, Maximize2, Minimize2
 } from 'lucide-react';
 import {
     listStudentBatchSections, listStudentBatchActivities,
@@ -82,8 +82,25 @@ const DummyAIAgent = ({ onClose, shiftLeft }) => {
 // ──────────────────────────────────────────
 //  Per-Question Media Carousel
 // ──────────────────────────────────────────
+const ACADEMIC_QUOTES = [
+    "Education is the most powerful weapon you can use to change the world. — Nelson Mandela",
+    "The beautiful thing about learning is that nobody can take it away from you. — B.B. King",
+    "Live as if you were to die tomorrow. Learn as if you were to live forever. — Mahatma Gandhi",
+    "An investment in knowledge pays the best interest. — Benjamin Franklin",
+    "The mind is not a vessel to be filled, but a fire to be kindled. — Plutarch",
+    "Tell me and I forget, teach me and I may remember, involve me and I learn. — Benjamin Franklin",
+    "The roots of education are bitter, but the fruit is sweet. — Aristotle",
+    "Learning is not attained by chance, it must be sought for with ardor. — Abigail Adams",
+    "The only thing that interferes with my learning is my education. — Albert Einstein",
+    "Knowledge is power. Information is liberating. — Kofi Annan",
+];
+
 const MediaCarousel = ({ mediaItems }) => {
     const [mediaIndex, setMediaIndex] = useState(0);
+    const [imgLoaded, setImgLoaded] = useState({});
+    const [isZoomed, setIsZoomed] = useState(false);
+    const quote = useMemo(() => ACADEMIC_QUOTES[Math.floor(Math.random() * ACADEMIC_QUOTES.length)], []);
+
     if (!mediaItems || mediaItems.length === 0) return null;
 
     const hasMultiple = mediaItems.length > 1;
@@ -94,10 +111,29 @@ const MediaCarousel = ({ mediaItems }) => {
         const isYouTube = current.url.includes('youtu');
 
         if (current.mediaType === 'image') {
-            return <img src={current.url} className="w-full h-auto max-h-[400px] object-contain" alt="question media" />;
+            return (
+                <div className="relative">
+                    {!imgLoaded[mediaIndex] && (
+                        <div className="flex items-center justify-center py-16 px-8 text-center">
+                            <div className="space-y-3">
+                                <div className="text-4xl animate-pulse">📚</div>
+                                <p className="text-sm text-gray-400 italic max-w-md leading-relaxed">"{quote}"</p>
+                            </div>
+                        </div>
+                    )}
+                    <img
+                        src={current.url}
+                        className={`w-full h-auto max-h-[400px] object-contain transition-all duration-300 ${imgLoaded[mediaIndex] ? 'opacity-100' : 'opacity-0 absolute inset-0'}`}
+                        alt={quote}
+                        loading="eager"
+                        decoding="async"
+                        onLoad={() => setImgLoaded(prev => ({ ...prev, [mediaIndex]: true }))}
+                    />
+                </div>
+            );
         }
         if (current.mediaType === 'video' && !isYouTube) {
-            return <video src={current.url} controls className="w-full h-auto max-h-[400px]" />;
+            return <video src={current.url} controls className="w-full h-auto max-h-[400px]" preload="metadata" />;
         }
         return (
             <div className="aspect-video w-full">
@@ -108,8 +144,44 @@ const MediaCarousel = ({ mediaItems }) => {
     };
 
     return (
-        <div className="mb-6 relative">
-            <div className="w-full rounded-2xl overflow-hidden border-4 border-gray-100 shadow-lg bg-black relative">
+        <div className="mb-5 relative">
+            {/* Preload all images in the carousel */}
+            {mediaItems.map((m, i) => m.mediaType === 'image' && m.url ? (
+                <link key={i} rel="preload" as="image" href={m.url} />
+            ) : null)}
+
+            {/* Toolbar — above carousel */}
+            {current?.url && (() => {
+                // Convert YouTube embed URLs to proper watch URLs
+                let openUrl = current.url;
+                const embedMatch = current.url.match(/youtube\.com\/embed\/([^?&/]+)/);
+                if (embedMatch) openUrl = `https://www.youtube.com/watch?v=${embedMatch[1]}`;
+                const shortMatch = current.url.match(/youtu\.be\/([^?&/]+)/);
+                if (shortMatch) openUrl = `https://www.youtube.com/watch?v=${shortMatch[1]}`;
+                return (
+                    <div className="flex items-center justify-end gap-2 mb-2 px-1">
+                        <button
+                            onClick={() => setIsZoomed(true)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-500 hover:text-red-700 hover:bg-red-50 transition-all"
+                        >
+                            <Maximize2 size={13} />
+                            Zoom
+                        </button>
+                        <a
+                            href={openUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-all"
+                        >
+                            <ExternalLink size={13} />
+                            Open in New Tab
+                        </a>
+                    </div>
+                );
+            })()}
+
+            {/* Normal carousel */}
+            <div className="w-full rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50 relative">
                 {renderMedia()}
                 {hasMultiple && (
                     <>
@@ -128,15 +200,86 @@ const MediaCarousel = ({ mediaItems }) => {
                     </>
                 )}
             </div>
+
+            {/* Dot indicators — below carousel */}
             {hasMultiple && (
-                <div className="flex justify-center gap-2 mt-4">
+                <div className="flex justify-center gap-1.5 mt-3">
                     {mediaItems.map((_, i) => (
                         <button
                             key={i}
                             onClick={() => setMediaIndex(i)}
-                            className={`w-2.5 h-2.5 rounded-full transition-all ${i === mediaIndex ? 'bg-teal-500 scale-125' : 'bg-gray-300 hover:bg-gray-400'}`}
+                            className={`w-2 h-2 rounded-full transition-all ${i === mediaIndex ? 'bg-teal-500 scale-125' : 'bg-gray-300 hover:bg-gray-400'}`}
                         />
                     ))}
+                </div>
+            )}
+
+            {/* Fullscreen overlay */}
+            {isZoomed && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" onClick={() => setIsZoomed(false)}>
+                    {/* Close button */}
+                    <button
+                        onClick={() => setIsZoomed(false)}
+                        className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-xl flex items-center justify-center text-gray-600 hover:text-red-500 transition-all hover:scale-110 z-50"
+                    >
+                        <X size={20} />
+                    </button>
+
+                    {/* Media container */}
+                    <div className="max-w-[90vw] max-h-[90vh] relative" onClick={e => e.stopPropagation()}>
+                        {current?.mediaType === 'image' && (
+                            <img src={current.url} className="max-w-[90vw] max-h-[85vh] object-contain rounded-xl shadow-2xl" alt={quote} />
+                        )}
+                        {current?.mediaType === 'video' && !current.url.includes('youtu') && (
+                            <video src={current.url} controls className="max-w-[90vw] max-h-[85vh] rounded-xl shadow-2xl" />
+                        )}
+                        {(current?.mediaType === 'embed' || current?.url?.includes('youtu')) && (
+                            <div className="w-[80vw] aspect-video">
+                                <iframe src={current.url} className="w-full h-full border-0 rounded-xl shadow-2xl" title="embed" allowFullScreen
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
+                            </div>
+                        )}
+
+                        {/* Overlay navigation arrows */}
+                        {hasMultiple && (
+                            <>
+                                <button
+                                    onClick={() => setMediaIndex(prev => prev === 0 ? mediaItems.length - 1 : prev - 1)}
+                                    className="absolute left-[-60px] top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-xl flex items-center justify-center text-gray-700 hover:text-teal-600 transition-all hover:scale-110"
+                                >
+                                    <ArrowLeft size={22} />
+                                </button>
+                                <button
+                                    onClick={() => setMediaIndex(prev => prev === mediaItems.length - 1 ? 0 : prev + 1)}
+                                    className="absolute right-[-60px] top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-xl flex items-center justify-center text-gray-700 hover:text-teal-600 transition-all hover:scale-110"
+                                >
+                                    <ArrowRight size={22} />
+                                </button>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Overlay bottom bar */}
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
+                        {hasMultiple && (
+                            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
+                                {mediaItems.map((_, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={(e) => { e.stopPropagation(); setMediaIndex(i); }}
+                                        className={`w-3 h-3 rounded-full transition-all ${i === mediaIndex ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/70'}`}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                        <button
+                            onClick={() => setIsZoomed(false)}
+                            className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold hover:bg-white/30 transition-all"
+                        >
+                            <Minimize2 size={14} />
+                            Minimize
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
@@ -165,8 +308,8 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
     const mediaItems = qData.media || [];
 
     return (
-        <div className="space-y-6">
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+        <div className="space-y-5">
+            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm border-l-4 border-l-teal-400">
                 <div className="prose prose-lg max-w-none text-gray-800"
                     dangerouslySetInnerHTML={{ __html: qData.prompt || '<p>Question...</p>' }}
                 />
@@ -175,25 +318,37 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
             <MediaCarousel mediaItems={mediaItems} />
 
             {qData.qType !== 'no_response' && (
-                <div className="bg-white rounded-2xl p-6 border border-teal-100 shadow-sm">
-                    <h4 className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-4">Write your answer here</h4>
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+                    <h4 className="text-xs font-bold text-teal-600 uppercase tracking-wider mb-5">
+                        {qData.qType === 'mcq' ? 'Choose one answer' :
+                            qData.qType === 'msq' ? 'Select all that apply' :
+                                qData.qType === 'fact_trick' ? 'What do you think?' :
+                                    qData.qType === 'fill_blanks' ? 'Fill in the blanks' :
+                                        'Your Answer'}
+                    </h4>
 
                     {qData.qType === 'mcq' && (
-                        <div className="grid gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {(qData.options || []).map((opt, i) => (
                                 <button key={i} onClick={() => update(opt)} disabled={readOnly}
-                                    className={`p-6 rounded-2xl border-4 font-bold text-lg text-left transition-all ${response === opt
+                                    className={`group p-4 rounded-xl border-2 font-semibold text-left transition-all flex items-center gap-3 hover:scale-[1.02] ${response === opt
                                         ? 'border-teal-500 bg-teal-50 text-teal-700 shadow-md'
-                                        : 'bg-white border-gray-100 text-gray-500 hover:border-teal-200'
+                                        : 'bg-white border-gray-100 text-gray-600 hover:border-teal-200 hover:shadow-sm'
                                         }`}>
-                                    {opt}
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black flex-shrink-0 transition-colors ${response === opt
+                                        ? 'bg-teal-500 text-white'
+                                        : 'bg-gray-100 text-gray-400 group-hover:bg-teal-100 group-hover:text-teal-600'
+                                        }`}>
+                                        {String.fromCharCode(65 + i)}
+                                    </div>
+                                    <span className="leading-snug">{opt}</span>
                                 </button>
                             ))}
                         </div>
                     )}
 
                     {qData.qType === 'msq' && (
-                        <div className="grid gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {(qData.options || []).map((opt, i) => {
                                 const selected = Array.isArray(response) ? response.includes(opt) : false;
                                 return (
@@ -203,15 +358,17 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                                         const newSelection = selected ? current.filter(a => a !== opt) : [...current, opt];
                                         onInput(newSelection, qIndex);
                                     }} disabled={readOnly}
-                                        className={`p-6 rounded-2xl border-4 font-bold text-lg text-left transition-all flex items-center gap-4 ${selected
-                                            ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-md'
-                                            : 'bg-white border-gray-100 text-gray-500 hover:border-blue-200'
+                                        className={`group p-4 rounded-xl border-2 font-semibold text-left transition-all flex items-center gap-3 hover:scale-[1.02] ${selected
+                                            ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-md'
+                                            : 'bg-white border-gray-100 text-gray-600 hover:border-blue-200 hover:shadow-sm'
                                             }`}>
-                                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'bg-blue-600 border-blue-600 text-white' : 'border-gray-300'
+                                        <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${selected
+                                            ? 'bg-blue-500 border-blue-500 text-white'
+                                            : 'border-gray-300 group-hover:border-blue-300'
                                             }`}>
                                             {selected && <Check size={14} strokeWidth={3} />}
                                         </div>
-                                        {opt}
+                                        <span className="leading-snug">{opt}</span>
                                     </button>
                                 );
                             })}
@@ -221,17 +378,18 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                     {qData.qType === 'fact_trick' && (
                         <div className="grid grid-cols-3 gap-4">
                             {(qData.options || ['Fact', 'Trick', 'Opinion']).slice(0, 3).map((opt, i) => {
-                                const icons = [<Check size={32} />, <AlertTriangle size={32} />, <HelpCircle size={32} />];
-                                const colors = ['bg-green-100 text-green-700', 'bg-red-100 text-red-700', 'bg-blue-100 text-blue-700'];
+                                const icons = [<Check size={28} />, <AlertTriangle size={28} />, <HelpCircle size={28} />];
+                                const colors = ['bg-green-100 text-green-600', 'bg-red-100 text-red-600', 'bg-blue-100 text-blue-600'];
+                                const selectedColors = ['border-green-500 bg-green-50', 'border-red-500 bg-red-50', 'border-blue-500 bg-blue-50'];
                                 const isSelected = response === opt;
                                 return (
                                     <button key={i} onClick={() => update(opt)} disabled={readOnly}
-                                        className={`p-6 rounded-[2rem] border-4 flex flex-col items-center justify-center gap-4 transition-all h-48 ${isSelected
-                                            ? 'border-teal-500 bg-white shadow-xl scale-105 z-10'
-                                            : 'border-gray-100 bg-gray-50 hover:bg-white'
+                                        className={`p-5 rounded-2xl border-3 flex flex-col items-center justify-center gap-3 transition-all hover:scale-[1.03] ${isSelected
+                                            ? `${selectedColors[i % 3]} shadow-lg scale-105`
+                                            : 'border-gray-100 bg-gray-50 hover:bg-white hover:shadow-sm'
                                             }`}>
-                                        <div className={`p-3 rounded-full ${colors[i % 3]}`}>{icons[i % 3]}</div>
-                                        <span className="font-black text-sm text-center uppercase leading-tight text-gray-700">{opt || 'Option'}</span>
+                                        <div className={`p-3 rounded-xl ${colors[i % 3]}`}>{icons[i % 3]}</div>
+                                        <span className="font-black text-xs text-center uppercase tracking-wide text-gray-700">{opt || 'Option'}</span>
                                     </button>
                                 );
                             })}
@@ -239,45 +397,72 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
                     )}
 
                     {qData.qType === 'single_input' && (
-                        <div className="space-y-3">
-                            <label className="text-sm font-black text-teal-400 uppercase tracking-widest ml-2">{qData.inputLabel}</label>
+                        <div className="space-y-2">
+                            {qData.inputLabel && <label className="text-sm font-bold text-teal-500 uppercase tracking-wider ml-1">{qData.inputLabel}</label>}
                             <div className={`border-2 rounded-xl overflow-hidden bg-white transition-all ${readOnly ? 'bg-gray-50 border-gray-200 cursor-not-allowed' : 'border-gray-200 focus-within:border-teal-400 focus-within:shadow-lg'
                                 }`}>
                                 <textarea
                                     className="w-full outline-none px-5 py-4 text-gray-800 text-lg leading-relaxed resize-none"
                                     placeholder={readOnly ? "NOT ANSWERED" : "Type your answer here..."}
-                                    rows={Math.max(3, Math.ceil((qData.maxChars || 500) / 100))}
-                                    maxLength={qData.maxChars || 500}
+                                    rows={4}
                                     value={response || ''}
                                     onChange={e => update(e.target.value)}
                                     disabled={readOnly}
                                 />
                             </div>
-                            <div className="text-right text-xs font-bold text-gray-300">{(response || '').length} / {qData.maxChars || 500}</div>
                         </div>
                     )}
 
                     {qData.qType === 'multi_input' && (
-                        <div className="grid gap-8">
-                            {(qData.multiFields || []).map((field, fIdx) => (
-                                <div key={fIdx} className="space-y-3">
-                                    <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-2 flex justify-between">
-                                        <span>{field.label || `Step ${fIdx + 1}`}</span>
-                                        <span>{(response && response[fIdx]?.length) || 0} / {field.maxChars || 100}</span>
-                                    </label>
-                                    <div className={`border-2 rounded-xl overflow-hidden bg-white transition-all ${readOnly ? 'bg-gray-50 border-gray-200 cursor-not-allowed' : 'border-gray-200 focus-within:border-teal-400 focus-within:shadow-lg'
-                                        }`}>
-                                        <textarea
-                                            className="w-full outline-none px-5 py-4 text-gray-800 text-lg leading-relaxed resize-none"
-                                            placeholder={readOnly ? "NOT ANSWERED" : "Type your answer here..."}
-                                            maxLength={field.maxChars || 100}
-                                            value={(response && response[fIdx]) || ''}
-                                            onChange={e => update(e.target.value, fIdx)}
-                                            disabled={readOnly}
-                                        />
+                        <div className="space-y-5">
+                            {(qData.multiFields || []).map((field, fIdx) => {
+                                const fieldType = field.fieldType || 'input';
+                                return (
+                                    <div key={fIdx} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                        <label className="text-xs font-black text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                            <span className="w-6 h-6 rounded-lg bg-teal-500 text-white flex items-center justify-center text-[10px] font-black">{fIdx + 1}</span>
+                                            {field.label || `Step ${fIdx + 1}`}
+                                        </label>
+                                        {fieldType === 'input' ? (
+                                            <div className={`border-2 rounded-xl overflow-hidden bg-white transition-all ${readOnly ? 'bg-gray-50 border-gray-200 cursor-not-allowed' : 'border-gray-200 focus-within:border-teal-400 focus-within:shadow-md'}`}>
+                                                <textarea
+                                                    className="w-full outline-none px-4 py-3 text-gray-800 text-base leading-relaxed resize-none"
+                                                    placeholder={readOnly ? "NOT ANSWERED" : "Type your answer here..."}
+                                                    rows={Math.max(2, Math.ceil((field.maxChars || 100) / 50))}
+                                                    value={(response && response[fIdx]) || ''}
+                                                    onChange={e => update(e.target.value, fIdx)}
+                                                    disabled={readOnly}
+                                                />
+                                            </div>
+                                        ) : (
+                                            /* MSQ step — multiple selection */
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-1">
+                                                {(field.options || []).map((opt, oi) => {
+                                                    const selections = Array.isArray(response && response[fIdx]) ? response[fIdx] : [];
+                                                    const selected = selections.includes(opt);
+                                                    return (
+                                                        <button key={oi} onClick={() => {
+                                                            if (readOnly) return;
+                                                            const current = Array.isArray(response && response[fIdx]) ? [...response[fIdx]] : [];
+                                                            const newSelection = selected ? current.filter(a => a !== opt) : [...current, opt];
+                                                            update(newSelection, fIdx);
+                                                        }} disabled={readOnly}
+                                                            className={`group p-3 rounded-lg border-2 font-semibold text-left transition-all flex items-center gap-2 text-sm hover:scale-[1.02] ${selected
+                                                                ? 'border-blue-500 bg-blue-50 text-blue-700 shadow-sm'
+                                                                : 'bg-white border-gray-100 text-gray-500 hover:border-blue-200'
+                                                                }`}>
+                                                            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${selected ? 'bg-blue-500 border-blue-500 text-white' : 'border-gray-300 group-hover:border-blue-300'}`}>
+                                                                {selected && <Check size={12} strokeWidth={3} />}
+                                                            </div>
+                                                            {opt}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
 
@@ -328,182 +513,128 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
 };
 
 // ──────────────────────────────────────────
-//  Step 1: Section Cards
+//  Step 1: Updated Sections + Activity Cards (Timeline UI)
 // ──────────────────────────────────────────
-
-const SectionCardsView = ({ sections, responses, onSelectSection, sessionInfo }) => {
-    const getSectionStatus = (section) => {
-        const acts = section.activities || [];
-        if (acts.length === 0) return { label: 'No activities', color: 'text-gray-400' };
-        
-        // Count how many activities have a grade score >= 5 using SAFE ID LOOKUP
-const completed = acts.filter(a => {
-    const id = normalizeId(a._id);
-    const score = Number(responses[id]?.grade?.score || 0);
-    return score >= 5;
-}).length;
-
-        
-        if (completed === acts.length) return { label: 'Completed', color: 'text-emerald-600' };
-        if (completed > 0) return { label: 'In Progress', color: 'text-amber-600' };
-        return { label: 'Tap to start', color: 'text-teal-600' };
-    };
+const AllSectionsView = ({ sections, responses, sessionInfo, onSelectActivity, selectedActivityId }) => {
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-            <div className="max-w-5xl mx-auto w-full px-6 pt-10 pb-4">
-                {sessionInfo?.title ? (
-                    <>
-                        <h1 className="text-2xl font-black text-gray-900">{sessionInfo.title}</h1>
-                        {sessionInfo.description && (
-                            <p className="text-sm text-gray-500 mt-1">{sessionInfo.description}</p>
-                        )}
-                        <p className="text-xs text-teal-600 font-bold mt-2 uppercase tracking-wider">Select a section to begin working</p>
-                    </>
-                ) : (
-                    <>
-                        <h1 className="text-2xl font-black text-gray-900">Session Activities</h1>
-                        <p className="text-sm text-gray-500 mt-1">Select a section to begin working</p>
-                    </>
-                )}
+        <div className="max-w-6xl mx-auto w-full px-6 pt-12 pb-24">
+            {/* Session Header */}
+            <div className="mb-12">
+                <span className="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-3 inline-block">
+                    Student Dashboard
+                </span>
+                <h1 className="text-4xl font-black text-gray-900 mb-1">
+                    {sessionInfo?.title || "Session 1"}
+                </h1>
+                <p className="text-gray-400 text-sm">
+                    {sessionInfo?.description || "this is disc of sessson1"}
+                </p>
             </div>
-            <div className="max-w-5xl mx-auto w-full px-6 pb-12">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {sections.map((section, idx) => {
-                        const status = getSectionStatus(section);
-                        const acts = section.activities || [];
-                        const completed = acts.filter(a => {
-                            const id = normalizeId(a._id);
-                            const r = responses[id];
-                          const score = Number(responses[id]?.grade?.score || 0);
-return score >= 5;
 
-                        }).length;
-                        
-                        return (
-                            <div
-                                key={section._id}
-                                onClick={() => onSelectSection(section)}
-                                className="bg-white rounded-2xl p-6 border border-gray-100 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-300 relative overflow-hidden group"
-                            >
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-400 to-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center font-bold text-lg mb-4">
-                                    {idx + 1}
+            {/* Timeline Container */}
+            <div className="relative space-y-16">
+                {/* Vertical Line */}
+                <div className="absolute left-5 top-2 bottom-0 w-[2px] bg-indigo-100 -z-0" />
+
+                {sections.map((section, secIdx) => {
+                    const acts = section.activities || [];
+                    const completedCount = acts.filter(a => {
+                        const id = normalizeId(a._id);
+                        return !!responses[id]?.grade;
+                    }).length;
+                    
+                    const isFullyDone = completedCount === acts.length && acts.length > 0;
+
+                    return (
+                        <div key={section._id} className="relative z-10">
+                            {/* Section Header Row */}
+                            <div className="flex items-start gap-6 mb-8">
+                                {/* Timeline Icon */}
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm transition-colors duration-300 ${
+                                    isFullyDone 
+                                    ? 'bg-emerald-500 text-white' 
+                                    : 'bg-indigo-500 text-white'
+                                }`}>
+                                    {isFullyDone ? <Check size={20} strokeWidth={3} /> : <span className="font-bold">{secIdx + 1}</span>}
                                 </div>
-                                <h3 className="text-lg font-bold text-gray-900 mb-1">{section.sectionName}</h3>
-                                <p className={`text-sm ${status.color}`}>{status.label}</p>
-                                {acts.length > 0 && (
-                                    <div className="mt-4">
-                                        <div className="w-full bg-gray-100 rounded-full h-1.5">
-                                            <div
-                                                className="bg-gradient-to-r from-teal-400 to-emerald-400 h-1.5 rounded-full transition-all duration-500"
-                                                style={{ width: `${(completed / acts.length) * 100}%` }}
+
+                                {/* Section Title & Progress Bar */}
+                                <div className="flex-1">
+                                    <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight">
+                                        {section.sectionName}
+                                    </h2>
+                                    <div className="flex items-center gap-3 mt-1">
+                                        <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                            <div 
+                                                className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                                                style={{ width: `${(completedCount / (acts.length || 1)) * 100}%` }}
                                             />
                                         </div>
-                                        <p className="text-xs text-gray-400 mt-1.5">{completed}/{acts.length} activities</p>
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase">
+                                            {completedCount}/{acts.length} Done
+                                        </span>
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Activity Cards Row (Horizontal) */}
+                            <div className="flex flex-wrap gap-4 ml-16">
+                                {acts.length === 0 ? (
+                                    <p className="text-xs text-gray-400 italic">No activities here</p>
+                                ) : (
+                                    acts.map((act) => {
+                                        const id = normalizeId(act._id);
+                                        const resp = responses[id];
+                                        const isCompleted = !!resp?.grade;
+                                        const totalQ = act.practiceData?.questions?.length || 0;
+
+                                        return (
+                                            <div
+                                                key={act._id}
+                                                onClick={() => onSelectActivity(act)}
+                                                className="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer w-full sm:w-[220px] group flex flex-col relative"
+                                            >
+                                                {/* Badge */}
+                                                <div className="mb-4">
+                                                    <span className={`text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${
+                                                        act.type === 'reading' 
+                                                        ? 'bg-purple-100 text-purple-600' 
+                                                        : 'bg-emerald-100 text-emerald-600'
+                                                    }`}>
+                                                        {act.type || 'Practice'}
+                                                    </span>
+                                                </div>
+
+                                                {/* Title */}
+                                                <h4 className="font-bold text-gray-800 text-sm mb-6 group-hover:text-indigo-600 transition-colors line-clamp-2 min-h-[40px]">
+                                                    {act.title}
+                                                </h4>
+
+                                                {/* Footer Info */}
+                                                <div className="mt-auto flex items-center justify-between border-t border-gray-50 pt-3">
+                                                    <span className="text-[10px] text-gray-400 font-medium">
+                                                        {totalQ} Questions
+                                                    </span>
+                                                    
+                                                    {isCompleted ? (
+                                                        <div className="w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-sm shadow-emerald-200">
+                                                            <Check size={14} strokeWidth={3} />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">
+                                                            <Play size={12} fill="currentColor" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })
                                 )}
                             </div>
-                        );
-                    })}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// ──────────────────────────────────────────
-//  Step 2: Activity List within Section
-// ──────────────────────────────────────────
-
-const ActivityListView = ({ section, responses, allActivities, onSelectActivity, onBack, sections, onMoveToNextSection }) => {
-    const acts = section.activities || [];
-    
-    // SAFE COMPLETED COUNT
-const completedCount = acts.filter(a => {
-    const id = normalizeId(a._id);
-    const score = Number(responses[id]?.grade?.score || 0);
-    return score >= 5;
-}).length;
-
-
-    return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
-            <div className="max-w-2xl mx-auto w-full px-6 pt-8 pb-12">
-                <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-gray-800 text-sm font-medium mb-6 transition">
-                    <ChevronLeft size={18} /> Back to Sections
-                </button>
-
-                <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-2xl p-6 border border-teal-100 text-center mb-6">
-                    <span className="text-xs font-bold text-teal-600 bg-teal-100 px-3 py-1 rounded-full uppercase tracking-wider">
-                        Section {(section.order ?? 0) + 1}
-                    </span>
-                    <h2 className="text-2xl font-black text-gray-900 mt-3 uppercase">{section.sectionName}</h2>
-                    <p className="text-sm text-gray-500 mt-1">Complete the activities below</p>
-                </div>
-
-                <div className="space-y-3">
-                    {acts.map((act, idx) => {
-                        const id = normalizeId(act._id);
-                        const resp = responses[id];
-                  const passed = Number(resp?.grade?.score || 0) >= 5;
-
-
-                        return (
-                            <div
-                                key={act._id}
-                                onClick={() => onSelectActivity(act)}
-                                className={`bg-white rounded-xl p-4 border flex items-center gap-4 transition-all cursor-pointer hover:shadow-md hover:border-teal-200 border-gray-100`}
-                            >
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${passed ? 'bg-teal-500 text-white' : 'bg-teal-50 text-teal-600'
-                                    }`}>
-                                    {passed ? <CheckCircle size={20} /> : <Play size={16} />}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="text-xs text-gray-400 uppercase font-bold flex items-center gap-2">
-                                        Activity {idx + 1}
-                                    </div>
-                                    <h4 className="font-bold text-gray-900 truncate">{act.title}</h4>
-                                </div>
-                                {!passed && <ArrowRight size={18} className="text-gray-300 flex-shrink-0" />}
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <div className="bg-white rounded-xl p-5 border border-gray-100 mt-6">
-                    <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-bold text-gray-900">Progress</h4>
-                        <span className="text-sm text-gray-400">{completedCount} / {acts.length} completed</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <div className="flex-1 bg-gray-100 rounded-full h-2.5">
-                            <div
-                                className={`h-2.5 rounded-full transition-all duration-700 ${acts.length > 0 && completedCount === acts.length
-                                    ? 'bg-gradient-to-r from-emerald-400 to-green-500'
-                                    : 'bg-gradient-to-r from-teal-400 to-emerald-500'
-                                    }`}
-                                style={{ width: `${acts.length > 0 ? (completedCount / acts.length) * 100 : 0}%` }}
-                            />
                         </div>
-                        {acts.length > 0 && completedCount === acts.length && (() => {
-                            const currentIdx = sections?.findIndex(s => s._id === section._id);
-                            const hasNext = currentIdx !== -1 && currentIdx < (sections?.length || 0) - 1;
-                            return hasNext ? (
-                                <button
-                                    onClick={() => onMoveToNextSection && onMoveToNextSection(sections[currentIdx + 1])}
-                                    className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition text-sm font-bold whitespace-nowrap shadow-md"
-                                >
-                                    Next Section <ArrowRight size={14} />
-                                </button>
-                            ) : (
-                                <span className="flex items-center gap-1.5 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-bold whitespace-nowrap">
-                                    <CheckCircle size={14} /> All Done!
-                                </span>
-                            );
-                        })()}
-                    </div>
-                </div>
+                    );
+                })}
             </div>
         </div>
     );
@@ -515,14 +646,14 @@ const completedCount = acts.filter(a => {
 
 const QuestionView = ({
     activity, section, responses, allActivities, sections,
-    effectiveSessionId, onBack, onUpdateResponses
+    effectiveSessionId, onBack, onUpdateResponses, onNextActivity, onGoToMenu
 }) => {
     const navigate = useNavigate();
     const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
     const [answers, setAnswers] = useState({});
     const [showCalculator, setShowCalculator] = useState(false);
     const [showAgentChat, setShowAgentChat] = useState(false);
-    
+
     // Core state for UI
     const [gradingResult, setGradingResult] = useState(null);
     const [previousBest, setPreviousBest] = useState(null);
@@ -541,11 +672,11 @@ const QuestionView = ({
                 }
             });
             setAnswers(prefilled);
-            
+
             // Store previous grade for header badge, but force result card closed
             if (existingResp.grade) {
                 setPreviousBest(existingResp.grade);
-                setGradingResult(null); 
+                setGradingResult(null);
             }
         } else {
             setAnswers({});
@@ -574,8 +705,12 @@ const QuestionView = ({
                 ...prev,
                 [qIdx]: val
             }));
+            // Hide grading result when student changes their answer
+            if (gradingResult) setGradingResult(null);
         }
     };
+
+    const gradingRef = useRef(null);
 
     const hasAnswer = (idx) => {
         const q = questions[idx];
@@ -591,7 +726,7 @@ const QuestionView = ({
         setIsSubmitting(true);
         try {
             const responseData = questions.map((_, idx) => answers[idx] ?? null);
-            
+
             const res = await submitActivityResponse({
                 batchActivity_obj_id: activity._id,
                 batchSession_obj_id: effectiveSessionId,
@@ -601,16 +736,21 @@ const QuestionView = ({
 
             if (res.success) {
                 const grade = res.data?.grade;
-                
+
                 // Show grading card immediately
-                setGradingResult(grade); 
+                setGradingResult(grade);
                 setPreviousBest(grade);
-                
+
+                // Auto-scroll to grading result
+                setTimeout(() => {
+                    gradingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+
                 // Update parent state safely
-                onUpdateResponses(normalizeId(activity._id), { 
+                onUpdateResponses(normalizeId(activity._id), {
                     ...responses[normalizeId(activity._id)],
-                    responses: responseData, 
-                    grade 
+                    responses: responseData,
+                    grade
                 });
             } else {
                 alert("Submission failed: " + res.message);
@@ -623,10 +763,32 @@ const QuestionView = ({
         }
     };
 
+    // ─── Position awareness ───
+    const sectionActs = section?.activities || [];
+    const actIdxInSection = sectionActs.findIndex(a => a._id === activity._id);
+    const isLastActInSection = actIdxInSection === sectionActs.length - 1;
+    const sectionIdx = sections?.findIndex(s => s._id === section?._id) ?? -1;
+    const isLastSection = sectionIdx === (sections?.length || 0) - 1;
+    const isAbsolutelyLast = isLastActInSection && isLastSection;
+
+    const isLastQuestion = currentQuestionIdx >= totalQ - 1;
+    const lastQuestionAnswered = isLastQuestion && (gradingResult || hasAnswer(currentQuestionIdx));
+
+    const getContinueLabel = () => {
+        if (currentQuestionIdx < totalQ - 1) return 'Next Question 👉';
+        if (isAbsolutelyLast) return lastQuestionAnswered ? 'Hurray Finished! 🎊' : 'Submit to Finish ✍️';
+        if (isLastActInSection) return 'Next Section 🚀';
+        return 'Next Activity →';
+    };
+
     const handleContinue = () => {
-        setGradingResult(null); 
+        setGradingResult(null);
         if (currentQuestionIdx < totalQ - 1) {
             setCurrentQuestionIdx(prev => prev + 1);
+        } else if (isAbsolutelyLast) {
+            onGoToMenu ? onGoToMenu() : onBack();
+        } else if (onNextActivity) {
+            onNextActivity();
         } else {
             onBack();
         }
@@ -639,7 +801,7 @@ const QuestionView = ({
     // Reading type
     if (activity.type === 'reading') {
         return (
-            <div className="min-h-screen bg-gray-50 flex flex-col">
+            <div className="bg-gray-50 flex flex-col pb-12">
                 <div className="bg-gradient-to-r from-teal-500 to-emerald-500 px-6 py-6">
                     <button onClick={onBack} className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-medium mb-3 transition">
                         <ChevronLeft size={18} /> Back
@@ -682,136 +844,175 @@ const QuestionView = ({
     // Practice type
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col relative">
-            {/* Header */}
-            <div className="bg-gradient-to-r from-teal-500 to-teal-400 px-6 py-5">
-                <div className="flex items-center justify-between mb-2">
-                    <button onClick={onBack} className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-medium transition">
-                        <ChevronLeft size={18} /> Back to Mission
-                    </button>
-                    {previousBest && (
-                        <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded text-white text-xs">
-                             <CheckCircle size={12} />
-                             <span>Best: {previousBest.score}/10</span>
-                        </div>
-                    )}
-                </div>
-                <div className="flex items-center gap-2 mb-2">
-                    <span className="bg-white/20 text-white text-[10px] font-bold px-2 py-1 rounded">🧩 {activity.type || 'Activity'}</span>
-                </div>
-                <h1 className="text-xl font-bold text-white">{activity.title}</h1>
-            </div>
-
-            {/* Navigation */}
-            <div className="bg-white border-b px-6 py-3">
-                <div className="max-w-2xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => currentQuestionIdx > 0 && setCurrentQuestionIdx(currentQuestionIdx - 1)}
-                            disabled={currentQuestionIdx === 0}
-                            className={`p-2 rounded-lg transition-all ${currentQuestionIdx > 0 ? 'bg-teal-100 text-teal-600 hover:bg-teal-200' : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                                }`}
-                        >
+            {/* ─── Redesigned Header ─── */}
+            <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-20">
+                <div className="max-w-4xl mx-auto px-6 py-3">
+                    {/* Top row: back, title, menu */}
+                    <div className="flex items-center gap-3">
+                        <button onClick={onBack} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition-all flex-shrink-0">
                             <ChevronLeft size={20} />
                         </button>
-                        <span className="text-gray-600 font-medium">Question {currentQuestionIdx + 1} of {totalQ}</span>
-                        <button
-                            onClick={() => {
-                                if (currentQuestionIdx < totalQ - 1) {
-                                    setCurrentQuestionIdx(currentQuestionIdx + 1);
-                                }
-                            }}
-                            disabled={currentQuestionIdx >= totalQ - 1}
-                            className={`p-2 rounded-lg transition-all ${currentQuestionIdx < totalQ - 1
-                                ? 'bg-teal-100 text-teal-600 hover:bg-teal-200'
-                                : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                                }`}
-                        >
-                            <ChevronRight size={20} />
-                        </button>
+                        <div className="flex-1 min-w-0">
+                            <h1 className="text-base font-bold text-gray-900 truncate">{activity.title}</h1>
+                            <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full uppercase">
+                                    {activity.type || 'Practice'}
+                                </span>
+                                {previousBest && (
+                                    <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <CheckCircle size={10} /> Submitted
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    {onGoToMenu && (
+    <button
+        onClick={onGoToMenu}
+        className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow-md transition-all flex items-center gap-2 flex-shrink-0"
+    >
+        <GraduationCap size={14} />
+        All Activities
+    </button>
+)}
                     </div>
-                    <div className="flex gap-1">
-                        {questions.map((_, i) => (
-                            <div key={i} className={`w-3 h-3 rounded-full transition-all ${i === currentQuestionIdx ? 'bg-teal-500' : hasAnswer(i) ? 'bg-teal-200' : 'bg-gray-200'
-                                }`} />
-                        ))}
-                    </div>
-                </div>
-            </div>
 
-            {/* Progress Bar */}
-            <div className="max-w-2xl mx-auto w-full px-6 mt-4">
-                <div className="flex items-center gap-4">
-                    <div className="flex-1 h-3 bg-gray-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-teal-500 transition-all duration-500" style={{ width: `${progress}%` }} />
+                    {/* Bottom row: question nav */}
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => currentQuestionIdx > 0 && setCurrentQuestionIdx(currentQuestionIdx - 1)}
+                                disabled={currentQuestionIdx === 0}
+                                className={`p-1.5 rounded-lg transition-all ${currentQuestionIdx > 0 ? 'bg-teal-50 text-teal-600 hover:bg-teal-100' : 'text-gray-300 cursor-not-allowed'}`}
+                            >
+                                <ChevronLeft size={18} />
+                            </button>
+                            <span className="text-sm font-semibold text-gray-700">
+                                Q {currentQuestionIdx + 1} <span className="text-gray-400 font-normal">/ {totalQ}</span>
+                            </span>
+                            <button
+                                onClick={() => {
+                                    if (currentQuestionIdx < totalQ - 1) {
+                                        setCurrentQuestionIdx(currentQuestionIdx + 1);
+                                    }
+                                }}
+                                disabled={currentQuestionIdx >= totalQ - 1}
+                                className={`p-1.5 rounded-lg transition-all ${currentQuestionIdx < totalQ - 1 ? 'bg-teal-50 text-teal-600 hover:bg-teal-100' : 'text-gray-300 cursor-not-allowed'}`}
+                            >
+                                <ChevronRight size={18} />
+                            </button>
+                        </div>
+                        <div className="flex gap-1">
+                            {questions.map((_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setCurrentQuestionIdx(i)}
+                                    className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${i === currentQuestionIdx ? 'bg-teal-500 scale-125' : hasAnswer(i) ? 'bg-teal-200' : 'bg-gray-200 hover:bg-gray-300'}`}
+                                />
+                            ))}
+                        </div>
                     </div>
-                    <span className="text-xs text-gray-500 font-bold">{Math.round(progress)}%</span>
                 </div>
             </div>
 
             {/* Question Content */}
             <div className="flex-1 overflow-y-auto px-6 py-6 pb-36">
-                <div className="max-w-2xl mx-auto">
+                <div className="max-w-4xl mx-auto">
                     {currentQ && (
                         <QuestionBlock
                             qData={currentQ}
                             qIndex={currentQuestionIdx}
                             response={answers[currentQuestionIdx]}
                             onInput={handleInput}
-                            readOnly={isSubmitting} 
+                            readOnly={isSubmitting}
                         />
                     )}
 
-                    {/* Inline Grading Result */}
+                    {/* Inline Grading Result — Kid Friendly */}
                     {gradingResult && (
-                        <div className="mt-6 bg-white rounded-2xl border-2 border-gray-100 shadow-lg overflow-hidden animate-[fadeIn_0.3s_ease-out]">
-                            <div className={`p-5 flex items-center justify-between ${currentQ?.showGrade === false
-                                ? 'bg-gradient-to-r from-purple-500 to-indigo-500'
-                                : gradingResult.score >= 5
-                                    ? 'bg-gradient-to-r from-teal-500 to-emerald-500'
-                                    : 'bg-gradient-to-r from-red-500 to-orange-500'
+                        <div ref={gradingRef} className="mt-6 rounded-2xl border-2 overflow-hidden shadow-lg transition-all duration-500 ease-out animate-[slideUp_0.4s_ease-out]" style={{
+                            borderColor: gradingResult.feedback
+                                ? (gradingResult.shouldRetry ? '#fb923c' : '#34d399')
+                                : '#a78bfa'
+                        }}>
+                            {/* Fun Header */}
+                            <div className={`p-5 ${gradingResult.feedback
+                                ? (gradingResult.shouldRetry
+                                    ? 'bg-gradient-to-r from-amber-400 to-orange-400'
+                                    : 'bg-gradient-to-r from-emerald-400 to-teal-400')
+                                : 'bg-gradient-to-r from-violet-400 to-purple-400'
                                 }`}>
                                 <div className="flex items-center gap-3 text-white">
-                                    <div className="p-2 bg-white/20 rounded-xl"><GraduationCap size={22} /></div>
+                                    <span className="text-3xl">
+                                        {gradingResult.feedback
+                                            ? (gradingResult.shouldRetry ? '💪' : '🎉')
+                                            : '✅'
+                                        }
+                                    </span>
                                     <div>
-                                        <h3 className="font-bold text-base">{currentQ?.showGrade === false ? 'AI Feedback' : 'AI Evaluation'}</h3>
-                                        <p className="text-white/70 text-xs">Analysis Complete</p>
+                                        <h3 className="font-black text-lg">
+                                            {gradingResult.feedback
+                                                ? (gradingResult.shouldRetry ? 'Almost There!' : 'Amazing Work!')
+                                                : 'Answer Saved!'
+                                            }
+                                        </h3>
+                                        <p className="text-white/80 text-xs font-medium">
+                                            {gradingResult.feedback
+                                                ? (gradingResult.shouldRetry ? 'You can do even better — give it another shot!' : 'You nailed it! Keep up the great work! 🌟')
+                                                : 'Your response has been recorded'
+                                            }
+                                        </p>
                                     </div>
                                 </div>
-                                {currentQ?.showGrade !== false && (
-                                    <div className="text-right text-white">
-                                        <span className="text-3xl font-black">{gradingResult.score}</span>
-                                        <span className="text-white/60 text-lg">/10</span>
+                            </div>
+
+                            <div className="p-5 space-y-4 bg-white">
+                                {/* Feedback */}
+                                {gradingResult.feedback && (
+                                    <div className="bg-gray-50 p-4 rounded-xl">
+                                        <span className="text-teal-600 font-bold text-xs uppercase tracking-wide block mb-2 flex items-center gap-1">
+                                            💬 {currentQ?.allowAiFeedback ? 'Level Up Tip' : 'Level Up Tip'}
+                                        </span>
+                                        <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-line">{gradingResult.feedback}</p>
                                     </div>
                                 )}
-                            </div>
-                            <div className="p-5 space-y-4">
-                                <div>
-                                    <span className="text-teal-500 font-bold text-xs uppercase tracking-wide block mb-1">AI Feedback</span>
-                                    <p className="text-gray-700 italic">"{gradingResult.feedback}"</p>
-                                </div>
-                                {(gradingResult.tip || currentQ?.postAnswerTip) && (
-                                    <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100 flex gap-3">
-                                        <div className="p-2 bg-yellow-400 text-white rounded-lg h-fit">💡</div>
+
+                                {/* Retry encouragement */}
+                                {gradingResult.shouldRetry && (
+                                    <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex gap-3 items-center">
+                                        <span className="text-2xl">🔄</span>
                                         <div>
-                                            <span className="text-yellow-600 font-bold text-xs uppercase block mb-1">Pro Tip</span>
-                                            <p className="text-yellow-800 text-sm">{gradingResult.tip || currentQ?.postAnswerTip}</p>
+                                            <span className="text-amber-700 font-bold text-sm block">Don't give up!</span>
+                                            <p className="text-amber-600 text-xs">Take another look and try again — you've got this!</p>
                                         </div>
                                     </div>
                                 )}
-                                <div className="flex gap-3">
-                                    {gradingResult.score < 5 && currentQ?.showGrade !== false && (
+
+                                {/* Pro Tip */}
+                                {(gradingResult.tip || currentQ?.postAnswerTip) && (
+                                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-3 items-center">
+                                        <span className="text-2xl">💡</span>
+                                        <div>
+                                            <span className="text-blue-700 font-bold text-sm block">PRO TIP?</span>
+                                            <p className="text-blue-600 text-xs">{gradingResult.tip || currentQ?.postAnswerTip}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Action buttons */}
+                                <div className="flex gap-3 pt-1">
+                                    {gradingResult.shouldRetry && (
                                         <button
                                             onClick={handleRetry}
-                                            className="flex-1 bg-red-100 text-red-600 py-3 rounded-xl font-bold hover:bg-red-200 transition-all flex items-center justify-center gap-2"
+                                            className="flex-1 bg-amber-100 text-amber-700 py-3.5 rounded-xl font-bold hover:bg-amber-200 transition-all flex items-center justify-center gap-2 text-sm"
                                         >
-                                            <RotateCcw size={18} /> Retry
+                                            🔄 Try Again
                                         </button>
                                     )}
                                     <button
                                         onClick={handleContinue}
-                                        className="flex-1 bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition-all"
+                                        className="flex-1 bg-gradient-to-r from-teal-500 to-emerald-500 text-white py-3.5 rounded-xl font-bold hover:from-teal-600 hover:to-emerald-600 transition-all text-sm shadow-md"
                                     >
-                                        {currentQuestionIdx < totalQ - 1 ? 'Next Question →' : 'Back to Menu'}
+                                        {getContinueLabel()}
                                     </button>
                                 </div>
                             </div>
@@ -823,35 +1024,37 @@ const QuestionView = ({
             {/* Footer */}
             {!gradingResult && (
                 <div className="fixed bottom-0 left-0 w-full bg-white border-t px-6 py-4 z-10">
-                    <div className="max-w-2xl mx-auto">
-                        {currentQ?.qType === 'no_response' ? (
-                            <button
-                                onClick={handleContinue}
-                                className="w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 bg-teal-500 text-white hover:bg-teal-600 shadow-lg"
-                            >
-                                {currentQuestionIdx < totalQ - 1 ? 'Next Question →' : 'Complete Activity ✓'}
-                            </button>
-                        ) : (
+                    <div className="max-w-4xl mx-auto flex gap-3">
+                        {/* Submit button — only for answerable question types */}
+                        {currentQ?.qType !== 'no_response' && (
                             <button
                                 onClick={handleSubmit}
                                 disabled={!hasAnswer(currentQuestionIdx) || isSubmitting}
-                                className={`w-full py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-3 ${isSubmitting
+                                className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${isSubmitting
                                     ? 'bg-teal-500 text-white cursor-wait'
                                     : hasAnswer(currentQuestionIdx)
-                                        ? 'bg-teal-500 text-white hover:bg-teal-600 shadow-lg'
+                                        ? 'bg-teal-500 text-white hover:bg-teal-600 shadow-md'
                                         : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                     }`}
                             >
                                 {isSubmitting ? (
                                     <>
-                                        <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                         Checking...
                                     </>
                                 ) : (
-                                    'Submit Answer'
+                                    '✅ Submit Answer'
                                 )}
                             </button>
                         )}
+
+                        {/* Always-visible Next button */}
+                        <button
+                            onClick={handleContinue}
+                            className="flex-1 py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-gray-900 text-white hover:bg-gray-800 shadow-md"
+                        >
+                            {getContinueLabel()}
+                        </button>
                     </div>
                 </div>
             )}
@@ -889,10 +1092,6 @@ const QuestionView = ({
     );
 };
 
-// ──────────────────────────────────────────
-//  Main Container
-// ──────────────────────────────────────────
-
 const StudentActivityPage = () => {
     const { batchId, sessionId, batchSessionId } = useParams();
     const effectiveSessionId = batchSessionId || sessionId;
@@ -901,88 +1100,100 @@ const StudentActivityPage = () => {
     const [responses, setResponses] = useState({});
     const [loading, setLoading] = useState(true);
     const [sessionInfo, setSessionInfo] = useState(null);
-
-    const [step, setStep] = useState('sections');
-    const [selectedSection, setSelectedSection] = useState(null);
     const [selectedActivity, setSelectedActivity] = useState(null);
 
     useEffect(() => {
         fetchSessionData();
     }, [effectiveSessionId]);
 
-const fetchSessionData = async () => {
-    setLoading(true);
+    const fetchSessionData = async () => {
+        setLoading(true);
 
-    try {
-        // 1️⃣ Fetch sections + responses in parallel
-        const [sectRes, respRes] = await Promise.all([
-            listStudentBatchSections(effectiveSessionId),
-            getMySessionResponses(effectiveSessionId)
-        ]);
+        try {
+            const [sectRes, respRes] = await Promise.all([
+                listStudentBatchSections(effectiveSessionId),
+                getMySessionResponses(effectiveSessionId)
+            ]);
 
-        if (!sectRes.success) throw new Error("Failed to load sections");
+            if (!sectRes.success) throw new Error("Failed to load sections");
 
-        // 2️⃣ Build response map FIRST
-        const respMap = {};
-        if (respRes.success && respRes.data?.responses) {
-            respRes.data.responses.forEach(r => {
-                const id = normalizeId(r.batchActivity_obj_id);
-                if (id) {
-                    respMap[id] = r;
-                }
-            });
+            const respMap = {};
+            if (respRes.success && respRes.data?.responses) {
+                respRes.data.responses.forEach(r => {
+                    const id = normalizeId(r.batchActivity_obj_id);
+                    if (id) {
+                        respMap[id] = r;
+                    }
+                });
+            }
+
+            const sectionsWithActs = await Promise.all(
+                (sectRes.data?.sections || []).map(async (sec) => {
+                    const actRes = await listStudentBatchActivities(sec._id);
+                    return {
+                        ...sec,
+                        activities: actRes.success ? (actRes.data?.activities || []) : []
+                    };
+                })
+            );
+
+            setResponses(respMap);
+            setSections(sectionsWithActs);
+
+            if (sectRes.data?.batchSession) {
+                setSessionInfo({
+                    title: sectRes.data.batchSession.title || '',
+                    description: sectRes.data.batchSession.description || '',
+                });
+            }
+
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
         }
-
-        // 3️⃣ Fetch activities for all sections in parallel
-        const sectionsWithActs = await Promise.all(
-            (sectRes.data?.sections || []).map(async (sec) => {
-                const actRes = await listStudentBatchActivities(sec._id);
-                return {
-                    ...sec,
-                    activities: actRes.success ? (actRes.data?.activities || []) : []
-                };
-            })
-        );
-
-        // 4️⃣ IMPORTANT: Set responses FIRST, then sections
-        setResponses(respMap);
-        setSections(sectionsWithActs);
-
-        if (sectRes.data?.batchSession) {
-            setSessionInfo({
-                title: sectRes.data.batchSession.title || '',
-                description: sectRes.data.batchSession.description || '',
-            });
-        }
-
-    } catch (err) {
-        console.error(err);
-    } finally {
-        setLoading(false);
-    }
-};
-
+    };
 
     const allActivities = useMemo(() => sections.flatMap(s => s.activities), [sections]);
 
-    const handleSelectSection = (section) => {
-        setSelectedSection(section);
-        setStep('activities');
-    };
-
     const handleSelectActivity = (activity) => {
         setSelectedActivity(activity);
-        setStep('question');
+        window.scrollTo(0, 0);
     };
 
-    const handleBackToSections = () => {
-        setSelectedSection(null);
-        setStep('sections');
-    };
-
-    const handleBackToActivities = () => {
+    const handleGoToMenu = () => {
         setSelectedActivity(null);
-        setStep('activities');
+        window.scrollTo(0, 0);
+    };
+
+    const handleNextActivity = () => {
+        if (!selectedActivity) return;
+
+        // Find current section and activity index
+        for (let si = 0; si < sections.length; si++) {
+            const acts = sections[si].activities || [];
+            const ai = acts.findIndex(a => a._id === selectedActivity._id);
+            if (ai !== -1) {
+                // Try next activity in same section
+                if (ai < acts.length - 1) {
+                    setSelectedActivity(acts[ai + 1]);
+                    window.scrollTo(0, 0);
+                    return;
+                }
+                // Try first activity in next section
+                for (let nsi = si + 1; nsi < sections.length; nsi++) {
+                    const nextActs = sections[nsi].activities || [];
+                    if (nextActs.length > 0) {
+                        setSelectedActivity(nextActs[0]);
+                        window.scrollTo(0, 0);
+                        return;
+                    }
+                }
+                // No more activities — go back to menu
+                handleGoToMenu();
+                return;
+            }
+        }
     };
 
     const handleUpdateResponses = (activityId, data) => {
@@ -1001,44 +1212,35 @@ const fetchSessionData = async () => {
         );
     }
 
-    if (step === 'question' && selectedActivity) {
+    // Full-page QuestionView when an activity is selected
+    if (selectedActivity) {
         return (
             <QuestionView
                 activity={selectedActivity}
-                section={selectedSection}
+                section={sections.find(s => (s.activities || []).some(a => a._id === selectedActivity._id))}
                 responses={responses}
                 allActivities={allActivities}
                 sections={sections}
                 effectiveSessionId={effectiveSessionId}
-                onBack={handleBackToActivities}
+                onBack={handleGoToMenu}
                 onUpdateResponses={handleUpdateResponses}
+                onNextActivity={handleNextActivity}
+                onGoToMenu={handleGoToMenu}
             />
         );
     }
 
-    if (step === 'activities' && selectedSection) {
-        return (
-            <ActivityListView
-                section={selectedSection}
-                responses={responses}
-                allActivities={allActivities}
-                onSelectActivity={handleSelectActivity}
-                onBack={handleBackToSections}
-                sections={sections}
-                onMoveToNextSection={(nextSection) => {
-                    setSelectedSection(nextSection);
-                }}
-            />
-        );
-    }
-
+    // All sections + activity cards view
     return (
-        <SectionCardsView
-            sections={sections}
-            responses={responses}
-            onSelectSection={handleSelectSection}
-            sessionInfo={sessionInfo}
-        />
+        <div className="min-h-screen bg-gray-50">
+            <AllSectionsView
+                sections={sections}
+                responses={responses}
+                sessionInfo={sessionInfo}
+                onSelectActivity={handleSelectActivity}
+                selectedActivityId={null}
+            />
+        </div>
     );
 };
 

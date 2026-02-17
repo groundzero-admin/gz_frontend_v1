@@ -83,9 +83,9 @@ const AdminActivityEditor = () => {
     const defaultQuestion = {
         qType: 'mcq',
         prompt: '',
-        aiPrompt: 'Grade based on correctness.',
+        aiPrompt: 'Evaluate based on correctness.',
         postAnswerTip: '',
-        showGrade: true,
+        allowAiFeedback: false,
         answer_embed_url: '',
         options: ['', ''],
         correctAnswer: '',
@@ -93,7 +93,7 @@ const AdminActivityEditor = () => {
         inputLabel: '',
         maxChars: 500,
         fillBlankText: '',
-        multiFields: [{ label: 'Step 1', maxChars: 100 }],
+        multiFields: [{ label: 'Step 1', maxChars: 100, fieldType: 'input', options: [] }],
         media: []
     };
 
@@ -255,7 +255,7 @@ const AdminActivityEditor = () => {
     const addMultiField = (qIdx) => {
         const newQs = [...form.practiceData.questions];
         if (!newQs[qIdx].multiFields) newQs[qIdx].multiFields = [];
-        newQs[qIdx].multiFields.push({ label: `Step ${newQs[qIdx].multiFields.length + 1}`, maxChars: 100 });
+        newQs[qIdx].multiFields.push({ label: `Step ${newQs[qIdx].multiFields.length + 1}`, maxChars: 100, fieldType: 'input', options: [], correctAnswers: [] });
         setForm({ ...form, practiceData: { ...form.practiceData, questions: newQs } });
     };
 
@@ -735,26 +735,83 @@ const AdminActivityEditor = () => {
                                                     </div>
                                                 )}
 
-                                                {/* ──── Multi-Step Input ──── */}
+                                                {/* ──── Multi-Step Input (Mixed Types) ──── */}
                                                 {q.qType === 'multi_input' && (
                                                     <div className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
                                                         <div className="flex justify-between items-center mb-3">
-                                                            <span className="text-xs font-bold text-gray-500 uppercase">Input Fields (Steps)</span>
+                                                            <span className="text-xs font-bold text-gray-500 uppercase">Steps (Input or MSQ)</span>
                                                             <button onClick={() => addMultiField(idx)}
                                                                 className="text-xs font-bold text-teal-600 bg-teal-50 px-3 py-1 rounded-full hover:bg-teal-100">+ Add Step</button>
                                                         </div>
-                                                        <div className="space-y-2">
+                                                        <div className="space-y-4">
                                                             {(q.multiFields || []).map((f, fIdx) => (
-                                                                <div key={fIdx} className="flex gap-3 items-center">
-                                                                    <div className="w-7 h-7 rounded-full bg-gray-200 text-gray-500 font-bold flex items-center justify-center text-xs flex-shrink-0">{fIdx + 1}</div>
-                                                                    <input className="flex-1 p-2 rounded-lg border border-gray-200 text-sm font-medium outline-none focus:border-black"
-                                                                        placeholder="Label (e.g. Step 1)" value={f.label}
-                                                                        onChange={e => updateMultiField(idx, fIdx, 'label', e.target.value)} />
-                                                                    <input className="w-16 p-2 rounded-lg border border-gray-200 text-sm font-bold outline-none focus:border-black text-center"
-                                                                        type="number" placeholder="Max" value={f.maxChars}
-                                                                        onChange={e => updateMultiField(idx, fIdx, 'maxChars', parseInt(e.target.value, 10) || 100)} />
-                                                                    <button onClick={() => removeMultiField(idx, fIdx)}
-                                                                        className="text-red-300 hover:text-red-500"><FaTimes size={12} /></button>
+                                                                <div key={fIdx} className="p-3 bg-white rounded-lg border border-gray-200 space-y-2">
+                                                                    <div className="flex gap-3 items-center">
+                                                                        <div className="w-7 h-7 rounded-full bg-gray-200 text-gray-500 font-bold flex items-center justify-center text-xs flex-shrink-0">{fIdx + 1}</div>
+                                                                        <select
+                                                                            value={f.fieldType || 'input'}
+                                                                            onChange={e => updateMultiField(idx, fIdx, 'fieldType', e.target.value)}
+                                                                            className="px-2 py-1.5 rounded-lg border border-gray-200 text-xs font-bold outline-none cursor-pointer bg-gray-50"
+                                                                        >
+                                                                            <option value="input">Text Input</option>
+                                                                            <option value="mcq">MSQ (Multiple Select)</option>
+                                                                        </select>
+                                                                        <input className="flex-1 p-2 rounded-lg border border-gray-200 text-sm font-medium outline-none focus:border-black"
+                                                                            placeholder="Label (e.g. Step 1)" value={f.label}
+                                                                            onChange={e => updateMultiField(idx, fIdx, 'label', e.target.value)} />
+                                                                        {(f.fieldType || 'input') === 'input' && (
+                                                                            <input className="w-16 p-2 rounded-lg border border-gray-200 text-sm font-bold outline-none focus:border-black text-center"
+                                                                                type="number" placeholder="Max" value={f.maxChars}
+                                                                                onChange={e => updateMultiField(idx, fIdx, 'maxChars', parseInt(e.target.value, 10) || 100)} />
+                                                                        )}
+                                                                        <button onClick={() => removeMultiField(idx, fIdx)}
+                                                                            className="text-red-300 hover:text-red-500"><FaTimes size={12} /></button>
+                                                                    </div>
+                                                                    {/* MSQ Options Editor with correct answer checkmarks */}
+                                                                    {(f.fieldType || 'input') === 'mcq' && (
+                                                                        <div className="ml-10 space-y-2">
+                                                                            <p className="text-[10px] text-blue-500 font-bold uppercase tracking-widest">Click ✓ to mark correct answers (multiple allowed)</p>
+                                                                            {(f.options || []).map((opt, oi) => {
+                                                                                const isCorrect = (f.correctAnswers || []).includes(opt) && opt !== '';
+                                                                                return (
+                                                                                    <div key={oi} className="flex gap-2 items-center">
+                                                                                        <button onClick={() => {
+                                                                                            if (opt === '') return;
+                                                                                            const current = f.correctAnswers || [];
+                                                                                            const newCorrect = isCorrect ? current.filter(a => a !== opt) : [...current, opt];
+                                                                                            updateMultiField(idx, fIdx, 'correctAnswers', newCorrect);
+                                                                                        }}
+                                                                                            className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-all flex-shrink-0 ${isCorrect ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white border-gray-200 text-gray-300 hover:border-blue-300'
+                                                                                                }`}><FaCheck size={10} /></button>
+                                                                                        <input className="flex-1 p-2 rounded-lg border border-gray-200 text-sm font-medium outline-none focus:border-black"
+                                                                                            placeholder={`Option ${oi + 1}`}
+                                                                                            value={opt}
+                                                                                            onChange={e => {
+                                                                                                const newOpts = [...(f.options || [])];
+                                                                                                newOpts[oi] = e.target.value;
+                                                                                                updateMultiField(idx, fIdx, 'options', newOpts);
+                                                                                            }} />
+                                                                                        {(f.options || []).length > 2 && (
+                                                                                            <button onClick={() => {
+                                                                                                const newOpts = (f.options || []).filter((_, i) => i !== oi);
+                                                                                                const nc = (f.correctAnswers || []).filter(a => a !== opt);
+                                                                                                updateMultiField(idx, fIdx, 'options', newOpts);
+                                                                                                updateMultiField(idx, fIdx, 'correctAnswers', nc);
+                                                                                            }}
+                                                                                                className="w-6 h-6 rounded-full bg-red-50 text-red-400 flex items-center justify-center hover:bg-red-500 hover:text-white"><FaTimes size={10} /></button>
+                                                                                        )}
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    const newOpts = [...(f.options || []), ''];
+                                                                                    updateMultiField(idx, fIdx, 'options', newOpts);
+                                                                                }}
+                                                                                className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100"
+                                                                            >+ Add Option</button>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             ))}
                                                         </div>
@@ -816,9 +873,9 @@ const AdminActivityEditor = () => {
                                                 {/* ──── Per-Question Settings ──── */}
                                                 <div className="flex flex-wrap gap-6 items-center mt-4 border-t dark:border-gray-700 pt-4">
                                                     <label className="flex items-center gap-2 cursor-pointer text-sm">
-                                                        <input type="checkbox" checked={q.showGrade !== false}
-                                                            onChange={e => updateQuestion(idx, 'showGrade', e.target.checked)} />
-                                                        <span className="font-bold text-gray-600 dark:text-gray-400">Show Grade to Student</span>
+                                                        <input type="checkbox" checked={q.allowAiFeedback === true}
+                                                            onChange={e => updateQuestion(idx, 'allowAiFeedback', e.target.checked)} />
+                                                        <span className="font-bold text-gray-600 dark:text-gray-400">Allow AI Feedback</span>
                                                     </label>
                                                     <div className="flex-1 min-w-[200px]">
                                                         <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-1 block">Answer Embed URL</label>
