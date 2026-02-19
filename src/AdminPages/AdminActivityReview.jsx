@@ -56,14 +56,14 @@ const MediaCarousel = ({ mediaItems }) => {
         const isYouTube = current.url.includes('youtu');
 
         if (current.mediaType === 'image') {
-            return <img src={current.url} className="w-full h-auto max-h-[600px] object-contain bg-black" alt="question media" />;
+            return <img src={current.url} className="w-full h-auto max-h-[600px] object-contain bg-black" alt="AI-powered learning content" />;
         }
         if (current.mediaType === 'video' && !isYouTube) {
             return <video src={current.url} controls className="w-full h-auto max-h-[600px] bg-black" />;
         }
         return (
             <div className="aspect-video w-full bg-black">
-                <iframe src={current.url} className="w-full h-full border-0" title="embed" allowFullScreen
+                <iframe src={current.url} className="w-full h-full border-0" title="Interactive learning resource" allowFullScreen
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
             </div>
         );
@@ -148,14 +148,14 @@ const MediaCarousel = ({ mediaItems }) => {
                     {/* Media container */}
                     <div className="max-w-[90vw] max-h-[90vh] relative" onClick={e => e.stopPropagation()}>
                         {current?.mediaType === 'image' && (
-                            <img src={current.url} className="max-w-[90vw] max-h-[85vh] object-contain rounded-xl shadow-2xl" alt="zoomed" />
+                            <img src={current.url} className="max-w-[90vw] max-h-[85vh] object-contain rounded-xl shadow-2xl" alt="AI-powered learning content — zoomed view" />
                         )}
                         {current?.mediaType === 'video' && !current.url.includes('youtu') && (
                             <video src={current.url} controls className="max-w-[90vw] max-h-[85vh] rounded-xl shadow-2xl" />
                         )}
                         {(current?.mediaType === 'embed' || current?.url?.includes('youtu')) && (
                             <div className="w-[80vw] aspect-video">
-                                <iframe src={current.url} className="w-full h-full border-0 rounded-xl shadow-2xl" title="embed" allowFullScreen
+                                <iframe src={current.url} className="w-full h-full border-0 rounded-xl shadow-2xl" title="Interactive learning resource" allowFullScreen
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
                             </div>
                         )}
@@ -329,7 +329,7 @@ const AdminActivityReview = () => {
     const [refreshing, setRefreshing] = useState(false);
 
     // UI State
-    const [viewMode, setViewMode] = useState('student'); // 'student' | 'question' | 'live'
+    const [viewMode, setViewMode] = useState('question'); // 'student' | 'question' | 'live'
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedCards, setExpandedCards] = useState({});
     const [selectedActivityId, setSelectedActivityId] = useState(null);
@@ -667,13 +667,147 @@ const AdminActivityReview = () => {
                                         <div>
                                             <h2 className="text-2xl font-black text-gray-900">{selectedData.activity.title}</h2>
                                             <div className="flex gap-4 mt-1 text-sm text-gray-500">
-                                                <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded font-bold uppercase text-[10px]">{selectedData.activity.type}</span>
-                                                <span>{selectedData.questions.length} Questions</span>
+                                                <span className={`px-2 py-0.5 rounded font-bold uppercase text-[10px] ${selectedData.activity.type === 'reading' ? 'bg-amber-100 text-amber-700' : 'bg-purple-100 text-purple-700'}`}>{selectedData.activity.type}</span>
+                                                {selectedData.activity.type === 'reading'
+                                                    ? <span>{(selectedData.activity.readingData?.materials || []).length} Materials</span>
+                                                    : <span>{selectedData.questions.length} Questions</span>
+                                                }
                                             </div>
                                         </div>
                                     </div>
 
-                                    {selectedData.questions.map((qData, i) => (
+                                    {/* Reading Material View */}
+                                    {selectedData.activity.type === 'reading' && (() => {
+                                        const materials = selectedData.activity.readingData?.materials || [];
+                                        const tipText = selectedData.activity.readingData?.tipText || '';
+                                        const legacyLink = selectedData.activity.readingData?.link;
+                                        if (legacyLink && materials.length === 0) materials.push({ title: 'Reading Resource', url: legacyLink, mediaType: 'link' });
+                                        const typeIcons = { pdf: '📄', doc: '📝', image: '🖼️', video: '🎬', embed: '🌐', link: '🔗' };
+
+                                        const ReviewMaterialViewer = () => {
+                                            const [viewIdx, setViewIdx] = React.useState(null);
+                                            const viewing = viewIdx !== null ? materials[viewIdx] : null;
+
+                                            const getViewableUrl = (url, mediaType) => {
+                                                if ((mediaType === 'pdf' || mediaType === 'doc') && url) {
+                                                    return `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+                                                }
+                                                // Convert YouTube embed URLs back to watch URLs for "open in new tab"
+                                                if (url) {
+                                                    const embedMatch = url.match(/youtube\.com\/embed\/([^?&]+)/);
+                                                    if (embedMatch) return `https://www.youtube.com/watch?v=${embedMatch[1]}`;
+                                                }
+                                                return url;
+                                            };
+
+                                            const renderContent = () => {
+                                                if (!viewing) return null;
+                                                const { url, mediaType } = viewing;
+                                                const loadingBg = (
+                                                    <div className="absolute inset-0 z-0 flex flex-col items-center justify-center bg-white rounded-xl text-gray-400 gap-3">
+                                                        <div className="text-4xl animate-pulse">🧒📚</div>
+                                                        <p className="text-sm font-medium">Loading your learning material...</p>
+                                                        <p className="text-xs opacity-60">AI-powered education for curious minds</p>
+                                                    </div>
+                                                );
+                                                if (mediaType === 'image') return (
+                                                    <div className="relative">
+                                                        {loadingBg}
+                                                        <img src={url} className="relative z-10 max-w-[90vw] max-h-[80vh] object-contain rounded-xl shadow-2xl" alt="AI-powered learning content for kids" />
+                                                    </div>
+                                                );
+                                                if (mediaType === 'video') return <video src={url} controls className="max-w-[90vw] max-h-[80vh] rounded-xl shadow-2xl" />;
+                                                if (mediaType === 'pdf' || mediaType === 'doc') {
+                                                    const viewerUrl = getViewableUrl(url, mediaType);
+                                                    return (
+                                                        <div className="relative w-[85vw] h-[80vh]">
+                                                            {loadingBg}
+                                                            <iframe src={viewerUrl} className="relative z-10 w-full h-full rounded-xl shadow-2xl border-0 bg-white" title="AI-powered education document viewer" allowFullScreen />
+                                                        </div>
+                                                    );
+                                                }
+                                                return (
+                                                    <div className="relative w-[85vw] h-[80vh]">
+                                                        {loadingBg}
+                                                        <iframe src={url} className="relative z-10 w-full h-full rounded-xl shadow-2xl border-0 bg-white" title="AI-powered learning resource" allowFullScreen />
+                                                    </div>
+                                                );
+                                            };
+
+                                            return (
+                                                <>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        {materials.map((mat, idx) => (
+                                                            <button key={idx} onClick={() => setViewIdx(idx)}
+                                                                className="bg-white rounded-2xl p-5 border border-gray-200 hover:border-teal-400 hover:shadow-lg transition-all text-left group"
+                                                            >
+                                                                <p className="font-bold text-gray-900 truncate">{mat.title || `Material ${idx + 1}`}</p>
+                                                                {mat.description && <p className="text-sm text-gray-500 mt-1 line-clamp-2">{mat.description}</p>}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+
+                                                    {viewing && (
+                                                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" onClick={() => setViewIdx(null)}>
+                                                            <button onClick={() => setViewIdx(null)}
+                                                                className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-xl flex items-center justify-center text-gray-600 hover:text-red-500 transition-all hover:scale-110 z-50">
+                                                                <X size={20} />
+                                                            </button>
+                                                            <a href={getViewableUrl(viewing.url, viewing.mediaType)} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
+                                                                className="absolute top-6 right-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-xl flex items-center justify-center text-gray-600 hover:text-blue-500 transition-all hover:scale-110 z-50">
+                                                                <ExternalLink size={18} />
+                                                            </a>
+                                                            <div className="relative" onClick={e => e.stopPropagation()}>
+                                                                {renderContent()}
+                                                                {materials.length > 1 && (
+                                                                    <>
+                                                                        <button onClick={() => setViewIdx(p => p === 0 ? materials.length - 1 : p - 1)}
+                                                                            className="absolute left-[-60px] top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-xl flex items-center justify-center text-gray-700 hover:text-teal-600 transition-all hover:scale-110">
+                                                                            <ArrowLeft size={22} />
+                                                                        </button>
+                                                                        <button onClick={() => setViewIdx(p => p === materials.length - 1 ? 0 : p + 1)}
+                                                                            className="absolute right-[-60px] top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-xl flex items-center justify-center text-gray-700 hover:text-teal-600 transition-all hover:scale-110">
+                                                                            <ArrowRight size={22} />
+                                                                        </button>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
+                                                                {materials.length > 1 && (
+                                                                    <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
+                                                                        {materials.map((_, i) => (
+                                                                            <button key={i} onClick={(e) => { e.stopPropagation(); setViewIdx(i); }}
+                                                                                className={`w-3 h-3 rounded-full transition-all ${i === viewIdx ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/70'}`} />
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                                <span className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold">
+                                                                    {viewing.title || `Material ${viewIdx + 1}`}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            );
+                                        };
+
+                                        return (
+                                            <div className="space-y-4">
+                                                {tipText && (
+                                                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-3">
+                                                        <span className="text-xl">💡</span>
+                                                        <div className="text-amber-800 text-sm font-medium leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: tipText }} />
+                                                    </div>
+                                                )}
+                                                {materials.length > 0 ? <ReviewMaterialViewer /> : (
+                                                    <div className="bg-gray-50 rounded-2xl p-8 text-center text-gray-400 italic">No reading materials attached.</div>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {/* Practice Questions View */}
+                                    {selectedData.activity.type !== 'reading' && selectedData.questions.map((qData, i) => (
                                         <div key={i} className="space-y-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-lg bg-gray-900 text-white flex items-center justify-center font-bold text-sm shadow-md">{i + 1}</div>

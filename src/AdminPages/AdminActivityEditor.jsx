@@ -104,7 +104,7 @@ const AdminActivityEditor = () => {
         allowCalculator: false,
         showAgent: false,
         isHidden: false,
-        readingData: { link: '' },
+        readingData: { tipText: '', materials: [] },
         practiceData: { description: '', questions: [] }
     };
     const [form, setForm] = useState(initialForm);
@@ -152,7 +152,7 @@ const AdminActivityEditor = () => {
                 setForm({
                     ...initialForm,
                     ...act,
-                    readingData: act.readingData || { link: '' },
+                    readingData: act.readingData || { tipText: '', materials: [] },
                     practiceData: act.practiceData || { description: '', questions: [] }
                 });
             }
@@ -513,18 +513,173 @@ const AdminActivityEditor = () => {
                                     </div>
 
                                     {form.type === 'reading' && (
-                                        <div>
-                                            <label className="block text-sm font-bold mb-1 opacity-70">Document Link / URL</label>
-                                            <input
-                                                className="w-full p-2 border rounded-lg"
-                                                placeholder="https://..."
-                                                value={form.readingData.link}
-                                                onChange={e => setForm({ ...form, readingData: { link: e.target.value } })}
-                                                style={{
-                                                    backgroundColor: `var(${isDark ? "rgba(0,0,0,0.2)" : "#f9fafb"})`,
-                                                    borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`
-                                                }}
-                                            />
+                                        <div className="space-y-4">
+                                            {/* Tip Text — Rich Text Editor */}
+                                            <div>
+                                                <label className="block text-sm font-bold mb-1 opacity-70">📝 Tip / Note for Students</label>
+                                                <RichTextEditor
+                                                    content={form.readingData?.tipText || ''}
+                                                    onChange={(html) => setForm({ ...form, readingData: { ...form.readingData, tipText: html } })}
+                                                    placeholder="Write a tip or note for students (bold, italic, lists, headings...)"
+                                                />
+                                            </div>
+
+                                            {/* Materials List */}
+                                            <div>
+                                                <label className="block text-sm font-bold mb-2 opacity-70">📚 Reading Materials</label>
+                                                <div className="space-y-3">
+                                                    {(form.readingData?.materials || []).map((mat, idx) => {
+                                                        const hasUrl = mat.url && mat.url !== '⏳ Uploading...';
+                                                        const isUploading = mat.url === '⏳ Uploading...';
+
+                                                        return (
+                                                            <div key={idx} className="rounded-xl border overflow-hidden"
+                                                                style={{
+                                                                    backgroundColor: `var(${isDark ? "--card-dark" : "#ffffff"})`,
+                                                                    borderColor: `var(${isDark ? "--border-dark" : "#e5e7eb"})`
+                                                                }}
+                                                            >
+                                                                {/* Header: number + title + delete */}
+                                                                <div className="flex items-center gap-2 p-4 pb-2">
+                                                                    <div className="w-7 h-7 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center text-xs font-black flex-shrink-0">{idx + 1}</div>
+                                                                    <input
+                                                                        className="flex-1 p-2 border rounded-lg text-sm font-semibold bg-transparent"
+                                                                        placeholder="Title (e.g., Chapter 1 Notes)"
+                                                                        value={mat.title}
+                                                                        onChange={e => {
+                                                                            const mats = [...(form.readingData?.materials || [])];
+                                                                            mats[idx] = { ...mats[idx], title: e.target.value };
+                                                                            setForm({ ...form, readingData: { ...form.readingData, materials: mats } });
+                                                                        }}
+                                                                        style={{ borderColor: `var(${isDark ? "--border-dark" : "#e5e7eb"})` }}
+                                                                    />
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const mats = (form.readingData?.materials || []).filter((_, i) => i !== idx);
+                                                                            setForm({ ...form, readingData: { ...form.readingData, materials: mats } });
+                                                                        }}
+                                                                        className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition flex-shrink-0"
+                                                                        title="Remove"
+                                                                    >
+                                                                        <FaTimes size={12} />
+                                                                    </button>
+                                                                </div>
+                                                                <div className="px-4 pb-1">
+                                                                    <input
+                                                                        className="w-full p-2 border rounded-lg text-xs bg-transparent"
+                                                                        placeholder="Short description (optional)"
+                                                                        value={mat.description || ''}
+                                                                        onChange={e => {
+                                                                            const mats = [...(form.readingData?.materials || [])];
+                                                                            mats[idx] = { ...mats[idx], description: e.target.value };
+                                                                            setForm({ ...form, readingData: { ...form.readingData, materials: mats } });
+                                                                        }}
+                                                                        style={{ borderColor: `var(${isDark ? "--border-dark" : "#e5e7eb"})` }}
+                                                                    />
+                                                                </div>
+
+                                                                {/* URL Section */}
+                                                                <div className="px-4 pb-4 pt-1">
+                                                                    {isUploading ? (
+                                                                        <div className="flex items-center gap-2 text-amber-600 text-sm font-medium p-3 bg-amber-50 rounded-lg">
+                                                                            <FaSpinner className="animate-spin" size={12} /> Uploading to cloud...
+                                                                        </div>
+                                                                    ) : hasUrl ? (
+                                                                        /* URL is set — show as success */
+                                                                        <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                                                            <span className="text-green-600 font-bold text-xs">✅</span>
+                                                                            <span className="text-xs text-green-700 truncate flex-1 font-medium">{mat.url.length > 70 ? mat.url.substring(0, 70) + '...' : mat.url}</span>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    const mats = [...(form.readingData?.materials || [])];
+                                                                                    mats[idx] = { ...mats[idx], url: '', mediaType: 'link' };
+                                                                                    setForm({ ...form, readingData: { ...form.readingData, materials: mats } });
+                                                                                }}
+                                                                                className="text-xs text-red-400 hover:text-red-600 font-bold"
+                                                                            >
+                                                                                Change
+                                                                            </button>
+                                                                        </div>
+                                                                    ) : (
+                                                                        /* No URL — show two options */
+                                                                        <div className="space-y-2">
+                                                                            {/* Paste Link option */}
+                                                                            <div className="flex items-center gap-2">
+                                                                                <FaGlobe size={12} className="text-gray-400 flex-shrink-0" />
+                                                                                <input
+                                                                                    className="flex-1 p-2 border rounded-lg text-sm bg-transparent"
+                                                                                    placeholder="Paste link here (URL, PDF link, YouTube, etc.)"
+                                                                                    onBlur={e => {
+                                                                                        const url = e.target.value.trim();
+                                                                                        if (!url) return;
+                                                                                        const mats = [...(form.readingData?.materials || [])];
+                                                                                        let mediaType = 'link';
+                                                                                        if (/\.(pdf)$/i.test(url)) mediaType = 'pdf';
+                                                                                        else if (/\.(docx?|pptx?|xlsx?)$/i.test(url)) mediaType = 'doc';
+                                                                                        else if (/\.(jpe?g|png|gif|webp|svg|bmp)$/i.test(url)) mediaType = 'image';
+                                                                                        else if (/\.(mp4|webm|mov|avi)$/i.test(url)) mediaType = 'video';
+                                                                                        else if (/youtube|youtu\.be|vimeo|embed/i.test(url)) mediaType = 'embed';
+                                                                                        mats[idx] = { ...mats[idx], url, mediaType };
+                                                                                        setForm({ ...form, readingData: { ...form.readingData, materials: mats } });
+                                                                                    }}
+                                                                                    onKeyDown={e => {
+                                                                                        if (e.key === 'Enter') e.target.blur();
+                                                                                    }}
+                                                                                    style={{ borderColor: `var(${isDark ? "--border-dark" : "#e5e7eb"})` }}
+                                                                                />
+                                                                            </div>
+                                                                            {/* OR divider */}
+                                                                            <div className="flex items-center gap-3 px-2">
+                                                                                <div className="flex-1 h-px bg-gray-200" />
+                                                                                <span className="text-[10px] font-bold text-gray-400 uppercase">or</span>
+                                                                                <div className="flex-1 h-px bg-gray-200" />
+                                                                            </div>
+                                                                            {/* Upload option */}
+                                                                            <label className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-gray-300 hover:border-blue-400 rounded-xl cursor-pointer text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-blue-50/50 transition-all">
+                                                                                <FaUpload size={12} />
+                                                                                Upload a file (PDF, Image, Video, Doc)
+                                                                                <input type="file" className="hidden" accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx"
+                                                                                    onChange={async (e) => {
+                                                                                        const file = e.target.files?.[0];
+                                                                                        if (!file) return;
+                                                                                        let cloudType = 'image';
+                                                                                        let detectedType = 'link';
+                                                                                        if (file.type.startsWith('video/')) { cloudType = 'video'; detectedType = 'video'; }
+                                                                                        else if (file.type.startsWith('image/')) { detectedType = 'image'; }
+                                                                                        else { cloudType = 'raw'; detectedType = file.name.endsWith('.pdf') ? 'pdf' : 'doc'; }
+
+                                                                                        const mats = [...(form.readingData?.materials || [])];
+                                                                                        mats[idx] = { ...mats[idx], url: '⏳ Uploading...', mediaType: detectedType, title: mats[idx].title || file.name };
+                                                                                        setForm({ ...form, readingData: { ...form.readingData, materials: mats } });
+
+                                                                                        const res = await uploadMedia(file, cloudType);
+                                                                                        if (res.success) {
+                                                                                            setForm(prev => {
+                                                                                                const updatedMats = [...(prev.readingData?.materials || [])];
+                                                                                                updatedMats[idx] = { ...updatedMats[idx], url: res.data.url };
+                                                                                                return { ...prev, readingData: { ...prev.readingData, materials: updatedMats } };
+                                                                                            });
+                                                                                        }
+                                                                                    }}
+                                                                                />
+                                                                            </label>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        const mats = [...(form.readingData?.materials || []), { title: '', url: '', mediaType: 'link' }];
+                                                        setForm({ ...form, readingData: { ...form.readingData, materials: mats } });
+                                                    }}
+                                                    className="mt-3 flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm font-bold transition"
+                                                >
+                                                    <FaPlus size={10} /> Add Material
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
 

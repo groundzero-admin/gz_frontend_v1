@@ -9,7 +9,7 @@ import {
     ArrowLeft, ArrowRight, CheckCircle, Play, RotateCcw,
     Calculator as CalcIcon, MessageSquare, X, GraduationCap,
     ChevronLeft, ChevronRight, ExternalLink, Check, AlertTriangle,
-    HelpCircle, Maximize2, Minimize2, Lock
+    HelpCircle, Maximize2, Minimize2, Lock, Sparkles
 } from 'lucide-react';
 import {
     listStudentBatchSections, listStudentBatchActivities,
@@ -152,124 +152,128 @@ const AIChatModal = ({ isOpen, onClose, batchActivityId, questionIndex }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-            <div
-                className="w-full max-w-lg h-[600px] rounded-2xl shadow-2xl flex flex-col overflow-hidden bg-white"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 p-4 flex items-center gap-3 text-white">
-                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-lg">🤖</div>
-                    <div className="flex-grow">
-                        <h3 className="font-bold text-base">AI Companion</h3>
-                        <p className="text-white/70 text-[10px]">Ask me anything about this question!</p>
-                    </div>
-                    <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg transition">
-                        <X size={18} />
-                    </button>
+        <div className="fixed bottom-24 right-6 z-50 w-[380px] h-[520px] rounded-2xl shadow-2xl flex flex-col overflow-hidden bg-white border border-gray-200" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="bg-gradient-to-r from-teal-500 to-emerald-500 p-4 flex items-center gap-3 text-white">
+                <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+                    <Sparkles size={18} />
                 </div>
-
-                {/* Disclaimer */}
-                <div className="px-4 py-2 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
-                    <AlertTriangle size={14} className="text-amber-500 flex-shrink-0" />
-                    <p className="text-[10px] text-amber-700">AI responses can make mistakes. Please double-check important information.</p>
+                <div className="flex-grow">
+                    <h3 className="font-bold text-sm">AI Companion</h3>
+                    <p className="text-white/70 text-[10px]">Ask me anything about this question!</p>
                 </div>
+                <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg transition">
+                    <X size={18} />
+                </button>
+            </div>
 
-                {/* Messages */}
-                <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
-                    {/* Load More */}
-                    {hasMore && (
-                        <div className="text-center">
-                            <button
-                                onClick={handleLoadMore}
-                                disabled={loadingHistory}
-                                className="text-xs text-purple-600 font-medium px-4 py-1.5 rounded-full bg-purple-50 hover:bg-purple-100 transition"
-                            >
-                                {loadingHistory ? 'Loading...' : '↑ Load older messages'}
-                            </button>
-                        </div>
-                    )}
+            {/* Disclaimer */}
+            <div className="px-4 py-2 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
+                <AlertTriangle size={14} className="text-amber-500 flex-shrink-0" />
+                <p className="text-[10px] text-amber-700">AI responses can make mistakes. Please double-check important information.</p>
+            </div>
 
-                    {loadingHistory && messages.length === 0 && (
-                        <div className="flex items-center justify-center h-full">
-                            <div className="flex flex-col items-center gap-2">
-                                <div className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin" />
-                                <p className="text-xs text-gray-400">Loading chat...</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {!loadingHistory && messages.length === 0 && (
-                        <div className="flex flex-col items-center justify-center h-full text-center px-6">
-                            <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-3xl mb-4">🎓</div>
-                            <h4 className="font-bold text-gray-700 text-sm">Hi there! I'm your AI Companion</h4>
-                            <p className="text-xs text-gray-400 mt-1 max-w-xs">Ask me anything about this question. I'll do my best to help you learn!</p>
-                        </div>
-                    )}
-
-                    {messages.map((msg, i) => (
-                        <div key={i} className={`flex ${msg.role === 'student' ? 'justify-end' : 'justify-start'}`}>
-                            {msg.role === 'ai' && (
-                                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs mr-2 flex-shrink-0 mt-1">
-                                    🤖
-                                </div>
-                            )}
-                            <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${msg.role === 'student'
-                                ? 'bg-purple-600 text-white rounded-br-md'
-                                : msg.isModerated
-                                    ? 'bg-amber-50 text-amber-800 border border-amber-200 rounded-bl-md'
-                                    : msg.isError
-                                        ? 'bg-red-50 text-red-700 border border-red-200 rounded-bl-md'
-                                        : 'bg-white text-gray-800 shadow-sm border border-gray-100 rounded-bl-md'
-                                }`}>
-                                <p className="whitespace-pre-line">{msg.message}</p>
-                            </div>
-                        </div>
-                    ))}
-
-                    {/* Typing indicator */}
-                    {sending && (
-                        <div className="flex justify-start">
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs mr-2 flex-shrink-0">
-                                🤖
-                            </div>
-                            <div className="bg-white rounded-2xl rounded-bl-md px-4 py-3 shadow-sm border border-gray-100">
-                                <div className="flex gap-1">
-                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div ref={messagesEndRef} />
-                </div>
-
-                {/* Input Bar */}
-                <div className="p-3 border-t bg-white">
-                    <div className="flex items-center gap-2">
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            value={input}
-                            onChange={e => setInput(e.target.value)}
-                            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                            placeholder="Ask a question..."
-                            disabled={sending}
-                            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition disabled:opacity-50"
-                        />
+            {/* Messages */}
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+                {/* Load More */}
+                {hasMore && (
+                    <div className="text-center">
                         <button
-                            onClick={handleSend}
-                            disabled={!input.trim() || sending}
-                            className={`p-2.5 rounded-xl transition-all ${input.trim() && !sending
-                                ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md'
-                                : 'bg-gray-100 text-gray-300 cursor-not-allowed'
-                                }`}
+                            onClick={handleLoadMore}
+                            disabled={loadingHistory}
+                            className="text-xs text-teal-600 font-medium px-4 py-1.5 rounded-full bg-teal-50 hover:bg-teal-100 transition"
                         >
-                            <ArrowRight size={18} />
+                            {loadingHistory ? 'Loading...' : '↑ Load older messages'}
                         </button>
                     </div>
+                )}
+
+                {loadingHistory && messages.length === 0 && (
+                    <div className="flex items-center justify-center h-full">
+                        <div className="flex flex-col items-center gap-2">
+                            <div className="w-8 h-8 border-3 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                            <p className="text-xs text-gray-400">Loading chat...</p>
+                        </div>
+                    </div>
+                )}
+
+                {!loadingHistory && messages.length === 0 && (
+                    <div className="flex flex-col items-center justify-center h-full text-center px-6">
+                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center mb-4 shadow-lg shadow-teal-200">
+                            <Sparkles size={28} className="text-white" />
+                        </div>
+                        <h4 className="font-black text-gray-800 text-base">Hey! I'm your AI Companion 👋</h4>
+                        <p className="text-xs text-gray-500 mt-2 max-w-xs leading-relaxed">Ask me anything about this question — I'll explain, give hints, or walk you through it!</p>
+                        <div className="flex gap-2 mt-3">
+                            <span className="px-3 py-1 bg-teal-50 text-teal-600 text-[10px] font-bold rounded-full">💡 Hints</span>
+                            <span className="px-3 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-full">📖 Explain</span>
+                            <span className="px-3 py-1 bg-cyan-50 text-cyan-600 text-[10px] font-bold rounded-full">🧠 Learn</span>
+                        </div>
+                    </div>
+                )}
+
+                {messages.map((msg, i) => (
+                    <div key={i} className={`flex ${msg.role === 'student' ? 'justify-end' : 'justify-start'}`}>
+                        {msg.role === 'ai' && (
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white mr-2 flex-shrink-0 mt-1">
+                                <Sparkles size={12} />
+                            </div>
+                        )}
+                        <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${msg.role === 'student'
+                            ? 'bg-teal-500 text-white rounded-br-md'
+                            : msg.isModerated
+                                ? 'bg-amber-50 text-amber-800 border border-amber-200 rounded-bl-md'
+                                : msg.isError
+                                    ? 'bg-red-50 text-red-700 border border-red-200 rounded-bl-md'
+                                    : 'bg-white text-gray-800 shadow-sm border border-gray-100 rounded-bl-md'
+                            }`}>
+                            <p className="whitespace-pre-line">{msg.message}</p>
+                        </div>
+                    </div>
+                ))}
+
+                {/* Typing indicator */}
+                {sending && (
+                    <div className="flex justify-start">
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-white mr-2 flex-shrink-0">
+                            <Sparkles size={12} />
+                        </div>
+                        <div className="bg-white rounded-2xl rounded-bl-md px-4 py-3 shadow-sm border border-gray-100">
+                            <div className="flex gap-1">
+                                <div className="w-2 h-2 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <div className="w-2 h-2 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <div className="w-2 h-2 bg-teal-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input Bar */}
+            <div className="p-3 border-t bg-white">
+                <div className="flex items-center gap-2">
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                        placeholder="Ask a question..."
+                        disabled={sending}
+                        className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-teal-400 focus:ring-2 focus:ring-teal-100 transition disabled:opacity-50"
+                    />
+                    <button
+                        onClick={handleSend}
+                        disabled={!input.trim() || sending}
+                        className={`p-2.5 rounded-xl transition-all ${input.trim() && !sending
+                            ? 'bg-teal-500 text-white hover:bg-teal-600 shadow-md'
+                            : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                            }`}
+                    >
+                        <ArrowRight size={18} />
+                    </button>
                 </div>
             </div>
         </div>
@@ -321,7 +325,7 @@ const MediaCarousel = ({ mediaItems }) => {
                     <img
                         src={current.url}
                         className={`w-full h-auto max-h-[400px] object-contain transition-all duration-300 ${imgLoaded[mediaIndex] ? 'opacity-100' : 'opacity-0 absolute inset-0'}`}
-                        alt={quote}
+                        alt="AI-powered learning content"
                         loading="eager"
                         decoding="async"
                         onLoad={() => setImgLoaded(prev => ({ ...prev, [mediaIndex]: true }))}
@@ -334,7 +338,7 @@ const MediaCarousel = ({ mediaItems }) => {
         }
         return (
             <div className="aspect-video w-full">
-                <iframe src={current.url} className="w-full h-full border-0" title="embed" allowFullScreen
+                <iframe src={current.url} className="w-full h-full border-0" title="Interactive learning resource" allowFullScreen
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
             </div>
         );
@@ -425,14 +429,14 @@ const MediaCarousel = ({ mediaItems }) => {
                     {/* Media container */}
                     <div className="max-w-[90vw] max-h-[90vh] relative" onClick={e => e.stopPropagation()}>
                         {current?.mediaType === 'image' && (
-                            <img src={current.url} className="max-w-[90vw] max-h-[85vh] object-contain rounded-xl shadow-2xl" alt={quote} />
+                            <img src={current.url} className="max-w-[90vw] max-h-[85vh] object-contain rounded-xl shadow-2xl" alt="AI-powered learning content" />
                         )}
                         {current?.mediaType === 'video' && !current.url.includes('youtu') && (
                             <video src={current.url} controls className="max-w-[90vw] max-h-[85vh] rounded-xl shadow-2xl" />
                         )}
                         {(current?.mediaType === 'embed' || current?.url?.includes('youtu')) && (
                             <div className="w-[80vw] aspect-video">
-                                <iframe src={current.url} className="w-full h-full border-0 rounded-xl shadow-2xl" title="embed" allowFullScreen
+                                <iframe src={current.url} className="w-full h-full border-0 rounded-xl shadow-2xl" title="Interactive learning resource" allowFullScreen
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
                             </div>
                         )}
@@ -784,6 +788,7 @@ const AllSectionsView = ({ sections, responses, sessionInfo, onSelectActivity, s
                                         const resp = responses[id];
                                         const isCompleted = !!resp?.grade;
                                         const totalQ = act.practiceData?.questions?.length || 0;
+                                        const totalMaterials = act.readingData?.materials?.length || 0;
 
                                         return (
                                             <div
@@ -809,7 +814,7 @@ const AllSectionsView = ({ sections, responses, sessionInfo, onSelectActivity, s
                                                 {/* Footer Info */}
                                                 <div className="mt-auto flex items-center justify-between border-t border-gray-50 pt-3">
                                                     <span className="text-[10px] text-gray-400 font-medium">
-                                                        {totalQ} Questions
+                                                        {act.type === 'reading' ? `${totalMaterials} Material${totalMaterials !== 1 ? 's' : ''}` : `${totalQ} Questions`}
                                                     </span>
 
                                                     {isCompleted ? (
@@ -995,24 +1000,204 @@ const QuestionView = ({
 
     // Reading type
     if (activity.type === 'reading') {
-        return (
-            <div className="bg-gray-50 flex flex-col pb-12">
-                <div className="bg-gradient-to-r from-teal-500 to-emerald-500 px-6 py-6">
-                    <button onClick={onBack} className="flex items-center gap-2 text-white/80 hover:text-white text-sm font-medium mb-3 transition">
-                        <ChevronLeft size={18} /> Back
-                    </button>
-                    <span className="text-xs font-bold text-white/70 bg-white/20 px-3 py-1 rounded-full">📖 reading</span>
-                    <h1 className="text-2xl font-black text-white mt-2">{activity.title}</h1>
-                </div>
-                <div className="max-w-2xl mx-auto w-full px-6 py-8">
-                    <div className="bg-white rounded-2xl p-8 border border-gray-100 text-center">
-                        <p className="text-gray-600 mb-6">Read the following material:</p>
-                        <a href={activity.readingData?.link} target="_blank" rel="noreferrer"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition">
-                            Open Resource <ExternalLink size={16} />
-                        </a>
+        const materials = activity.readingData?.materials || [];
+        const tipText = activity.readingData?.tipText || '';
+        // Also support legacy single-link reading activities
+        const legacyLink = activity.readingData?.link;
+        if (legacyLink && materials.length === 0) {
+            materials.push({ title: 'Reading Resource', url: legacyLink, mediaType: 'link' });
+        }
+
+        const typeIcons = { pdf: '📄', doc: '📝', image: '🖼️', video: '🎬', embed: '🌐', link: '🔗' };
+
+        const ReadingMaterialViewer = () => {
+            const [viewingIdx, setViewingIdx] = useState(null);
+            const viewing = viewingIdx !== null ? materials[viewingIdx] : null;
+
+            const getViewableUrl = (url, mediaType) => {
+                if ((mediaType === 'pdf' || mediaType === 'doc') && url) {
+                    return `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
+                }
+                // Convert YouTube embed URLs back to watch URLs for "open in new tab"
+                if (url) {
+                    const embedMatch = url.match(/youtube\.com\/embed\/([^?&]+)/);
+                    if (embedMatch) return `https://www.youtube.com/watch?v=${embedMatch[1]}`;
+                }
+                return url;
+            };
+
+            const renderViewing = () => {
+                if (!viewing) return null;
+                const { url, mediaType } = viewing;
+                const loadingBg = (
+                    <div className="absolute inset-0 z-0 flex flex-col items-center justify-center bg-white rounded-xl text-gray-400 gap-3">
+                        <div className="text-4xl animate-pulse">🧒📚</div>
+                        <p className="text-sm font-medium">Loading your learning material...</p>
+                        <p className="text-xs opacity-60">AI-powered education for curious minds</p>
                     </div>
-                    <div className="mt-6 text-center">
+                );
+                if (mediaType === 'image') return (
+                    <div className="relative">
+                        {loadingBg}
+                        <img src={url} className="relative z-10 max-w-[90vw] max-h-[80vh] object-contain rounded-xl shadow-2xl" alt="AI-powered learning content for kids" />
+                    </div>
+                );
+                if (mediaType === 'video') return <video src={url} controls className="max-w-[90vw] max-h-[80vh] rounded-xl shadow-2xl" />;
+                if (mediaType === 'pdf' || mediaType === 'doc') {
+                    const viewerUrl = getViewableUrl(url, mediaType);
+                    return (
+                        <div className="relative w-[85vw] h-[80vh]">
+                            {loadingBg}
+                            <iframe src={viewerUrl} className="relative z-10 w-full h-full rounded-xl shadow-2xl border-0 bg-white" title="AI-powered education document viewer" />
+                        </div>
+                    );
+                }
+                if (mediaType === 'embed') return (
+                    <div className="relative w-[80vw] aspect-video">
+                        {loadingBg}
+                        <iframe src={url} className="relative z-10 w-full h-full border-0 rounded-xl shadow-2xl" title="Interactive AI learning resource" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
+                    </div>
+                );
+                // link type
+                return (
+                    <div className="relative w-[85vw] h-[80vh]">
+                        {loadingBg}
+                        <iframe src={url} className="relative z-10 w-full h-full rounded-xl shadow-2xl border-0 bg-white" title="AI-powered learning resource" />
+                    </div>
+                );
+            };
+
+            return (
+                <>
+                    {/* Material Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {materials.map((mat, idx) => (
+                            <button key={idx}
+                                onClick={() => setViewingIdx(idx)}
+                                className="bg-white rounded-2xl border border-gray-200 hover:border-teal-300 hover:shadow-xl transition-all text-left group overflow-hidden flex"
+                            >
+                                <div className="w-1.5 bg-gradient-to-b from-teal-400 to-emerald-400 flex-shrink-0 group-hover:from-teal-500 group-hover:to-emerald-500 transition-all" />
+                                <div className="flex-1 p-5 flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center text-xs font-black flex-shrink-0 group-hover:bg-teal-100 transition">
+                                        {idx + 1}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-gray-900 truncate group-hover:text-teal-700 transition">{mat.title || `Material ${idx + 1}`}</p>
+                                        {mat.description && <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">{mat.description}</p>}
+                                    </div>
+                                    <ExternalLink size={14} className="text-gray-300 group-hover:text-teal-500 transition mt-1 flex-shrink-0" />
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Fullscreen Viewer */}
+                    {viewing && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" onClick={() => setViewingIdx(null)}>
+                            {/* Close button */}
+                            <button onClick={() => setViewingIdx(null)}
+                                className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-xl flex items-center justify-center text-gray-600 hover:text-red-500 transition-all hover:scale-110 z-50">
+                                <X size={20} />
+                            </button>
+                            {/* Open in new tab */}
+                            <a href={getViewableUrl(viewing.url, viewing.mediaType)} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}
+                                className="absolute top-6 right-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-xl flex items-center justify-center text-gray-600 hover:text-blue-500 transition-all hover:scale-110 z-50">
+                                <ExternalLink size={18} />
+                            </a>
+
+                            {/* Content */}
+                            <div className="relative" onClick={e => e.stopPropagation()}>
+                                {renderViewing()}
+
+                                {/* Nav arrows */}
+                                {materials.length > 1 && (
+                                    <>
+                                        <button onClick={() => setViewingIdx(prev => prev === 0 ? materials.length - 1 : prev - 1)}
+                                            className="absolute left-[-60px] top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-xl flex items-center justify-center text-gray-700 hover:text-teal-600 transition-all hover:scale-110">
+                                            <ArrowLeft size={22} />
+                                        </button>
+                                        <button onClick={() => setViewingIdx(prev => prev === materials.length - 1 ? 0 : prev + 1)}
+                                            className="absolute right-[-60px] top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-xl flex items-center justify-center text-gray-700 hover:text-teal-600 transition-all hover:scale-110">
+                                            <ArrowRight size={22} />
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Bottom bar */}
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
+                                {materials.length > 1 && (
+                                    <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
+                                        {materials.map((_, i) => (
+                                            <button key={i} onClick={(e) => { e.stopPropagation(); setViewingIdx(i); }}
+                                                className={`w-3 h-3 rounded-full transition-all ${i === viewingIdx ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/70'}`} />
+                                        ))}
+                                    </div>
+                                )}
+                                <span className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold">
+                                    {viewing.title || `Material ${viewingIdx + 1}`}
+                                </span>
+                                <button onClick={() => setViewingIdx(null)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold hover:bg-white/30 transition-all">
+                                    <X size={14} /> Minimize
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </>
+            );
+        };
+
+        return (
+            <div className="min-h-screen bg-gray-50 flex flex-col relative pb-12">
+                {/* ─── Header (matches practice page) ─── */}
+                <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-20">
+                    <div className="max-w-4xl mx-auto px-6 py-3">
+                        <div className="flex items-center gap-3">
+                            <button onClick={onBack} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition-all flex-shrink-0">
+                                <ChevronLeft size={20} />
+                            </button>
+                            <div className="flex-1 min-w-0">
+                                <h1 className="text-base font-bold text-gray-900 truncate">{activity.title}</h1>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full uppercase">
+                                        📖 Reading
+                                    </span>
+                                    <span className="text-[10px] text-gray-400 font-medium">{materials.length} document{materials.length !== 1 ? 's' : ''}</span>
+                                </div>
+                            </div>
+                            {onGoToMenu && (
+                                <button
+                                    onClick={onGoToMenu}
+                                    className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm hover:shadow-md transition-all flex items-center gap-2 flex-shrink-0"
+                                >
+                                    <GraduationCap size={14} />
+                                    All Activities
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ─── Content ─── */}
+                <div className="max-w-4xl mx-auto w-full px-6 py-8 space-y-6">
+                    {/* Tip text from admin */}
+                    {tipText && (
+                        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-3">
+                            <span className="text-xl">💡</span>
+                            <div className="text-amber-800 text-sm font-medium leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: tipText }} />
+                        </div>
+                    )}
+
+                    {materials.length > 0 ? (
+                        <ReadingMaterialViewer />
+                    ) : (
+                        <div className="bg-white rounded-2xl p-8 border border-gray-100 text-center text-gray-400">
+                            No reading materials available for this activity.
+                        </div>
+                    )}
+
+                    <div className="text-center pt-4">
                         <button
                             onClick={() => {
                                 submitActivityResponse({
@@ -1028,9 +1213,50 @@ const QuestionView = ({
                             }}
                             className="px-8 py-3 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition"
                         >
-                            Mark as Completed
+                            ✅ Mark as Completed
                         </button>
                     </div>
+                </div>
+
+                {/* Calculator */}
+                {activity.allowCalculator && showCalculator && <SimpleCalculator onClose={() => setShowCalculator(false)} />}
+
+                {/* AI Chat Modal */}
+                <AIChatModal
+                    isOpen={showAgentChat}
+                    onClose={() => setShowAgentChat(false)}
+                    batchActivityId={activity._id}
+                    questionIndex={0}
+                />
+
+                {/* Bottom Action Bar */}
+                <div className="fixed bottom-24 right-6 z-40 flex flex-col gap-3 items-end">
+                    {activity.showAgent && !showAgentChat && (
+                        <button
+                            onClick={() => setShowAgentChat(true)}
+                            className="flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 transition-all group hover:scale-105"
+                        >
+                            <div className="relative">
+                                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <Sparkles size={18} className="text-white" />
+                                </div>
+                                <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-teal-500 animate-pulse" />
+                            </div>
+                            <div className="text-left">
+                                <p className="text-sm font-black text-white">AI Companion</p>
+                                <p className="text-[10px] text-white/70 font-medium">Need help? Click here! ✨</p>
+                            </div>
+                        </button>
+                    )}
+                    {activity.allowCalculator && (
+                        <button
+                            onClick={() => setShowCalculator(!showCalculator)}
+                            className={`p-4 rounded-full shadow-xl hover:scale-110 transition-all ${showCalculator ? 'bg-teal-600 text-white' : 'bg-white text-teal-600 border-2 border-teal-200'
+                                }`}
+                        >
+                            <CalcIcon size={24} />
+                        </button>
+                    )}
                 </div>
             </div>
         );
@@ -1271,14 +1497,17 @@ const QuestionView = ({
                 {activity.showAgent && !showAgentChat && (
                     <button
                         onClick={() => setShowAgentChat(true)}
-                        className="flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl bg-white border-2 border-purple-200 hover:border-purple-400 hover:shadow-2xl transition-all group"
+                        className="flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 transition-all group hover:scale-105"
                     >
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-lg group-hover:scale-110 transition-transform">
-                            🤖
+                        <div className="relative">
+                            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <Sparkles size={18} className="text-white" />
+                            </div>
+                            <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-teal-500 animate-pulse" />
                         </div>
                         <div className="text-left">
-                            <p className="text-sm font-bold text-gray-800">AI Companion</p>
-                            <p className="text-[10px] text-gray-400">Need help? Click to ask me!</p>
+                            <p className="text-sm font-black text-white">AI Companion</p>
+                            <p className="text-[10px] text-white/70 font-medium">Need help? Click here! ✨</p>
                         </div>
                     </button>
                 )}
