@@ -4,7 +4,8 @@ import { getSessionResponses, listBatchSections, listAllSessionActivities } from
 import {
     ArrowLeft, ArrowRight, Search, ChevronDown, ChevronUp,
     User, List, Activity, Clock, Star,
-    Check, AlertTriangle, HelpCircle, FileText, RefreshCw
+    Check, AlertTriangle, HelpCircle, FileText, RefreshCw,
+    ExternalLink, Maximize2, X, Eye, EyeOff
 } from 'lucide-react';
 
 // ──────────────────────────────────────────
@@ -35,10 +36,20 @@ const ScoreBadge = ({ score }) => {
 
 const MediaCarousel = ({ mediaItems }) => {
     const [mediaIndex, setMediaIndex] = useState(0);
+    const [isZoomed, setIsZoomed] = useState(false);
     if (!mediaItems || mediaItems.length === 0) return null;
 
     const hasMultiple = mediaItems.length > 1;
     const current = mediaItems[mediaIndex];
+
+    const getOpenUrl = () => {
+        let openUrl = current?.url || '';
+        const embedMatch = openUrl.match(/youtube\.com\/embed\/([^?&/]+)/);
+        if (embedMatch) return `https://www.youtube.com/watch?v=${embedMatch[1]}`;
+        const shortMatch = openUrl.match(/youtu\.be\/([^?&/]+)/);
+        if (shortMatch) return `https://www.youtube.com/watch?v=${shortMatch[1]}`;
+        return openUrl;
+    };
 
     const renderMedia = () => {
         if (!current?.url) return null;
@@ -59,24 +70,133 @@ const MediaCarousel = ({ mediaItems }) => {
     };
 
     return (
-        <div className="mb-6 relative group w-full">
-            <div className="w-full rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-gray-900 relative">
-                {renderMedia()}
+        <>
+            <div className="mb-6 relative w-full">
+                {/* Toolbar above carousel */}
+                {current?.url && (
+                    <div className="flex items-center justify-end gap-2 mb-2 px-1">
+                        <button
+                            onClick={() => setIsZoomed(true)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-500 hover:text-red-700 hover:bg-red-50 transition-all"
+                        >
+                            <Maximize2 size={13} />
+                            Zoom
+                        </button>
+                        <a
+                            href={getOpenUrl()}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-500 hover:text-blue-700 hover:bg-blue-50 transition-all"
+                        >
+                            <ExternalLink size={13} />
+                            Open in New Tab
+                        </a>
+                    </div>
+                )}
+
+                {/* Normal carousel */}
+                <div className="w-full rounded-2xl overflow-hidden border border-gray-200 shadow-sm bg-gray-50 relative">
+                    {renderMedia()}
+                    {hasMultiple && (
+                        <>
+                            <button onClick={() => setMediaIndex(prev => prev === 0 ? mediaItems.length - 1 : prev - 1)}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center text-gray-700 hover:text-teal-600 transition-all hover:scale-110 z-10">
+                                <ArrowLeft size={20} />
+                            </button>
+                            <button onClick={() => setMediaIndex(prev => prev === mediaItems.length - 1 ? 0 : prev + 1)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center text-gray-700 hover:text-teal-600 transition-all hover:scale-110 z-10">
+                                <ArrowRight size={20} />
+                            </button>
+                        </>
+                    )}
+                </div>
+
+                {/* Dot indicators */}
                 {hasMultiple && (
-                    <>
-                        <button onClick={() => setMediaIndex(prev => prev === 0 ? mediaItems.length - 1 : prev - 1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 rounded-full shadow hover:scale-110 transition flex items-center justify-center"><ArrowLeft size={16} /></button>
-                        <button onClick={() => setMediaIndex(prev => prev === mediaItems.length - 1 ? 0 : prev + 1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/90 rounded-full shadow hover:scale-110 transition flex items-center justify-center"><ArrowRight size={16} /></button>
-                    </>
+                    <div className="flex justify-center gap-1.5 mt-3">
+                        {mediaItems.map((_, i) => (
+                            <button key={i} onClick={() => setMediaIndex(i)}
+                                className={`w-2 h-2 rounded-full transition-all ${i === mediaIndex ? 'bg-teal-500 scale-125' : 'bg-gray-300 hover:bg-gray-400'}`}
+                            />
+                        ))}
+                    </div>
                 )}
             </div>
-            {hasMultiple && (
-                <div className="flex justify-center gap-2 mt-2">
-                    {mediaItems.map((_, i) => (
-                        <div key={i} className={`w-2 h-2 rounded-full transition-all ${i === mediaIndex ? 'bg-teal-500 scale-125' : 'bg-gray-300'}`} />
-                    ))}
+
+            {/* Fullscreen overlay — matching student page style */}
+            {isZoomed && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md" onClick={() => setIsZoomed(false)}>
+                    {/* Close button */}
+                    <button
+                        onClick={() => setIsZoomed(false)}
+                        className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-xl flex items-center justify-center text-gray-600 hover:text-red-500 transition-all hover:scale-110 z-50"
+                    >
+                        <X size={20} />
+                    </button>
+
+                    {/* Open in new tab button */}
+                    <a
+                        href={getOpenUrl()}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="absolute top-6 right-20 w-10 h-10 rounded-full bg-white/90 hover:bg-white shadow-xl flex items-center justify-center text-gray-600 hover:text-blue-500 transition-all hover:scale-110 z-50"
+                    >
+                        <ExternalLink size={18} />
+                    </a>
+
+                    {/* Media container */}
+                    <div className="max-w-[90vw] max-h-[90vh] relative" onClick={e => e.stopPropagation()}>
+                        {current?.mediaType === 'image' && (
+                            <img src={current.url} className="max-w-[90vw] max-h-[85vh] object-contain rounded-xl shadow-2xl" alt="zoomed" />
+                        )}
+                        {current?.mediaType === 'video' && !current.url.includes('youtu') && (
+                            <video src={current.url} controls className="max-w-[90vw] max-h-[85vh] rounded-xl shadow-2xl" />
+                        )}
+                        {(current?.mediaType === 'embed' || current?.url?.includes('youtu')) && (
+                            <div className="w-[80vw] aspect-video">
+                                <iframe src={current.url} className="w-full h-full border-0 rounded-xl shadow-2xl" title="embed" allowFullScreen
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" />
+                            </div>
+                        )}
+
+                        {/* Overlay navigation arrows */}
+                        {hasMultiple && (
+                            <>
+                                <button onClick={() => setMediaIndex(prev => prev === 0 ? mediaItems.length - 1 : prev - 1)}
+                                    className="absolute left-[-60px] top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-xl flex items-center justify-center text-gray-700 hover:text-teal-600 transition-all hover:scale-110">
+                                    <ArrowLeft size={22} />
+                                </button>
+                                <button onClick={() => setMediaIndex(prev => prev === mediaItems.length - 1 ? 0 : prev + 1)}
+                                    className="absolute right-[-60px] top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white rounded-full shadow-xl flex items-center justify-center text-gray-700 hover:text-teal-600 transition-all hover:scale-110">
+                                    <ArrowRight size={22} />
+                                </button>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Bottom bar — dots + minimize */}
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
+                        {hasMultiple && (
+                            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
+                                {mediaItems.map((_, i) => (
+                                    <button key={i} onClick={(e) => { e.stopPropagation(); setMediaIndex(i); }}
+                                        className={`w-3 h-3 rounded-full transition-all ${i === mediaIndex ? 'bg-white scale-125' : 'bg-white/40 hover:bg-white/70'}`}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                        <button
+                            onClick={() => setIsZoomed(false)}
+                            className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-semibold hover:bg-white/30 transition-all"
+                        >
+                            <X size={14} />
+                            Minimize
+                        </button>
+                    </div>
                 </div>
             )}
-        </div>
+        </>
     );
 };
 
@@ -100,7 +220,7 @@ const QuestionBlock = ({ qData, response, readOnly, hidePrompt }) => {
 
             {qData.qType !== 'no_response' && (
                 <div className={`rounded-xl p-5 border-2 transition-all w-full ${readOnly ? 'bg-gray-50 border-gray-200' : 'bg-white border-teal-100'}`}>
-                    
+
                     {readOnly && <div className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">Student Answer</div>}
 
                     {qData.qType === 'mcq' && (
@@ -212,7 +332,7 @@ const AdminActivityReview = () => {
     const [viewMode, setViewMode] = useState('student'); // 'student' | 'question' | 'live'
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedCards, setExpandedCards] = useState({});
-    const [selectedActivityId, setSelectedActivityId] = useState(null); 
+    const [selectedActivityId, setSelectedActivityId] = useState(null);
 
     useEffect(() => {
         fetchData();
@@ -381,15 +501,24 @@ const AdminActivityReview = () => {
                         </div>
                     </div>
 
-                    <div className="flex bg-gray-100 p-1 rounded-xl">
-                        <button onClick={() => setViewMode('student')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'student' ? 'bg-white shadow text-teal-700' : 'text-gray-500 hover:text-gray-700'}`}>
-                            <User size={16} /> Students
-                        </button>
-                        <button onClick={() => setViewMode('question')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'question' ? 'bg-white shadow text-purple-700' : 'text-gray-500 hover:text-gray-700'}`}>
-                            <List size={16} /> Questions
-                        </button>
-                        <button onClick={() => setViewMode('live')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'live' ? 'bg-white shadow text-amber-700' : 'text-gray-500 hover:text-gray-700'}`}>
-                            <Activity size={16} /> Live Status
+                    <div className="flex items-center gap-3">
+                        <div className="flex bg-gray-100 p-1 rounded-xl">
+                            <button onClick={() => setViewMode('student')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'student' ? 'bg-white shadow text-teal-700' : 'text-gray-500 hover:text-gray-700'}`}>
+                                <User size={16} /> Students
+                            </button>
+                            <button onClick={() => setViewMode('question')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'question' ? 'bg-white shadow text-purple-700' : 'text-gray-500 hover:text-gray-700'}`}>
+                                <List size={16} /> Questions
+                            </button>
+                            <button onClick={() => setViewMode('live')} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${viewMode === 'live' ? 'bg-white shadow text-amber-700' : 'text-gray-500 hover:text-gray-700'}`}>
+                                <Activity size={16} /> Live Status
+                            </button>
+                        </div>
+                        <button
+                            onClick={() => window.open(`/admin/present/batch-session/${effectiveSessionId}/review`, '_blank')}
+                            className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-bold transition shadow-md"
+                            title="Open in new tab (presentation mode)"
+                        >
+                            <ExternalLink size={14} /> Open in New Tab
                         </button>
                     </div>
                 </div>
@@ -416,9 +545,9 @@ const AdminActivityReview = () => {
                         ) : (
                             <div className="flex-1"></div> // Spacer for Live View
                         )}
-                        
-                        <button 
-                            onClick={refreshResponses} 
+
+                        <button
+                            onClick={refreshResponses}
                             className="flex items-center gap-2 px-4 py-3 bg-white hover:bg-gray-50 text-gray-700 rounded-xl border border-gray-200 text-sm font-bold transition shadow-sm hover:shadow-md whitespace-nowrap"
                             disabled={refreshing}
                         >
@@ -504,7 +633,7 @@ const AdminActivityReview = () => {
                 {/* ================= QUESTION VIEW ================= */}
                 {viewMode === 'question' && (
                     <div className="grid grid-cols-[280px_1fr] gap-6 h-[calc(100vh-140px)]">
-                        
+
                         {/* 1. Sidebar */}
                         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden flex flex-col shadow-sm">
                             <div className="p-4 border-b bg-gray-50/50"><h2 className="font-bold text-gray-700 text-sm">Curriculum</h2></div>
@@ -549,18 +678,21 @@ const AdminActivityReview = () => {
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-lg bg-gray-900 text-white flex items-center justify-center font-bold text-sm shadow-md">{i + 1}</div>
                                                 <div className="h-px bg-gray-200 flex-1" />
-                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Master Question</span>
+                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest"> Question</span>
                                             </div>
-                                            
+
                                             {/* Full Width Master Question */}
                                             <div className="bg-white rounded-2xl p-1 border border-transparent">
                                                 <QuestionBlock qData={qData.question} readOnly={true} response={null} />
                                             </div>
 
                                             <div className="bg-gray-100/80 rounded-3xl p-6 border border-gray-200/50">
-                                                
-                                                {/* Response Header with PER-QUESTION Refresh Button */}
-                                                <div className="flex items-center justify-between mb-5">
+
+                                                {/* Response Header — collapsed by default */}
+                                                <button
+                                                    onClick={() => toggleExpand(`q-${i}`)}
+                                                    className="w-full flex items-center justify-between hover:bg-gray-200/50 rounded-xl px-2 py-2 transition"
+                                                >
                                                     <h3 className="font-bold text-gray-700 flex items-center gap-2 text-sm">
                                                         <User size={16} /> Student Responses
                                                     </h3>
@@ -568,32 +700,36 @@ const AdminActivityReview = () => {
                                                         <span className="bg-white px-3 py-1 rounded-full text-xs font-bold text-gray-500 shadow-sm border">
                                                             {qData.answers.filter(a => a.student && a.answer).length} Answers
                                                         </span>
-                                                        <button 
-                                                            onClick={refreshResponses} 
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); refreshResponses(); }}
                                                             className="flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-teal-50 text-teal-700 rounded-full border border-teal-200 text-xs font-bold transition shadow-sm hover:shadow-md"
                                                             disabled={refreshing}
                                                         >
                                                             <RefreshCw size={12} className={refreshing ? "animate-spin" : ""} />
                                                             {refreshing ? "Updating" : "Refresh"}
                                                         </button>
+                                                        {expandedCards[`q-${i}`] ? <EyeOff size={14} className="text-gray-400" /> : <Eye size={14} className="text-gray-400" />}
+                                                        {expandedCards[`q-${i}`] ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
                                                     </div>
-                                                </div>
+                                                </button>
 
-                                                <div className="grid grid-cols-1 gap-6">
-                                                    {qData.answers.filter(a => a.student && a.answer).map((ans, ansIdx) => (
-                                                        <div key={ansIdx} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition group w-full">
-                                                            <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center font-bold text-xs">{ans.student?.name?.charAt(0)}</div>
-                                                                    <div><p className="font-bold text-sm text-gray-900">{ans.student?.name}</p></div>
+                                                {expandedCards[`q-${i}`] && (
+                                                    <div className="grid grid-cols-1 gap-6 mt-4">
+                                                        {qData.answers.filter(a => a.student && a.answer).map((ans, ansIdx) => (
+                                                            <div key={ansIdx} className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 hover:shadow-md transition group w-full">
+                                                                <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-white flex items-center justify-center font-bold text-xs">{ans.student?.name?.charAt(0)}</div>
+                                                                        <div><p className="font-bold text-sm text-gray-900">{ans.student?.name}</p></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="w-full">
+                                                                    <QuestionBlock qData={qData.question} response={ans.answer} readOnly={true} hidePrompt={true} />
                                                                 </div>
                                                             </div>
-                                                            <div className="w-full">
-                                                                <QuestionBlock qData={qData.question} response={ans.answer} readOnly={true} hidePrompt={true} />
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))}

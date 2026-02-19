@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 import {
     listStudentBatchSections, listStudentBatchActivities,
-    getMySessionResponses, submitActivityResponse
+    getMySessionResponses, submitActivityResponse,
+    sendActivityChatMessage, getActivityChatHistory
 } from "../api.js";
 
 // ──────────────────────────────────────────
@@ -54,26 +55,222 @@ const SimpleCalculator = ({ onClose }) => {
     );
 };
 
-const DummyAIAgent = ({ onClose, shiftLeft }) => {
+// ──────────────────────────────────────────
+//  AI Chat Modal (Real, Persistent)
+// ──────────────────────────────────────────
+const AIChatModal = ({ isOpen, onClose, batchActivityId, questionIndex }) => {
+    const [messages, setMessages] = useState([]);
+    const [input, setInput] = useState('');
+    const [sending, setSending] = useState(false);
+    const [loadingHistory, setLoadingHistory] = useState(false);
+    const [hasMore, setHasMore] = useState(false);
+    const [page, setPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const messagesEndRef = useRef(null);
+    const chatContainerRef = useRef(null);
+    const inputRef = useRef(null);
+
+    // Load initial history when modal opens
+    useEffect(() => {
+        if (isOpen && batchActivityId) {
+            setMessages([]);
+            setPage(1);
+            setHasMore(false);
+            loadHistory(1, true);
+            setTimeout(() => inputRef.current?.focus(), 200);
+        }
+    }, [isOpen, batchActivityId, questionIndex]);
+
+    const loadHistory = async (pageNum, isInitial = false) => {
+        setLoadingHistory(true);
+        const res = await getActivityChatHistory(batchActivityId, questionIndex, pageNum, 10);
+        if (res.success && res.data) {
+            if (isInitial) {
+                setMessages(res.data.messages || []);
+            } else {
+                // Prepend older messages
+                setMessages(prev => [...(res.data.messages || []), ...prev]);
+            }
+            setTotalCount(res.data.totalCount || 0);
+            setHasMore(res.data.hasMore || false);
+            setPage(pageNum);
+        }
+        setLoadingHistory(false);
+        if (isInitial) {
+            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }), 100);
+        }
+    };
+
+    const handleLoadMore = () => {
+        if (!loadingHistory && hasMore) {
+            loadHistory(page + 1, false);
+        }
+    };
+
+    const handleSend = async () => {
+        const trimmed = input.trim();
+        if (!trimmed || sending) return;
+
+        // Optimistically add student message
+        const tempMsg = { role: 'student', message: trimmed, createdAt: new Date().toISOString() };
+        setMessages(prev => [...prev, tempMsg]);
+        setInput('');
+        setSending(true);
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+
+        const res = await sendActivityChatMessage(batchActivityId, questionIndex, trimmed);
+
+        if (res.success) {
+            if (res.data?.isBad) {
+                // Guardrail triggered
+                setMessages(prev => [...prev, {
+                    role: 'ai',
+                    message: '⚠️ Your message was flagged as inappropriate. Please ask a question related to the topic.',
+                    createdAt: new Date().toISOString(),
+                    isModerated: true
+                }]);
+            } else if (res.data?.answer) {
+                setMessages(prev => [...prev, {
+                    role: 'ai',
+                    message: res.data.answer,
+                    createdAt: new Date().toISOString()
+                }]);
+            }
+        } else {
+            setMessages(prev => [...prev, {
+                role: 'ai',
+                message: '😔 Sorry, I couldn\'t respond right now. Please try again!',
+                createdAt: new Date().toISOString(),
+                isError: true
+            }]);
+        }
+
+        setSending(false);
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    };
+
+    if (!isOpen) return null;
+
     return (
-        <div className={`fixed bottom-24 z-40 w-80 bg-white rounded-2xl shadow-2xl border overflow-hidden transition-all ${shiftLeft ? 'right-[290px]' : 'right-6'}`}>
-            <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-4 text-white flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                    <MessageSquare size={20} />
-                    <span className="font-bold">AI Tutor</span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
+            <div
+                className="w-full max-w-lg h-[600px] rounded-2xl shadow-2xl flex flex-col overflow-hidden bg-white"
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 p-4 flex items-center gap-3 text-white">
+                    <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-lg">🤖</div>
+                    <div className="flex-grow">
+                        <h3 className="font-bold text-base">AI Companion</h3>
+                        <p className="text-white/70 text-[10px]">Ask me anything about this question!</p>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg transition">
+                        <X size={18} />
+                    </button>
                 </div>
-                <button onClick={onClose} className="p-1 hover:bg-white/20 rounded"><X size={16} /></button>
-            </div>
-            <div className="p-4 h-64 overflow-y-auto bg-gray-50">
-                <div className="bg-white p-3 rounded-xl shadow-sm mb-3">
-                    <p className="text-sm text-gray-600">👋 Hi! I'm your AI tutor. How can I help you with this question?</p>
+
+                {/* Disclaimer */}
+                <div className="px-4 py-2 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
+                    <AlertTriangle size={14} className="text-amber-500 flex-shrink-0" />
+                    <p className="text-[10px] text-amber-700">AI responses can make mistakes. Please double-check important information.</p>
                 </div>
-                <div className="text-center text-gray-400 text-xs mt-8">
-                    <p>Ask me anything about the question!</p>
+
+                {/* Messages */}
+                <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50">
+                    {/* Load More */}
+                    {hasMore && (
+                        <div className="text-center">
+                            <button
+                                onClick={handleLoadMore}
+                                disabled={loadingHistory}
+                                className="text-xs text-purple-600 font-medium px-4 py-1.5 rounded-full bg-purple-50 hover:bg-purple-100 transition"
+                            >
+                                {loadingHistory ? 'Loading...' : '↑ Load older messages'}
+                            </button>
+                        </div>
+                    )}
+
+                    {loadingHistory && messages.length === 0 && (
+                        <div className="flex items-center justify-center h-full">
+                            <div className="flex flex-col items-center gap-2">
+                                <div className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                                <p className="text-xs text-gray-400">Loading chat...</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {!loadingHistory && messages.length === 0 && (
+                        <div className="flex flex-col items-center justify-center h-full text-center px-6">
+                            <div className="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center text-3xl mb-4">🎓</div>
+                            <h4 className="font-bold text-gray-700 text-sm">Hi there! I'm your AI Companion</h4>
+                            <p className="text-xs text-gray-400 mt-1 max-w-xs">Ask me anything about this question. I'll do my best to help you learn!</p>
+                        </div>
+                    )}
+
+                    {messages.map((msg, i) => (
+                        <div key={i} className={`flex ${msg.role === 'student' ? 'justify-end' : 'justify-start'}`}>
+                            {msg.role === 'ai' && (
+                                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs mr-2 flex-shrink-0 mt-1">
+                                    🤖
+                                </div>
+                            )}
+                            <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${msg.role === 'student'
+                                ? 'bg-purple-600 text-white rounded-br-md'
+                                : msg.isModerated
+                                    ? 'bg-amber-50 text-amber-800 border border-amber-200 rounded-bl-md'
+                                    : msg.isError
+                                        ? 'bg-red-50 text-red-700 border border-red-200 rounded-bl-md'
+                                        : 'bg-white text-gray-800 shadow-sm border border-gray-100 rounded-bl-md'
+                                }`}>
+                                <p className="whitespace-pre-line">{msg.message}</p>
+                            </div>
+                        </div>
+                    ))}
+
+                    {/* Typing indicator */}
+                    {sending && (
+                        <div className="flex justify-start">
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs mr-2 flex-shrink-0">
+                                🤖
+                            </div>
+                            <div className="bg-white rounded-2xl rounded-bl-md px-4 py-3 shadow-sm border border-gray-100">
+                                <div className="flex gap-1">
+                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                    <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div ref={messagesEndRef} />
                 </div>
-            </div>
-            <div className="p-3 border-t bg-white">
-                <input type="text" placeholder="Type a message..." className="w-full p-2 border rounded-lg text-sm outline-none focus:border-purple-400" />
+
+                {/* Input Bar */}
+                <div className="p-3 border-t bg-white">
+                    <div className="flex items-center gap-2">
+                        <input
+                            ref={inputRef}
+                            type="text"
+                            value={input}
+                            onChange={e => setInput(e.target.value)}
+                            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                            placeholder="Ask a question..."
+                            disabled={sending}
+                            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 transition disabled:opacity-50"
+                        />
+                        <button
+                            onClick={handleSend}
+                            disabled={!input.trim() || sending}
+                            className={`p-2.5 rounded-xl transition-all ${input.trim() && !sending
+                                ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md'
+                                : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                                }`}
+                        >
+                            <ArrowRight size={18} />
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     );
@@ -1057,25 +1254,36 @@ const QuestionView = ({
                 </div>
             )}
 
-            {/* Calculator & Agent */}
+            {/* Calculator */}
             {showCalculator && <SimpleCalculator onClose={() => setShowCalculator(false)} />}
-            {activity.showAgent && showAgentChat && (
-                <DummyAIAgent
-                    onClose={() => setShowAgentChat(false)}
-                    shiftLeft={activity.allowCalculator && showCalculator}
-                />
-            )}
 
-            <div className="fixed bottom-24 right-6 z-40 flex gap-3">
-                {activity.showAgent && (
+            {/* AI Chat Modal */}
+            <AIChatModal
+                isOpen={showAgentChat}
+                onClose={() => setShowAgentChat(false)}
+                batchActivityId={activity._id}
+                questionIndex={currentQuestionIdx}
+            />
+
+            {/* Bottom Action Bar */}
+            <div className="fixed bottom-24 right-6 z-40 flex flex-col gap-3 items-end">
+                {/* AI Companion Card */}
+                {activity.showAgent && !showAgentChat && (
                     <button
-                        onClick={() => setShowAgentChat(!showAgentChat)}
-                        className={`p-4 rounded-full shadow-xl hover:scale-110 transition-all ${showAgentChat ? 'bg-purple-600 text-white' : 'bg-white text-purple-600 border-2 border-purple-200'
-                            }`}
+                        onClick={() => setShowAgentChat(true)}
+                        className="flex items-center gap-3 px-5 py-3 rounded-2xl shadow-xl bg-white border-2 border-purple-200 hover:border-purple-400 hover:shadow-2xl transition-all group"
                     >
-                        <MessageSquare size={24} />
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white text-lg group-hover:scale-110 transition-transform">
+                            🤖
+                        </div>
+                        <div className="text-left">
+                            <p className="text-sm font-bold text-gray-800">AI Companion</p>
+                            <p className="text-[10px] text-gray-400">Need help? Click to ask me!</p>
+                        </div>
                     </button>
                 )}
+
+                {/* Calculator Button */}
                 {activity.allowCalculator && (
                     <button
                         onClick={() => setShowCalculator(!showCalculator)}

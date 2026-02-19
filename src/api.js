@@ -2469,6 +2469,37 @@ export const deleteBatchSection = async (batchSectionId) => {
   }
 };
 
+// --- Section Reorder ---
+export const reorderTemplateSections = async (orderedIds) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/template/sections/reorder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ orderedIds }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("reorderTemplateSections error:", error);
+    return { success: false, message: "Network error reordering sections." };
+  }
+};
+
+export const reorderBatchSections = async (orderedIds) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch/sections/reorder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ orderedIds }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("reorderBatchSections error:", error);
+    return { success: false, message: "Network error reordering batch sections." };
+  }
+};
+
 // --- Batch Activities ---
 export const createBatchActivity = async (batchSectionId, data) => {
   try {
@@ -2539,6 +2570,36 @@ export const deleteBatchActivity = async (activityId) => {
   } catch (error) {
     console.error("deleteBatchActivity error:", error);
     return { success: false, message: "Network error deleting batch activity." };
+  }
+};
+
+export const reorderTemplateActivities = async (orderedIds) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/template/activities/reorder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ orderedIds }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("reorderTemplateActivities error:", error);
+    return { success: false, message: "Network error reordering activities." };
+  }
+};
+
+export const reorderBatchActivities = async (orderedIds) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch/activities/reorder`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ orderedIds }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("reorderBatchActivities error:", error);
+    return { success: false, message: "Network error reordering batch activities." };
   }
 };
 
@@ -2686,5 +2747,37 @@ export const uploadMedia = async (file, mediaType) => {
   } catch (error) {
     console.error("uploadMedia error:", error);
     return { success: false, message: "Network error uploading media." };
+  }
+};
+
+// ========== ACTIVITY AI CHAT ==========
+
+export const sendActivityChatMessage = async (batchActivityId, questionIndex, message) => {
+  try {
+    const response = await fetch(`${BASE_URL}/student/activity-chat/send`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ batchActivityId, questionIndex, message }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("sendActivityChatMessage error:", error);
+    return { success: false, message: "Network error sending chat message." };
+  }
+};
+
+export const getActivityChatHistory = async (batchActivityId, questionIndex, page = 1, limit = 10) => {
+  try {
+    const params = new URLSearchParams({ batchActivityId, questionIndex, page, limit });
+    const response = await fetch(`${BASE_URL}/student/activity-chat/history?${params}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("getActivityChatHistory error:", error);
+    return { success: false, message: "Network error fetching chat history." };
   }
 };

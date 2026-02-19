@@ -57,6 +57,7 @@ import AdminBatchTemplateSessionPage from './AdminPages/AdminBatchTemplateSessio
 import AdminSectionPage from './AdminPages/AdminSectionPage.jsx'
 import AdminActivityEditor from './AdminPages/AdminActivityEditor.jsx'
 import AdminActivityReview from './AdminPages/AdminActivityReview.jsx'
+// import AdminActivityPresenter from './AdminPages/AdminActivityPresenter.jsx'
 import StudentActivityPage from './StudentPages/StudentActivityPage.jsx'
 
 
@@ -152,6 +153,10 @@ function App() {
 
       {/* Student Activity Player (Standalone) */}
       <Route path="/student/activity/batch-session/:batchSessionId" element={<StudentActivityPage />} />
+
+      {/* Admin Activity Presenter (Standalone - no sidebar layout) */}
+      {/* <Route path="/admin/present/batch-section/:batchSectionId" element={<AdminActivityPresenter />} /> */}
+      <Route path="/admin/present/batch-session/:batchSessionId/review" element={<AdminActivityReview />} />
 
       <Route path="/student/dashboard" element={< StudentLayout />}>
         {/* Default page at /admin/dashboard */}

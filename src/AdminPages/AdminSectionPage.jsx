@@ -5,7 +5,9 @@ import {
     FaPlus,
     FaEdit,
     FaTrash,
-    FaList
+    FaList,
+    FaChevronUp,
+    FaChevronDown
 } from "react-icons/fa";
 import {
     listSections,
@@ -15,7 +17,9 @@ import {
     listBatchSections,
     createBatchSection,
     updateBatchSection,
-    deleteBatchSection
+    deleteBatchSection,
+    reorderTemplateSections,
+    reorderBatchSections
 } from "../api.js";
 
 const AdminSectionPage = () => {
@@ -107,6 +111,21 @@ const AdminSectionPage = () => {
         }
     };
 
+    const handleReorder = async (sectionId, direction) => {
+        const idx = sections.findIndex(s => s._id === sectionId);
+        if (idx === -1) return;
+        const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+        if (swapIdx < 0 || swapIdx >= sections.length) return;
+
+        const newList = [...sections];
+        [newList[idx], newList[swapIdx]] = [newList[swapIdx], newList[idx]];
+        setSections(newList);
+
+        const orderedIds = newList.map(s => s._id);
+        const reorderFn = isTemplateMode ? reorderTemplateSections : reorderBatchSections;
+        await reorderFn(orderedIds);
+    };
+
     return (
         <div
             className="flex flex-col min-h-[calc(100vh)] w-[calc(100%+3rem)] md:w-[calc(100%+5rem)] -m-6 md:-m-10 p-6 font-sans transition-colors duration-300"
@@ -170,7 +189,7 @@ const AdminSectionPage = () => {
                     <div
                         className="p-12 rounded-2xl shadow-sm text-center border dashed transition-colors"
                         style={{
-                        backgroundColor: isDark ? "var(--card-dark)" : "#ffffff",
+                            backgroundColor: isDark ? "var(--card-dark)" : "#ffffff",
 
                             borderColor: `var(${isDark ? "--border-dark" : "#e5e7eb"})`
                         }}
@@ -185,7 +204,7 @@ const AdminSectionPage = () => {
                                 key={section._id}
                                 className="p-6 rounded-xl shadow-sm border hover:shadow-md transition flex items-center justify-between group"
                                 style={{
-                                backgroundColor: isDark ? "var(--card-dark)" : "#ffffff",
+                                    backgroundColor: isDark ? "var(--card-dark)" : "#ffffff",
 
                                     borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`
                                 }}
@@ -209,6 +228,24 @@ const AdminSectionPage = () => {
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                    <div className="flex flex-col gap-0.5 mr-1">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleReorder(section._id, 'up'); }}
+                                            disabled={sections.indexOf(section) === 0}
+                                            className={`p-1 rounded transition text-red-400 ${sections.indexOf(section) === 0 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-red-300'}`}
+                                            title="Move up"
+                                        >
+                                            <FaChevronUp size={10} />
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleReorder(section._id, 'down'); }}
+                                            disabled={sections.indexOf(section) === sections.length - 1}
+                                            className={`p-1 rounded transition text-red-400 ${sections.indexOf(section) === sections.length - 1 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-red-300'}`}
+                                            title="Move down"
+                                        >
+                                            <FaChevronDown size={10} />
+                                        </button>
+                                    </div>
                                     <button
                                         onClick={() => openModal(section)}
                                         className="p-2 opacity-50 hover:opacity-100 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition"
@@ -234,7 +271,7 @@ const AdminSectionPage = () => {
                     <div
                         className="w-full max-w-md rounded-2xl p-6 shadow-2xl transition-colors"
                         style={{
-                         backgroundColor: isDark ? "var(--card-dark)" : "#ffffff",
+                            backgroundColor: isDark ? "var(--card-dark)" : "#ffffff",
 
                             color: `var(${isDark ? "--text-dark-primary" : "--text-light-primary"})`,
                             border: `1px solid var(${isDark ? "--border-dark" : "transparent"})`

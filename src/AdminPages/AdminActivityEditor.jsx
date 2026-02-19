@@ -8,12 +8,12 @@ import ListItem from '@tiptap/extension-list-item';
 import {
     FaArrowLeft, FaSave, FaPlus, FaTrash, FaImage, FaVideo, FaCode,
     FaBold, FaItalic, FaListUl, FaListOl, FaQuoteRight, FaHeading, FaTimes,
-    FaCheck, FaGlobe, FaChevronRight, FaUpload, FaSpinner
+    FaCheck, FaGlobe, FaChevronRight, FaUpload, FaSpinner, FaChevronUp, FaChevronDown
 } from "react-icons/fa";
 import {
     listActivities, createActivity, getActivity, updateActivity, deleteActivity,
     listBatchActivities, createBatchActivity, getBatchActivity, updateBatchActivity, deleteBatchActivity,
-    uploadMedia
+    uploadMedia, reorderTemplateActivities, reorderBatchActivities
 } from "../api.js";
 
 // ──────────────────────────────────────────
@@ -103,6 +103,7 @@ const AdminActivityEditor = () => {
         order: 0,
         allowCalculator: false,
         showAgent: false,
+        isHidden: false,
         readingData: { link: '' },
         practiceData: { description: '', questions: [] }
     };
@@ -167,6 +168,23 @@ const AdminActivityEditor = () => {
             ? `/admin/dashboard/template-section/${sectionId}/activities`
             : `/admin/dashboard/batch-section/${batchSectionId}/activities`
         );
+    };
+
+    const handleReorder = async (actId, direction) => {
+        const idx = activities.findIndex(a => a._id === actId);
+        if (idx === -1) return;
+        const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+        if (swapIdx < 0 || swapIdx >= activities.length) return;
+
+        // Swap locally for instant feedback
+        const newList = [...activities];
+        [newList[idx], newList[swapIdx]] = [newList[swapIdx], newList[idx]];
+        setActivities(newList);
+
+        // Persist to DB
+        const orderedIds = newList.map(a => a._id);
+        const reorderFn = isTemplateMode ? reorderTemplateActivities : reorderBatchActivities;
+        await reorderFn(orderedIds);
     };
 
     const handleSave = async () => {
@@ -371,19 +389,41 @@ const AdminActivityEditor = () => {
                     )}
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
-                    {sidebarLoading ? <p className="p-4 text-center opacity-50">Loading...</p> : activities.map(act => (
+                    {sidebarLoading ? <p className="p-4 text-center opacity-50">Loading...</p> : activities.map((act, idx) => (
                         <div
                             key={act._id}
                             onClick={() => setSelectedActId(act._id)}
-                            className={`p-3 rounded-lg cursor-pointer flex justify-between items-center group transition border ${selectedActId === act._id ? 'bg-black text-white border-black' : 'hover:bg-gray-100 dark:hover:bg-gray-800 border-transparent'}`}
+                            className={`p-3 rounded-lg cursor-pointer flex justify-between items-center group transition border-2 ${selectedActId === act._id ? 'border-black dark:border-white dark:text-white bg-gray-50 dark:bg-gray-800 font-semibold' : 'hover:bg-gray-100 dark:hover:bg-gray-800 border-transparent'}`}
                         >
-                            <span className="truncate w-48 font-medium">{act.title}</span>
-                            <button
-                                onClick={(e) => { e.stopPropagation(); handleDelete(act._id); }}
-                                className={`p-1.5 rounded opacity-0 group-hover:opacity-100 transition ${selectedActId === act._id ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-white dark:hover:bg-gray-700 text-gray-500'}`}
-                            >
-                                <FaTrash size={12} />
-                            </button>
+                            <span className="truncate w-36 font-medium">{act.title}</span>
+                            <div className="flex items-center gap-1">
+                                {selectedActId === act._id && (
+                                    <>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleReorder(act._id, 'up'); }}
+                                            disabled={idx === 0}
+                                            className={`p-1 rounded transition text-red-400 ${idx === 0 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-gray-700 hover:text-red-300'}`}
+                                            title="Move up"
+                                        >
+                                            <FaChevronUp size={10} />
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleReorder(act._id, 'down'); }}
+                                            disabled={idx === activities.length - 1}
+                                            className={`p-1 rounded transition text-red-400 ${idx === activities.length - 1 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-gray-700 hover:text-red-300'}`}
+                                            title="Move down"
+                                        >
+                                            <FaChevronDown size={10} />
+                                        </button>
+                                    </>
+                                )}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleDelete(act._id); }}
+                                    className={`p-1.5 rounded opacity-0 group-hover:opacity-100 transition ${selectedActId === act._id ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-white dark:hover:bg-gray-700 text-gray-500'}`}
+                                >
+                                    <FaTrash size={12} />
+                                </button>
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -452,7 +492,11 @@ const AdminActivityEditor = () => {
                                                 <input type="checkbox" checked={form.allowCalculator} onChange={e => setForm({ ...form, allowCalculator: e.target.checked })} /> Calculator
                                             </label>
                                             <label className="flex items-center gap-2 cursor-pointer text-sm">
-                                                <input type="checkbox" checked={form.showAgent} onChange={e => setForm({ ...form, showAgent: e.target.checked })} /> AI Tutor
+                                                <input type="checkbox" checked={form.showAgent} onChange={e => setForm({ ...form, showAgent: e.target.checked })} /> AI Companion
+                                            </label>
+                                            <div className="w-px bg-gray-200 dark:bg-gray-700 mx-2" />
+                                            <label className="flex items-center gap-2 cursor-pointer text-sm text-orange-500 font-semibold">
+                                                <input type="checkbox" checked={form.isHidden || false} onChange={e => setForm({ ...form, isHidden: e.target.checked })} /> Hidden from Students
                                             </label>
                                         </div>
                                     </div>
