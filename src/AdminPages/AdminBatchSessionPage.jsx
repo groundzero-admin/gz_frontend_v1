@@ -31,7 +31,8 @@ import {
   unlinkStudentFromBatch,
   listAllBatchTemplates,
   importTemplateIntoBatch,
-  deleteBatchSession
+  deleteBatchSession,
+  updateBatchDefaults
 } from "../api.js";
 
 // --- Helper: Time Picker ---
@@ -43,20 +44,16 @@ const TimePicker = ({ label, value, onChange, isDark }) => {
     return { h, m, p: periodPart || "AM" };
   };
 
-  const [timeState, setTimeState] = useState(parseTime(value));
+  const [timeState, setTimeState] = useState(() => parseTime(value));
 
-  useEffect(() => {
-    onChange(`${timeState.h}:${timeState.m} ${timeState.p}`);
-  }, [timeState]);
-
-  useEffect(() => {
-    setTimeState(parseTime(value));
-  }, [value]);
+  const update = (key, val) => {
+    const next = { ...timeState, [key]: val };
+    setTimeState(next);
+    onChange(`${next.h}:${next.m} ${next.p}`);
+  };
 
   const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
   const minutes = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0'));
-
-  const update = (key, val) => setTimeState(prev => ({ ...prev, [key]: val }));
 
   const selectStyle = {
     backgroundColor: `var(${isDark ? "--bg-dark" : "--bg-light"})`,
@@ -277,8 +274,8 @@ const SessionModal = ({ isOpen, onClose, onSubmit, isDark, editingSession, batch
     title: '',
     description: '',
     date: '',
-    startTime: '10:00 AM',
-    endTime: '11:00 AM',
+    startTime: batchDetails?.defaultStartTime || '10:00 AM',
+    endTime: batchDetails?.defaultEndTime || '11:00 AM',
     meetingLinkOrLocation: '',
     googleClassroomLink: ''
   });
@@ -736,6 +733,78 @@ const BatchStudentCard = ({ student, isDark, onDelete }) => (
   </div>
 );
 
+// --- Default Time Editor (inline in batch header) ---
+const DefaultTimeEditor = ({ batchId, batchDetails, isDark, onUpdated }) => {
+  const [editing, setEditing] = useState(false);
+  const [startTime, setStartTime] = useState(batchDetails?.defaultStartTime || '10:00 AM');
+  const [endTime, setEndTime] = useState(batchDetails?.defaultEndTime || '11:00 AM');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setStartTime(batchDetails?.defaultStartTime || '10:00 AM');
+    setEndTime(batchDetails?.defaultEndTime || '11:00 AM');
+  }, [batchDetails]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    const res = await updateBatchDefaults(batchId, startTime, endTime);
+    if (res.success) {
+      onUpdated(res.data);
+      setEditing(false);
+    } else {
+      alert(res.message || "Failed to save.");
+    }
+    setSaving(false);
+  };
+
+  if (!editing) {
+    return (
+      <div className="flex items-center gap-2 mt-2">
+        <FaClock size={12} className="opacity-50" />
+        <span className="text-sm opacity-70">Default Time: <strong>{batchDetails?.defaultStartTime || '10:00 AM'}</strong> – <strong>{batchDetails?.defaultEndTime || '11:00 AM'}</strong></span>
+        <button
+          onClick={() => setEditing(true)}
+          className="text-[10px] px-2 py-0.5 rounded border font-bold border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white transition ml-1"
+        >
+          <FaEdit className="inline mr-1" size={9} /> Edit
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 p-4 rounded-xl border"
+      style={{
+        backgroundColor: `var(${isDark ? "--card-dark" : "--bg-light"})`,
+        borderColor: `var(${isDark ? "--border-dark" : "--border-light"})`
+      }}
+    >
+      <p className="text-xs font-bold opacity-70 mb-2 uppercase tracking-wider">Default Session Time</p>
+      <p className="text-[10px] opacity-50 mb-3">Used when importing or syncing template sessions into this batch.</p>
+      <div className="flex gap-4">
+        <TimePicker label="Start" isDark={isDark} value={startTime} onChange={setStartTime} />
+        <TimePicker label="End" isDark={isDark} value={endTime} onChange={setEndTime} />
+      </div>
+      <div className="flex gap-2 mt-2">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-1 px-4 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition disabled:opacity-50"
+        >
+          <FaCheck size={10} /> {saving ? 'Saving...' : 'Save'}
+        </button>
+        <button
+          onClick={() => setEditing(false)}
+          className="px-4 py-1.5 rounded-lg text-xs font-bold border hover:opacity-80 transition"
+          style={{ borderColor: `var(${isDark ? "--border-dark" : "--border-light"})` }}
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // --- Main Page ---
 const AdminBatchSessionPage = () => {
   const { isDark } = useOutletContext();
@@ -950,6 +1019,9 @@ const AdminBatchSessionPage = () => {
                     <FaMapMarkerAlt size={12} /> {batchDetails.classLocation} ({batchDetails.cityCode})
                   </p>
                 )}
+
+                {/* Default Session Time */}
+                <DefaultTimeEditor batchId={batchId} batchDetails={batchDetails} isDark={isDark} onUpdated={(b) => setBatchDetails(b)} />
               </div>
             ) : (
               <p className="text-sm opacity-60">Loading details...</p>

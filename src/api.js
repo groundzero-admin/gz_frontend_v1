@@ -2275,6 +2275,25 @@ export const importTemplateIntoBatch = async (template_obj_id, batch_obj_id) => 
 };
 
 // ==========================================
+//    BATCH DEFAULT TIMES
+// ==========================================
+
+export const updateBatchDefaults = async (batchId, defaultStartTime, defaultEndTime) => {
+  try {
+    const response = await fetch(`${BASE_URL}/admin/batch/${batchId}/defaults`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ defaultStartTime, defaultEndTime }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error("Update batch defaults error:", error);
+    return { success: false, message: "Network error." };
+  }
+};
+
+// ==========================================
 //    ACTIVITY / WORKSHEET SYSTEM APIS
 // ==========================================
 

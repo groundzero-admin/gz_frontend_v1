@@ -510,11 +510,13 @@ const QuestionBlock = ({ qData, response, onInput, readOnly, qIndex }) => {
 
     return (
         <div className="space-y-5">
-            <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm border-l-4 border-l-teal-400">
-                <div className="prose prose-lg max-w-none text-gray-800"
-                    dangerouslySetInnerHTML={{ __html: qData.prompt || '<p>Question...</p>' }}
-                />
-            </div>
+            {qData.prompt && qData.prompt.replace(/<[^>]*>/g, '').trim() ? (
+                <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm border-l-4 border-l-teal-400">
+                    <div className="prose prose-lg max-w-none text-gray-800"
+                        dangerouslySetInnerHTML={{ __html: qData.prompt }}
+                    />
+                </div>
+            ) : null}
 
             <MediaCarousel mediaItems={mediaItems} />
 
@@ -858,6 +860,7 @@ const QuestionView = ({
     const [gradingResult, setGradingResult] = useState(null);
     const [previousBest, setPreviousBest] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [dirtyQuestions, setDirtyQuestions] = useState(new Set());
 
     // Initial load logic: Hydrate answers, but hide grade card initially
     useEffect(() => {
@@ -905,6 +908,8 @@ const QuestionView = ({
                 ...prev,
                 [qIdx]: val
             }));
+            // Mark this question as modified
+            setDirtyQuestions(prev => new Set(prev).add(qIdx));
             // Hide grading result when student changes their answer
             if (gradingResult) setGradingResult(null);
         }
@@ -982,6 +987,32 @@ const QuestionView = ({
     };
 
     const handleContinue = () => {
+        // Auto-save silently if the current question was modified
+        if (dirtyQuestions.has(currentQuestionIdx) && hasAnswer(currentQuestionIdx) && !isSubmitting) {
+            // Silent save — just persist, no grading card
+            const responseData = questions.map((_, idx) => answers[idx] ?? null);
+            submitActivityResponse({
+                batchActivity_obj_id: activity._id,
+                batchSession_obj_id: effectiveSessionId,
+                responses: responseData,
+                questionIndex: currentQuestionIdx
+            }).then(res => {
+                if (res.success) {
+                    onUpdateResponses(normalizeId(activity._id), {
+                        ...responses[normalizeId(activity._id)],
+                        responses: responseData,
+                        grade: res.data?.grade
+                    });
+                }
+            }).catch(() => { });
+            // Clear dirty flag for this question
+            setDirtyQuestions(prev => {
+                const next = new Set(prev);
+                next.delete(currentQuestionIdx);
+                return next;
+            });
+        }
+
         setGradingResult(null);
         if (currentQuestionIdx < totalQ - 1) {
             setCurrentQuestionIdx(prev => prev + 1);
@@ -1451,7 +1482,7 @@ const QuestionView = ({
                             <button
                                 onClick={handleSubmit}
                                 disabled={!hasAnswer(currentQuestionIdx) || isSubmitting}
-                                className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${isSubmitting
+                                className={`w-[70%] py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${isSubmitting
                                     ? 'bg-teal-500 text-white cursor-wait'
                                     : hasAnswer(currentQuestionIdx)
                                         ? 'bg-teal-500 text-white hover:bg-teal-600 shadow-md'
@@ -1472,7 +1503,7 @@ const QuestionView = ({
                         {/* Always-visible Next button */}
                         <button
                             onClick={handleContinue}
-                            className="flex-1 py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-gray-900 text-white hover:bg-gray-800 shadow-md"
+                            className="w-[30%] py-3.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-gray-900 text-white hover:bg-gray-800 shadow-md"
                         >
                             {getContinueLabel()}
                         </button>

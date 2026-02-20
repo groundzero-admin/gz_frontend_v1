@@ -398,8 +398,8 @@ const DeleteConfirmModal = ({ isOpen, session, isDark, onClose, onConfirm }) => 
                                     onClick={handleFinalConfirm}
                                     disabled={deleteInput !== 'DELETE' || deleting}
                                     className={`flex-1 py-3 rounded-xl font-bold text-sm text-white transition flex items-center justify-center gap-2 ${deleteInput === 'DELETE' && !deleting
-                                            ? 'bg-red-500 hover:bg-red-600 shadow-lg'
-                                            : 'bg-gray-300 cursor-not-allowed'
+                                        ? 'bg-red-500 hover:bg-red-600 shadow-lg'
+                                        : 'bg-gray-300 cursor-not-allowed'
                                         }`}
                                 >
                                     {deleting ? (

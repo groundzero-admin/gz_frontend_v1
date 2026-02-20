@@ -209,10 +209,14 @@ const QuestionBlock = ({ qData, response, readOnly, hidePrompt }) => {
         <div className="space-y-4 font-sans w-full">
             {!hidePrompt && (
                 <div className="space-y-4 w-full">
-                    {qData.prompt && (
+                    {qData.prompt && qData.prompt.replace(/<[^>]*>/g, '').trim() ? (
                         <div className="prose prose-lg max-w-none text-gray-800 bg-white p-5 rounded-xl border border-gray-200 shadow-sm w-full"
                             dangerouslySetInnerHTML={{ __html: qData.prompt }}
                         />
+                    ) : (
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-700 text-sm font-medium flex items-center gap-2">
+                            This question does not contain any question text.
+                        </div>
                     )}
                     <MediaCarousel mediaItems={mediaItems} />
                 </div>
