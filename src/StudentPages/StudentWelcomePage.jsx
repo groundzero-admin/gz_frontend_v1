@@ -115,8 +115,8 @@ const SessionCard = ({ session, status, isDark }) => {
         if (mod === "PM" && h !== 12) h += 12;
         if (mod === "AM" && h === 12) h = 0;
         sDate.setHours(h, m, 0, 0);
-        // Enable activity 24 hours before session start
-        const enableTime = new Date(sDate.getTime() - 24 * 60 * 60 * 1000);
+        // Enable activity 1 hour before session start
+        const enableTime = new Date(sDate.getTime() - 1 * 60 * 60 * 1000);
         if (new Date() < enableTime) activityEnabled = false;
       } catch (e) { /* parsing fail → keep enabled */ }
     }
